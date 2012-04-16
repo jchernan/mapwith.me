@@ -1,0 +1,36 @@
+<html> 
+  <head>
+    <link rel="stylesheet" href="http://code.leafletjs.com/leaflet-0.3.1/leaflet.css" />
+    <script src="http://code.leafletjs.com/leaflet-0.3.1/leaflet.js"></script>
+    <title>Sample map application</title>
+  </head>
+
+  <body>
+    <div id="map" style="height: 600px"> </div>
+
+    <script>
+            //var url = 'http://{s}.tiles.mapbox.com/v3/jchernan.paris/{z}/{x}/{y}.png';
+            var url = 'http://192.168.1.66:8888/v2/boston/{z}/{x}/{y}.png';
+                tileLayer = new L.TileLayer(url, {maxZoom: 18});
+
+            var map = new L.Map('map');
+            map.setView(new L.LatLng(42.3605, -71.0593), 13).addLayer(tileLayer);
+
+/*
+            var marker1Loc = new L.LatLng(42.3605, -71.0593);
+            var marker1 = new L.Marker(marker1Loc);
+            map.addLayer(marker1);
+*/
+
+/* 
+            var marker2Loc = new L.LatLng(37.6750, -122.47);
+            var marker2 = new L.Marker(marker2Loc);
+            map.addLayer(marker2);
+ */
+
+            //marker.bindPopup("<b>Popup example</b><br />I am a popup.").openPopup();
+
+    </script>
+  </body>
+  
+</html>
