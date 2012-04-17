@@ -3,34 +3,38 @@
     <link rel="stylesheet" href="http://code.leafletjs.com/leaflet-0.3.1/leaflet.css" />
     <script src="http://code.leafletjs.com/leaflet-0.3.1/leaflet.js"></script>
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.5.js"></script>
-    <title>Sample map application</title>
+    <title>Map Application</title>
   </head>
 
   <body>
-    <div id="map" style="height: 600px"> </div>
+    <div id="map" style="height: 800px"> </div>
 	
     <script>
-    		var tileStreamServer = "http://192.168.1.66:8888";
-    		var addressServer = "http://192.168.1.65:8890";
+    		var tileStreamServer = "http://www.aeternitatis.org:8888";
+    		var addressServer = "http://www.aeternitatis.org:8890";
     		var url = tileStreamServer + "/v2/boston/{z}/{x}/{y}.png";
-            //var url = 'http://{s}.tiles.mapbox.com/v3/jchernan.paris/{z}/{x}/{y}.png';
             
 			tileLayer = new L.TileLayer(url, {maxZoom: 18, minZoom:11});
 
             var map = new L.Map("map");
-  
-			var address = { "address": "365 Washington Street, Braintree, MA, 02184" };
+            var defaultCenter = new L.LatLng(42.3605, -71.0593); // default center point
+            var defaultZoom = 13;
+  			
+			var address = { "address": "77 Massachusetts Avenue, Cambridge, MA, 02139" };
 
 			$.getJSON(addressServer, address, function(data) {
 				for (var i=0; i < data.length ; i++) {
 					var point = data[i];
 					var markerLoc = new L.LatLng(point.latitude, point.longitude);
-            		var marker = new L.Marker(markerLoc);
-            		map.addLayer(marker);
-            		map.setView(markerLoc, 15).addLayer(tileLayer);
+					var marker = new L.Marker(markerLoc);
+					map.addLayer(marker);
+					map.setView(markerLoc, 15).addLayer(tileLayer);
 				}
 			})
 			.error(function(data) { 
+				// if there is an error, set view at the default center point
+				map.setView(defaultCenter, defaultZoom).addLayer(tileLayer);
+				
 				console.log("Error: " + data.statusText); 
 				console.log("Response text: " + data.responseText);
 			});
