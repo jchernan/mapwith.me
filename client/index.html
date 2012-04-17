@@ -2,34 +2,39 @@
   <head>
     <link rel="stylesheet" href="http://code.leafletjs.com/leaflet-0.3.1/leaflet.css" />
     <script src="http://code.leafletjs.com/leaflet-0.3.1/leaflet.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.5.js"></script>
     <title>Sample map application</title>
   </head>
 
   <body>
     <div id="map" style="height: 600px"> </div>
-
+	
     <script>
+    		var tileStreamServer = "http://192.168.1.66:8888";
+    		var addressServer = "http://192.168.1.65:8890";
+    		var url = tileStreamServer + "/v2/boston/{z}/{x}/{y}.png";
             //var url = 'http://{s}.tiles.mapbox.com/v3/jchernan.paris/{z}/{x}/{y}.png';
-            var url = 'http://192.168.1.66:8888/v2/boston/{z}/{x}/{y}.png';
-                tileLayer = new L.TileLayer(url, {maxZoom: 18});
+            
+			tileLayer = new L.TileLayer(url, {maxZoom: 18, minZoom:11});
 
-            var map = new L.Map('map');
-            map.setView(new L.LatLng(42.3605, -71.0593), 13).addLayer(tileLayer);
+            var map = new L.Map("map");
+  
+			var address = { "address": "365 Washington Street, Braintree, MA, 02184" };
 
-/*
-            var marker1Loc = new L.LatLng(42.3605, -71.0593);
-            var marker1 = new L.Marker(marker1Loc);
-            map.addLayer(marker1);
-*/
-
-/* 
-            var marker2Loc = new L.LatLng(37.6750, -122.47);
-            var marker2 = new L.Marker(marker2Loc);
-            map.addLayer(marker2);
- */
-
-            //marker.bindPopup("<b>Popup example</b><br />I am a popup.").openPopup();
-
+			$.getJSON(addressServer, address, function(data) {
+				for (var i=0; i < data.length ; i++) {
+					var point = data[i];
+					var markerLoc = new L.LatLng(point.latitude, point.longitude);
+            		var marker = new L.Marker(markerLoc);
+            		map.addLayer(marker);
+            		map.setView(markerLoc, 15).addLayer(tileLayer);
+				}
+			})
+			.error(function(data) { 
+				console.log("Error: " + data.statusText); 
+				console.log("Response text: " + data.responseText);
+			});
+			
     </script>
   </body>
   
