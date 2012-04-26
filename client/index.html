@@ -2,12 +2,35 @@
   <head>
     <link rel="stylesheet" href="http://code.leafletjs.com/leaflet-0.3.1/leaflet.css" />
     <script src="http://code.leafletjs.com/leaflet-0.3.1/leaflet.js"></script>
-    <script type="text/javascript" src="http://code.jquery.com/jquery-1.5.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.js"></script>
+    <link href="bootstrap.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 40px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
     <title>Map Application</title>
   </head>
 
   <body>
-    <div id="map" style="height: 800px"> </div>	
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="#">Maps</a>
+          <div class="btn-group pull-right">
+            <input type="text" class="input-medium search-query">
+          </div>
+          <!--form>
+            <input type="text" class="input-medium search-query">
+            <button type="submit" class="btn">Search</button>
+          </form-->
+        </div>
+      </div>
+    </div>
+    
+    <div id="map" style="height: 800px"> </div>
+
     <script>
       var tileStreamServer = "http://www.aeternitatis.org:8888";
       var addressServer = "http://www.aeternitatis.org/map_find";
@@ -38,5 +61,8 @@
       });
 
     </script>
+   
+    <script src="bootstrap.js"></script> 
+  
   </body>
 </html>
