@@ -41,22 +41,30 @@ function (req, res) {
                 /* TODO: May receive more (or less) than one result */
                 var points = []; 
 
-                var point = {
-                    "latitude":parsed_result[0].lat,
-                    "longitude":parsed_result[0].lon
-                };
+		try { 
+		    for (var i = 0; i < parsed_result.length; i++) { 
+		        var point = {
+			    "latitude":parsed_result[i].lat,
+			    "longitude":parsed_result[i].lon
+			    };
                 
-                points.push(point);
+			    points.push(point);
+			    console.log('Returning (' + point.latitude + ', ' + point.longitude + ')'); 
+		    }
 
-                console.log(point.latitude); 
-                console.log(point.longitude); 
-                res.end(JSON.stringify(points));
+		    res.end(JSON.stringify(points));
+		} 
+		catch (err) {
+		    console.log('Returning []')
+	 	    res.end('[]');
+		}
+
             });
         } 
     );
      
 
-}).listen(8890);
+}).listen(3000);
 
 
 
