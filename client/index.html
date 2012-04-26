@@ -2,40 +2,88 @@
   <head>
     <link rel="stylesheet" href="http://code.leafletjs.com/leaflet-0.3.1/leaflet.css" />
     <script src="http://code.leafletjs.com/leaflet-0.3.1/leaflet.js"></script>
-    <script type="text/javascript" src="http://code.jquery.com/jquery-1.5.js"></script>
-    <title>Sample map application</title>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.js"></script>
+    <link href="bootstrap.css" rel="stylesheet">
+    <style>
+      body {
+        padding-top: 40px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+    <title>Map Application</title>
   </head>
 
   <body>
-    <div id="map" style="height: 600px"> </div>
-	
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container" style="width: 95%">
+          <a class="brand" href="#">Maps</a>
+          <form class="navbar-form pull-right" onsubmit="return find_and_display_address();">
+            <input type="text" id="address_search_field" class="span3" 
+                   style="height: 30px;background-repeat:no-repeat;background-position: 185px 5px;padding-right:30px"  
+                   placeholder="Search">
+          </form>
+       </div>
+      </div>
+
+                   <!-- style="height: 30px;background-image:url('jax-loader.gif');background-repeat:no-repeat;background-position: 180px 5px;"  -->
+    </div>
+    
+    <div id="map" style="height: 800px"> </div>
+
     <script>
-    		var tileStreamServer = "http://192.168.1.66:8888";
-    		var addressServer = "http://192.168.1.65:8890";
-    		var url = tileStreamServer + "/v2/boston/{z}/{x}/{y}.png";
-            //var url = 'http://{s}.tiles.mapbox.com/v3/jchernan.paris/{z}/{x}/{y}.png';
-            
-			tileLayer = new L.TileLayer(url, {maxZoom: 18, minZoom:11});
+      var tileStreamServer = "http://www.aeternitatis.org:8888";
+      var addressServer = "http://www.aeternitatis.org/map_find";
+      var url = tileStreamServer + "/v2/boston/{z}/{x}/{y}.png";
+      var tileLayer = new L.TileLayer(url, {maxZoom: 18, minZoom:11});
 
-            var map = new L.Map("map");
-  
-			var address = { "address": "365 Washington Street, Braintree, MA, 02184" };
+      var map = new L.Map("map");
+      var layerGroup = new L.LayerGroup();
+      map.addLayer(layerGroup);
+      map.addLayer(tileLayer);
 
-			$.getJSON(addressServer, address, function(data) {
-				for (var i=0; i < data.length ; i++) {
-					var point = data[i];
-					var markerLoc = new L.LatLng(point.latitude, point.longitude);
-            		var marker = new L.Marker(markerLoc);
-            		map.addLayer(marker);
-            		map.setView(markerLoc, 15).addLayer(tileLayer);
-				}
-			})
-			.error(function(data) { 
-				console.log("Error: " + data.statusText); 
-				console.log("Response text: " + data.responseText);
-			});
-			
+      var defaultCenter = new L.LatLng(42.3605, -71.0593); // default center point
+      var defaultZoom = 13;
+      var foundZoom = 15;
+
+      map.setView(defaultCenter, defaultZoom);
+
+
+      function find_and_display_address() { 
+          var input_field = $('#address_search_field').val();
+          var address = { "address": input_field };
+
+
+          /* Show progress bar */
+          $('#address_search_field').css('background-image', 'url("ajax-loader.gif")');
+          layerGroup.clearLayers();
+
+          $.getJSON(addressServer, address, function(data) {
+                  $('#address_search_field').css('background-image', '');
+
+                  for (var i = 0; i < data.length ; i++) {
+                      var point = data[i];
+                      var markerLoc = new L.LatLng(point.latitude, point.longitude);
+                      var marker = new L.Marker(markerLoc);
+                      layerGroup.addLayer(marker);
+                      map.setView(markerLoc, foundZoom); 
+                  }
+                  })
+          .error(function(data) {
+                  // if there is an error, set view at the default center point
+                  map.setView(defaultCenter, defaultZoom).addLayer(tileLayer);
+                  console.log("Error: " + data.statusText); 
+                  console.log("Response text: " + data.responseText);
+                  $('#address_search_field').css('background-image', '');
+
+                  });
+
+          return false;
+      }
+
     </script>
-  </body>
+   
+    <script src="bootstrap.js"></script> 
   
+  </body>
 </html>
