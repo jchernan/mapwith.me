@@ -63,10 +63,14 @@
 
                   for (var i = 0; i < data.length ; i++) {
                       var point = data[i];
+                      if (point.latitude >= 42.185 && point.latitude <= 42.558 
+                        && point.longitude >= -71.539 && point.longitude <= -70.669) {
+                        
                       var markerLoc = new L.LatLng(point.latitude, point.longitude);
                       var marker = new L.Marker(markerLoc);
                       layerGroup.addLayer(marker);
                       map.setView(markerLoc, foundZoom); 
+                  }
                   }
                   })
           .error(function(data) {
@@ -80,6 +84,7 @@
 
           return false;
       }
+
 
     </script>
    
