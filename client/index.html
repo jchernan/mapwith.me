@@ -16,17 +16,17 @@
 
     <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
-        <div class="container">
+        <div class="container" style="width: 95%">
           <a class="brand" href="#">Maps</a>
-          <div class="btn-group pull-right">
-            <input type="text" class="input-medium search-query">
-          </div>
-          <!--form>
-            <input type="text" class="input-medium search-query">
-            <button type="submit" class="btn">Search</button>
-          </form-->
-        </div>
+          <form class="navbar-form pull-right" onsubmit="return find_and_display_address();">
+            <input type="text" id="address_search_field" class="span3" 
+                   style="height: 30px;background-repeat:no-repeat;background-position: 185px 5px;padding-right:30px"  
+                   placeholder="Search">
+          </form>
+       </div>
       </div>
+
+                   <!-- style="height: 30px;background-image:url('jax-loader.gif');background-repeat:no-repeat;background-position: 180px 5px;"  -->
     </div>
     
     <div id="map" style="height: 800px"> </div>
@@ -35,30 +35,51 @@
       var tileStreamServer = "http://www.aeternitatis.org:8888";
       var addressServer = "http://www.aeternitatis.org/map_find";
       var url = tileStreamServer + "/v2/boston/{z}/{x}/{y}.png";
-
-      tileLayer = new L.TileLayer(url, {maxZoom: 18, minZoom:11});
+      var tileLayer = new L.TileLayer(url, {maxZoom: 18, minZoom:11});
 
       var map = new L.Map("map");
+      var layerGroup = new L.LayerGroup();
+      map.addLayer(layerGroup);
+      map.addLayer(tileLayer);
+
       var defaultCenter = new L.LatLng(42.3605, -71.0593); // default center point
       var defaultZoom = 13;
+      var foundZoom = 15;
 
-      var address = { "address": "77 Massachusetts Avenue, Cambridge, MA, 02139" };
+      map.setView(defaultCenter, defaultZoom);
 
-      $.getJSON(addressServer, address, function(data) {
-        for (var i=0; i < data.length ; i++){
-          var point = data[i];
-          var markerLoc = new L.LatLng(point.latitude, point.longitude);
-          var marker = new L.Marker(markerLoc);
-          map.addLayer(marker);
-          map.setView(markerLoc, 15).addLayer(tileLayer);
-        }
-      })
-      .error(function(data) {
-        // if there is an error, set view at the default center point
-        map.setView(defaultCenter, defaultZoom).addLayer(tileLayer);
-        console.log("Error: " + data.statusText); 
-        console.log("Response text: " + data.responseText);
-      });
+
+      function find_and_display_address() { 
+          var input_field = $('#address_search_field').val();
+          var address = { "address": input_field };
+
+
+          /* Show progress bar */
+          $('#address_search_field').css('background-image', 'url("ajax-loader.gif")');
+          layerGroup.clearLayers();
+
+          $.getJSON(addressServer, address, function(data) {
+                  $('#address_search_field').css('background-image', '');
+
+                  for (var i = 0; i < data.length ; i++) {
+                      var point = data[i];
+                      var markerLoc = new L.LatLng(point.latitude, point.longitude);
+                      var marker = new L.Marker(markerLoc);
+                      layerGroup.addLayer(marker);
+                      map.setView(markerLoc, foundZoom); 
+                  }
+                  })
+          .error(function(data) {
+                  // if there is an error, set view at the default center point
+                  map.setView(defaultCenter, defaultZoom).addLayer(tileLayer);
+                  console.log("Error: " + data.statusText); 
+                  console.log("Response text: " + data.responseText);
+                  $('#address_search_field').css('background-image', '');
+
+                  });
+
+          return false;
+      }
 
     </script>
    
