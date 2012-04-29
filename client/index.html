@@ -9,7 +9,7 @@
         padding-top: 40px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
     </style>
-    <title>Map Application</title>
+    <title>Maps</title>
   </head>
 
   <body>
@@ -25,69 +25,11 @@
           </form>
        </div>
       </div>
-
-                   <!-- style="height: 30px;background-image:url('jax-loader.gif');background-repeat:no-repeat;background-position: 180px 5px;"  -->
     </div>
     
     <div id="map" style="height: 800px"> </div>
 
-    <script>
-      var tileStreamServer = "http://www.aeternitatis.org:8888";
-      var addressServer = "http://www.aeternitatis.org/map_find";
-      var url = tileStreamServer + "/v2/boston/{z}/{x}/{y}.png";
-      var tileLayer = new L.TileLayer(url, {maxZoom: 18, minZoom:11});
-
-      var map = new L.Map("map");
-      var layerGroup = new L.LayerGroup();
-      map.addLayer(layerGroup);
-      map.addLayer(tileLayer);
-
-      var defaultCenter = new L.LatLng(42.3605, -71.0593); // default center point
-      var defaultZoom = 13;
-      var foundZoom = 15;
-
-      map.setView(defaultCenter, defaultZoom);
-
-
-      function find_and_display_address() { 
-          var input_field = $('#address_search_field').val();
-          var address = { "address": input_field };
-
-
-          /* Show progress bar */
-          $('#address_search_field').css('background-image', 'url("ajax-loader.gif")');
-          layerGroup.clearLayers();
-
-          $.getJSON(addressServer, address, function(data) {
-                  $('#address_search_field').css('background-image', '');
-
-                  for (var i = 0; i < data.length ; i++) {
-                      var point = data[i];
-                      if (point.latitude >= 42.185 && point.latitude <= 42.558 
-                        && point.longitude >= -71.539 && point.longitude <= -70.669) {
-                        
-                      var markerLoc = new L.LatLng(point.latitude, point.longitude);
-                      var marker = new L.Marker(markerLoc);
-                      layerGroup.addLayer(marker);
-                      map.setView(markerLoc, foundZoom); 
-                  }
-                  }
-                  })
-          .error(function(data) {
-                  // if there is an error, set view at the default center point
-                  map.setView(defaultCenter, defaultZoom).addLayer(tileLayer);
-                  console.log("Error: " + data.statusText); 
-                  console.log("Response text: " + data.responseText);
-                  $('#address_search_field').css('background-image', '');
-
-                  });
-
-          return false;
-      }
-
-
-    </script>
-   
+    <script src="map.js"></script>
     <script src="bootstrap.js"></script> 
   
   </body>
