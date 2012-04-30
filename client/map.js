@@ -1,15 +1,15 @@
 var MapApp = {};
 
 MapApp.mapPoints = {
-    center = { 
+    center: { 
         lat: 42.3605, 
-        lon: -71.0593 i
+        lon: -71.0593
     },
-    upperLeft = {
+    upperLeft: {
         lat: 42.5711,
         lon: -71.3916
     },
-    lowerRight = {
+    lowerRight: {
         lat: 42.1684,
         lon: -70.7029
     }
@@ -42,8 +42,8 @@ map.addLayer(tileLayer);
 
 // default center point
 var defaultCenter = new L.LatLng(
-    mapPoints.center.lat, 
-    mapPoints.center.lon
+    MapApp.mapPoints.center.lat, 
+    MapApp.mapPoints.center.lon
 ); 
 
 map.setView(defaultCenter, MapApp.mapZooms.defaultZoom);
