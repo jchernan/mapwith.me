@@ -67,7 +67,7 @@ function find_and_display_address() {
     };
 
     // Show progress bar 
-    $('#address_search_field').css('background-image', 'url("ajax-loader.gif")');
+    $('#address_search_field').css('background-image', 'url("images/ajax-loader.gif")');
     layerGroup.clearLayers();
 
     // query the address server
@@ -118,7 +118,7 @@ function find_and_display_address() {
 
 function addMarker(point, name, color) {
     var markerLoc = new L.LatLng(point.latitude, point.longitude);
-    var url = 'markers/color-pin.png';
+    var url = 'images/markers/color-pin.png';
     var icon = new MapApp.MarkerIcon(url.replace("color", color));
     var marker = new L.Marker(markerLoc, {icon: icon});
     if (name != null) {
@@ -129,7 +129,7 @@ function addMarker(point, name, color) {
 }
 
 MapApp.MarkerIcon = L.Icon.extend({
-    iconUrl: 'markers/black-pin.png',
+    iconUrl: 'images/markers/black-pin.png',
     shadowUrl: null,
     iconSize: new L.Point(16, 28),
     iconAnchor: new L.Point(8, 28),
