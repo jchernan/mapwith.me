@@ -28,18 +28,14 @@ MapApp.venueServer = "http://www.aeternitatis.org/venue_find";
 MapApp.tileStreamUrl = MapApp.tileStreamServer + "/v2/boston/{z}/{x}/{y}.png";
 
 MapApp.inBounds = function(point) {
-    if (point.latitude >= MapApp.mapPoints.lowerRight.lat 
-          && point.latitude <= MapApp.mapPoints.upperLeft.lat 
-          && point.longitude >= MapApp.mapPoints.upperLeft.lon 
-          && point.longitude <= MapApp.mapPoints.lowerRight.lon) {
-        return true;
-    } else {
-        return false;
-    }
+    return (point.latitude >= MapApp.mapPoints.lowerRight.lat 
+        && point.latitude <= MapApp.mapPoints.upperLeft.lat 
+        && point.longitude >= MapApp.mapPoints.upperLeft.lon 
+        && point.longitude <= MapApp.mapPoints.lowerRight.lon);
 }
 
 // tile layer
-var tileLayer = new L.TileLayer(
+MapApp.tileLayer = new L.TileLayer(
     MapApp.tileStreamUrl, {
         maxZoom: MapApp.mapZooms.max,
         minZoom: MapApp.mapZooms.min
@@ -47,28 +43,36 @@ var tileLayer = new L.TileLayer(
 );
 
 // map
-var map = new L.Map("map");
-var layerGroup = new L.LayerGroup();
-map.addLayer(layerGroup);
-map.addLayer(tileLayer);
+MapApp.layerGroup = new L.LayerGroup();
+MapApp.map = new L.Map("map");
+MapApp.map.addLayer(MapApp.layerGroup);
+MapApp.map.addLayer(MapApp.tileLayer);
 
 // default center point
-var defaultCenter = new L.LatLng(
+MapApp.defaultCenter = new L.LatLng(
     MapApp.mapPoints.center.lat, 
     MapApp.mapPoints.center.lon
 ); 
 
-map.setView(defaultCenter, MapApp.mapZooms.defaultZoom);
+MapApp.map.setView(MapApp.defaultCenter, MapApp.mapZooms.defaultZoom);
 
 function find_and_display_address() {
-    var input_field = $('#address_search_field').val();
+    
+    var inputField = $('#address_search_field').val();
+   
+    // check if input is undefined, empty, or all whitespaces 
+    if (!inputField || /^\s*$/.test(inputField)) {
+        console.log('Undefined or empty input');
+        return false;
+    }
+    
     var address = {
-        "address": input_field
+        "address": inputField
     };
 
     // Show progress bar 
     $('#address_search_field').css('background-image', 'url("images/ajax-loader.gif")');
-    layerGroup.clearLayers();
+    MapApp.layerGroup.clearLayers();
 
     // query the address server
     $.getJSON(MapApp.addressServer, address, function(data) {
@@ -76,13 +80,13 @@ function find_and_display_address() {
         for (var i = 0; i < data.length; i++) {
             var point = data[i];
             if (MapApp.inBounds(point)) {
-                var markerLoc = addMarker(point, null, "pink");
-                map.setView(markerLoc, MapApp.mapZooms.foundZoom);
+                var markerLoc = MapApp.addMarker(point, null, "pink");
+                MapApp.map.setView(markerLoc, MapApp.mapZooms.foundZoom);
             }
         }
     }).error(function(data) {
         // if there is an error, set view at the default center point
-        map.setView(defaultCenter, MapApp.mapZooms.defaultZoom).addLayer(tileLayer);
+        MapApp.map.setView(defaultCenter, MapApp.mapZooms.defaultZoom).addLayer(tileLayer);
         console.log("Error: " + data.statusText);
         console.log("Response text: " + data.responseText);
         $('#address_search_field').css('background-image', '');
@@ -92,14 +96,13 @@ function find_and_display_address() {
     $.getJSON(MapApp.venueServer, address, function(data) {
 
         if (MapApp.inBounds(data.geopoint)) {
-            var markerLoc = addMarker(data.geopoint, null, "purple");
-            map.setView(markerLoc, MapApp.mapZooms.foundZoom);
+            var markerLoc = MapApp.addMarker(data.geopoint, null, "purple");
         }
 
         for (var i = 0; i < data.venues.length; i++) {
             var point = data.venues[i];
             if (MapApp.inBounds(point)) {
-                addMarker(point, point.name, "blue");
+                MapApp.addMarker(point, point.name, "blue");
             }
         }
 
@@ -107,7 +110,7 @@ function find_and_display_address() {
 
     }).error(function(data) {
         // if there is an error, set view at the default center point
-        map.setView(defaultCenter, MapApp.mapZooms.defaultZoom).addLayer(tileLayer);
+        MapApp.map.setView(defaultCenter, MapApp.mapZooms.defaultZoom).addLayer(tileLayer);
         console.log("Error: " + data.statusText);
         console.log("Response text: " + data.responseText);
         $('#address_search_field').css('background-image', '');
@@ -116,7 +119,7 @@ function find_and_display_address() {
     return false;
 }
 
-function addMarker(point, name, color) {
+MapApp.addMarker = function(point, name, color) {
     var markerLoc = new L.LatLng(point.latitude, point.longitude);
     var url = 'images/markers/color-pin.png';
     var icon = new MapApp.MarkerIcon(url.replace("color", color));
@@ -124,7 +127,7 @@ function addMarker(point, name, color) {
     if (name != null) {
         marker.bindPopup(name).openPopup();
     }
-    layerGroup.addLayer(marker);
+    MapApp.layerGroup.addLayer(marker);
     return markerLoc;
 }
 
@@ -135,3 +138,4 @@ MapApp.MarkerIcon = L.Icon.extend({
     iconAnchor: new L.Point(8, 28),
     popupAnchor: new L.Point(0, -28)
 });
+
