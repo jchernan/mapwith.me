@@ -93,15 +93,20 @@ function find_and_display_address() {
     // query the address server
     $.getJSON(MapApp.addressServer, address, function(data) {
 
+        if (data.length === 0) {
+            $('#address_search_field').css('background-image', '');
+            return;
+        }
+
         for (var i = 0; i < data.length; i++) {
             var point = data[i];
             if (MapApp.inBounds(point)) {
                 address.latitude = point.latitude;
                 address.longitude = point.longitude;
+                // query the venues server
+                $.getJSON(MapApp.venuesServer, address, venuesCallback).error(errorCallback);
             }
         }
-        // query the venues server
-        $.getJSON(MapApp.venuesServer, address, venuesCallback).error(errorCallback);
     
     }).error(errorCallback);
 
