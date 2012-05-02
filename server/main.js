@@ -8,6 +8,8 @@ http.createServer(
 function (req, res) {
     var url_parts = url.parse(req.url, true);
     var address = url_parts.query.address;
+    var latitude = url_parts.query.latitude;
+    var longitude = url_parts.query.longitude;
     console.log("Processing venue_find request for " + url_parts.query.address);
 
     res.writeHead(200, 
@@ -16,7 +18,7 @@ function (req, res) {
 
     var options = {
         host: "api.foursquare.com",
-        path: "/v2/venues/search?near='" + escape(address) + "'" + 
+        path: "/v2/venues/search?ll=" + latitude + escape(",") + longitude + 
 	      "&client_id=GXSFY2MK32QDGOZW4OT3VKFFYBJRZAQWKJVJGCYTS3MZAQ4L&client_secret=N3JVG0VY3XW0020PPIZXTRVSWCH3TRAZOIUBR35LMQVHAOCG&v=20120429", 
         method: "GET"
     };
@@ -41,11 +43,12 @@ function (req, res) {
 
 			return address_entry;
 		});
-	
-		var geopoint = {
-			"latitude":parsed_result.response.geocode.feature.geometry.center.lat,
-			"longitude":parsed_result.response.geocode.feature.geometry.center.lng
+		
+                var geopoint = {
+			"latitude":latitude,
+			"longitude":longitude
 		}
+                
 		response.geopoint = geopoint;
 		response.venues = venues;
 		
