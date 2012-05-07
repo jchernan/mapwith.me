@@ -74,7 +74,8 @@ MapApp.map.setView(MapApp.defaultCenter, MapApp.mapZooms.defaultZoom);
 
 function find_and_display_address() {
 
-    var inputField = $('#address_search_field').val();
+    //var inputField = $('#address_search_field').val();
+    var inputField = '77 Massachusetts Avenue, Cambridge, MA 02139';
 
     // check if input is undefined, empty, or all whitespaces 
     if (!inputField || /^\s*$/.test(inputField)) {
@@ -104,7 +105,7 @@ function find_and_display_address() {
                 address.latitude = point.latitude;
                 address.longitude = point.longitude;
                 // query the venues server
-                $.getJSON(MapApp.venuesServer, address, venuesCallback).error(errorCallback);
+                $.getJSON(MapApp.venuesServer, address, findVenues).error(errorCallback);
             }
         }
     
@@ -113,18 +114,34 @@ function find_and_display_address() {
     return false;
 }
 
-function venuesCallback(data) {
+function findVenues(data) {
     if (MapApp.inBounds(data.geopoint)) {
         var markerLoc = MapApp.addMarker(data.geopoint, null, "pink");
         MapApp.map.setView(markerLoc, MapApp.mapZooms.foundZoom);
     }
-    for (var i = 0; i < data.venues.length; i++) {
-        var point = data.venues[i];
+
+    data.venues.sort(function(p1, p2) {
+        return distance(p1, data.geopoint) - distance(p2, data.geopoint);
+    });
+
+    renderVenues(data.venues);
+
+    $('#address_search_field').css('background-image', '');
+}
+
+function renderVenues(venues) {
+    
+    for (var i = 0; i < venues.length; i++) {
+        var point = venues[i];
         if (MapApp.inBounds(point)) {
             MapApp.addMarker(point, point.name, "blue");
         }
     }
-    $('#address_search_field').css('background-image', '');
+}
+
+function distance(p1, p2) {
+    return Math.pow(p1.latitude - p2.latitude, 2) 
+        + Math.pow(p1.longitude - p2.longitude, 2);
 }
 
 function errorCallback(data) {
