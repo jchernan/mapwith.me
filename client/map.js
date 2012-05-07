@@ -133,14 +133,16 @@ function renderVenues(venues) {
     data.venues.sort(function(p1, p2) {
         return distance(p1, geopoint) - distance(p2, geopoint);
     });
- 
+
     for (var i = 0; i < venues.length; i++) {
         var point = venues[i];
         if (MapApp.inBounds(point)) {
             MapApp.addMarker(point, point.name, "blue");
         }
     }
+
 }
+
 
 function distance(p1, p2) {
     return Math.pow(p1.latitude - p2.latitude, 2) 
