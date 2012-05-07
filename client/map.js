@@ -133,6 +133,16 @@ function renderVenues(venues, geopoint) {
         return distance(p1, geopoint) - distance(p2, geopoint);
     });
    
+    data.venues.sort(function(p1, p2) {
+        return distance(p1, data.geopoint) - distance(p2, data.geopoint);
+    });
+
+    renderVenues(data.venues);
+
+    $('#address_search_field').css('background-image', '');
+}
+
+function renderVenues(venues) {
     for (var i = 0; i < venues.length; i++) {
         var point = venues[i];
         if (MapApp.inBounds(point)) {
