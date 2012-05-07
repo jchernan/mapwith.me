@@ -77,8 +77,7 @@ MapApp.map.setView(MapApp.defaultCenter, MapApp.mapZooms.defaultZoom);
 
 function find_and_display_address() {
 
-    //var inputField = $('#address_search_field').val();
-    var inputField = '77 Massachusetts Avenue, Cambridge, MA 02139';
+    var inputField = $('#address_search_field').val();
 
     // check if input is undefined, empty, or all whitespaces 
     if (!inputField || /^\s*$/.test(inputField)) {
@@ -92,7 +91,6 @@ function find_and_display_address() {
 
     // Show progress bar 
     $('#address_search_field').css('background-image', 'url("images/ajax-loader.gif")');
-    MapApp.layerGroup.clearLayers();
 
     // query the address server
     $.getJSON(MapApp.addressServer, address, function(data) {
@@ -108,7 +106,7 @@ function find_and_display_address() {
                 address.latitude = point.latitude;
                 address.longitude = point.longitude;
                 // query the venues server
-                $.getJSON(MapApp.venuesServer, address, findVenues).error(errorCallback);
+                $.getJSON(MapApp.venuesServer, address, processVenues).error(errorCallback);
             }
         }
     
@@ -117,30 +115,49 @@ function find_and_display_address() {
     return false;
 }
 
-function findVenues(data) {
-    /* Render geopoint */
+function processVenues(data) {
+    
     if (MapApp.inBounds(data.geopoint)) {
-        var markerLoc = MapApp.addMarker(data.geopoint, null, "pink");
+        MapApp.venues = data.venues;
+        MapApp.geopoint = data.geopoint;
+        MapApp.map.on('zoomend', Renderer.draw);
+        var markerLoc = new L.LatLng(MapApp.geopoint.latitude, MapApp.geopoint.longitude);
         MapApp.map.setView(markerLoc, MapApp.mapZooms.foundZoom);
     }
-     
-    VenuesRenderer.compute();
-
-     /* Render nearby locations */
-    renderVenues(data.venues, data.geopoint, VenuesRenderer.threshRadius);
-
-    MapApp.map.on('zoomend', VenuesRenderer.compute);
 
     /* Remove loading icon */
     $('#address_search_field').css('background-image', '');
 }
 
+var Renderer = {};
 
-function renderVenues(venues, geopoint, threshold) {
+Renderer.draw = function() {
+    var zoomLevel = MapApp.map.getZoom();
+    var center = MapApp.map.getBounds().getCenter();
+    var corner = MapApp.map.getBounds().getNorthWest();
+    Renderer.radiusOfInterest = Renderer.distance(
+        { latitude: center.lat, longitude: center.lng }, 
+        { latitude: corner.lat, longitude: corner.lng }
+    );
+    Renderer.threshRadius = Renderer.radiusOfInterest * 0.002;
+    console.log('zoom level: ' + zoomLevel + ', thresh radius: ' + Renderer.threshRadius);
+    
+    MapApp.layerGroup.clearLayers();
+    /* Render geopoint */
+    Renderer.renderGeopoint(MapApp.geopoint);
+    /* Render nearby locations */
+    Renderer.renderVenues(MapApp.venues.slice(0), MapApp.geopoint, Renderer.threshRadius);
+}
+
+Renderer.renderGeopoint = function(geopoint) {
+    MapApp.addMarker(geopoint, null, "pink");
+}
+
+Renderer.renderVenues = function(venues, geopoint, threshold) {    
     console.log('call to render venues'); 
 
     venues.sort(function(p1, p2) {
-        return distance(p1, geopoint) - distance(p2, geopoint);
+        return Renderer.distance(p1, geopoint) - Renderer.distance(p2, geopoint);
     });
 
     var someone_is_spliced = true;
@@ -149,12 +166,12 @@ function renderVenues(venues, geopoint, threshold) {
         someone_is_spliced = false;
         for (var i = 0; i < venues.length; i++) {
             var venue = venues[i];
-            var nearest_venue_idx = nearestNeighbor(venue, venues); 
+            var nearest_venue_idx = Renderer.nearestNeighbor(venue, venues); 
             var nearest_venue = venues[nearest_venue_idx]; 
-            console.log('distance between two venues is ' + distance(nearest_venue, venue)); 
+            console.log('distance between two venues is ' + Renderer.distance(nearest_venue, venue)); 
             console.log('. and threshold is  ' + threshold);
 
-            if (distance(nearest_venue, venue) < threshold) {
+            if (Renderer.distance(nearest_venue, venue) < threshold) {
                 venues.splice(nearest_venue_idx, 1); 
                 console.log('splicing venue at ' + nearest_venue_idx); 
                 someone_is_spliced = true;
@@ -171,12 +188,12 @@ function renderVenues(venues, geopoint, threshold) {
 
 }
 
-function nearestNeighbor(point, points) {
+Renderer.nearestNeighbor = function(point, points) {
     var distances = $.map(points, function(point_i, i) {    
        if (point_i === point)
          return Number.MAX_VALUE; //Avoid comparing the point against itself
        else 
-        return distance(point_i, point);
+        return Renderer.distance(point_i, point);
     }); 
 
     var min_distance = Number.MAX_VALUE;
@@ -192,24 +209,9 @@ function nearestNeighbor(point, points) {
     return min_point_idx;
 }
 
-
-function distance(p1, p2) {
+Renderer.distance = function(p1, p2) {
     return Math.pow(p1.latitude - p2.latitude, 2) 
         + Math.pow(p1.longitude - p2.longitude, 2);
-}
-
-var VenuesRenderer = {};
-
-VenuesRenderer.compute = function() {
-    var zoomLevel = MapApp.map.getZoom();
-    var center = MapApp.map.getBounds().getCenter();
-    var corner = MapApp.map.getBounds().getNorthWest();
-    VenuesRenderer.radiusOfInterest = distance(
-        { latitude: center.lat, longitude: center.lng }, 
-        { latitude: corner.lat, longitude: corner.lng }
-    );
-    VenuesRenderer.threshRadius = VenuesRenderer.radiusOfInterest * 0.001;
-    console.log('threshRadius ' + VenuesRenderer.threshRadius);
 }
 
 function errorCallback(data) {
