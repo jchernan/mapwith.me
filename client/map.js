@@ -124,10 +124,12 @@ function findVenues(data) {
         MapApp.map.setView(markerLoc, MapApp.mapZooms.foundZoom);
     }
      
-     /* Render nearby locations */
-     renderVenues(data.venues, data.geopoint, 5e-6);
+    VenuesRenderer.compute();
 
-    MapApp.map.on('zoomend', zoomChange);
+     /* Render nearby locations */
+    renderVenues(data.venues, data.geopoint, VenuesRenderer.threshRadius);
+
+    MapApp.map.on('zoomend', VenuesRenderer.compute);
 
     /* Remove loading icon */
     $('#address_search_field').css('background-image', '');
@@ -196,31 +198,18 @@ function distance(p1, p2) {
         + Math.pow(p1.longitude - p2.longitude, 2);
 }
 
-var roiCircle = MapApp.defaultCenter; 
-var threshCircle = MapApp.defaultCenter;
+var VenuesRenderer = {};
 
-function zoomChange() {
+VenuesRenderer.compute = function() {
     var zoomLevel = MapApp.map.getZoom();
     var center = MapApp.map.getBounds().getCenter();
     var corner = MapApp.map.getBounds().getNorthWest();
-    var radiusOfInterest = distance(
+    VenuesRenderer.radiusOfInterest = distance(
         { latitude: center.lat, longitude: center.lng }, 
         { latitude: corner.lat, longitude: corner.lng }
     );
-    var threshRadius = radiusOfInterest * 0.10;
-
-    console.log('threshRadius ' + threshRadius);
-
-    MapApp.layerGroup.removeLayer(roiCircle);
-    MapApp.layerGroup.removeLayer(threshCircle);
-    roiCircle = new L.CircleMarker(center);
-    threshCircle = new L.CircleMarker(center);
-    
-    roiCircle.setRadius(Math.abs(MapApp.map.latLngToLayerPoint(center).x 
-        - MapApp.map.latLngToLayerPoint(corner).x));
-        
-    MapApp.layerGroup.addLayer(roiCircle);
-    MapApp.layerGroup.addLayer(threshCircle);
+    VenuesRenderer.threshRadius = VenuesRenderer.radiusOfInterest * 0.001;
+    console.log('threshRadius ' + VenuesRenderer.threshRadius);
 }
 
 function errorCallback(data) {
