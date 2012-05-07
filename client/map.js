@@ -125,7 +125,7 @@ function findVenues(data) {
     }
      
      /* Render nearby locations */
-     renderVenues(data.venues);
+     renderVenues(data.venues, data.geopoint, 5e-6);
 
     MapApp.map.on('zoomend', zoomChange);
 
@@ -133,28 +133,63 @@ function findVenues(data) {
     $('#address_search_field').css('background-image', '');
 }
 
-function renderVenues(venues, geopoint) {
-    data.venues.sort(function(p1, p2) {
+
+function renderVenues(venues, geopoint, threshold) {
+    console.log('call to render venues'); 
+
+    venues.sort(function(p1, p2) {
         return distance(p1, geopoint) - distance(p2, geopoint);
     });
-   
-    data.venues.sort(function(p1, p2) {
-        return distance(p1, data.geopoint) - distance(p2, data.geopoint);
-    });
 
-    renderVenues(data.venues);
+    var someone_is_spliced = true;
 
-    $('#address_search_field').css('background-image', '');
-}
+    while (someone_is_spliced) { 
+        someone_is_spliced = false;
+        for (var i = 0; i < venues.length; i++) {
+            var venue = venues[i];
+            var nearest_venue_idx = nearestNeighbor(venue, venues); 
+            var nearest_venue = venues[nearest_venue_idx]; 
+            console.log('distance between two venues is ' + distance(nearest_venue, venue)); 
+            console.log('. and threshold is  ' + threshold);
 
-function renderVenues(venues) {
+            if (distance(nearest_venue, venue) < threshold) {
+                venues.splice(nearest_venue_idx, 1); 
+                console.log('splicing venue at ' + nearest_venue_idx); 
+                someone_is_spliced = true;
+            }
+       } 
+   }
+
     for (var i = 0; i < venues.length; i++) {
         var point = venues[i];
         if (MapApp.inBounds(point)) {
             MapApp.addMarker(point, point.name, "blue");
         }
     }
+
 }
+
+function nearestNeighbor(point, points) {
+    var distances = $.map(points, function(point_i, i) {    
+       if (point_i === point)
+         return Number.MAX_VALUE; //Avoid comparing the point against itself
+       else 
+        return distance(point_i, point);
+    }); 
+
+    var min_distance = Number.MAX_VALUE;
+    var min_point_idx = 0;
+
+    for (var i = 0; i < points.length; i++) {
+        if (distances[i] < min_distance) {
+            min_point_idx = i;
+            min_distance = distances[i];            
+        }
+    }
+
+    return min_point_idx;
+}
+
 
 function distance(p1, p2) {
     return Math.pow(p1.latitude - p2.latitude, 2) 
