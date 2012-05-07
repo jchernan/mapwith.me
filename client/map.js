@@ -28,7 +28,10 @@ MapApp.venuesServer = "http://www.aeternitatis.org/venue_find";
 MapApp.tileStreamUrl = MapApp.tileStreamServer + "/v2/boston/{z}/{x}/{y}.png";
 
 MapApp.inBounds = function(point) {
-    return (point.latitude >= MapApp.mapPoints.lowerRight.lat && point.latitude <= MapApp.mapPoints.upperLeft.lat && point.longitude >= MapApp.mapPoints.upperLeft.lon && point.longitude <= MapApp.mapPoints.lowerRight.lon);
+    return (point.latitude >= MapApp.mapPoints.lowerRight.lat 
+        && point.latitude <= MapApp.mapPoints.upperLeft.lat 
+        && point.longitude >= MapApp.mapPoints.upperLeft.lon 
+        && point.longitude <= MapApp.mapPoints.lowerRight.lon);
 }
 
 MapApp.addMarker = function(point, name, color) {
@@ -68,7 +71,7 @@ MapApp.map.addLayer(MapApp.tileLayer);
 
 // default center point
 MapApp.defaultCenter = new L.LatLng(
-MapApp.mapPoints.center.lat, MapApp.mapPoints.center.lon);
+    MapApp.mapPoints.center.lat, MapApp.mapPoints.center.lon);
 
 MapApp.map.setView(MapApp.defaultCenter, MapApp.mapZooms.defaultZoom);
 
@@ -124,6 +127,8 @@ function findVenues(data) {
      /* Render nearby locations */
      renderVenues(data.venues);
 
+    MapApp.map.on('zoomend', zoomChange);
+
     /* Remove loading icon */
     $('#address_search_field').css('background-image', '');
 }
@@ -154,6 +159,33 @@ function renderVenues(venues) {
 function distance(p1, p2) {
     return Math.pow(p1.latitude - p2.latitude, 2) 
         + Math.pow(p1.longitude - p2.longitude, 2);
+}
+
+var roiCircle = MapApp.defaultCenter; 
+var threshCircle = MapApp.defaultCenter;
+
+function zoomChange() {
+    var zoomLevel = MapApp.map.getZoom();
+    var center = MapApp.map.getBounds().getCenter();
+    var corner = MapApp.map.getBounds().getNorthWest();
+    var radiusOfInterest = distance(
+        { latitude: center.lat, longitude: center.lng }, 
+        { latitude: corner.lat, longitude: corner.lng }
+    );
+    var threshRadius = radiusOfInterest * 0.10;
+
+    console.log('threshRadius ' + threshRadius);
+
+    MapApp.layerGroup.removeLayer(roiCircle);
+    MapApp.layerGroup.removeLayer(threshCircle);
+    roiCircle = new L.CircleMarker(center);
+    threshCircle = new L.CircleMarker(center);
+    
+    roiCircle.setRadius(Math.abs(MapApp.map.latLngToLayerPoint(center).x 
+        - MapApp.map.latLngToLayerPoint(corner).x));
+        
+    MapApp.layerGroup.addLayer(roiCircle);
+    MapApp.layerGroup.addLayer(threshCircle);
 }
 
 function errorCallback(data) {
