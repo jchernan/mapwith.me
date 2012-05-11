@@ -21,8 +21,9 @@ function (req, res) {
     var options = {
         host: "api.foursquare.com",
         path: "/v2/venues/search?ll=" + latitude + escape(",") + longitude + 
-              "&limit=50&radius=1000"
-              "&client_id=" + foursquare_client_id + "&client_secret=" + foursquare_client_secret+ "&v=20120429", 
+              "&limit=50&radius=1000&intent=browse" + 
+              "&client_id=" + foursquare_client_id + 
+	      "&client_secret=" + foursquare_client_secret+ "&v=20120429", 
         method: "GET"
     };
    
@@ -121,4 +122,5 @@ function (req, res) {
 }).listen(3000); 
 
 
+process.title = 'address_server';
 console.log("listening");
