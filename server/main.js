@@ -4,6 +4,8 @@ var url = require('url');
 var fs = require('fs');
 var jQuery = require('jquery');
  
+var foursquare_client_id = 'GXSFY2MK32QDGOZW4OT3VKFFYBJRZAQWKJVJGCYTS3MZAQ4L';
+var foursquare_client_secret = 'N3JVG0VY3XW0020PPIZXTRVSWCH3TRAZOIUBR35LMQVHAOCG';
 http.createServer(
 function (req, res) {
     var url_parts = url.parse(req.url, true);
@@ -19,7 +21,9 @@ function (req, res) {
     var options = {
         host: "api.foursquare.com",
         path: "/v2/venues/search?ll=" + latitude + escape(",") + longitude + 
-	      "&client_id=GXSFY2MK32QDGOZW4OT3VKFFYBJRZAQWKJVJGCYTS3MZAQ4L&client_secret=N3JVG0VY3XW0020PPIZXTRVSWCH3TRAZOIUBR35LMQVHAOCG&v=20120429", 
+              "&limit=50&radius=1000&intent=browse" + 
+              "&client_id=" + foursquare_client_id + 
+	      "&client_secret=" + foursquare_client_secret+ "&v=20120429", 
         method: "GET"
     };
    
@@ -118,4 +122,5 @@ function (req, res) {
 }).listen(3000); 
 
 
+process.title = 'address_server';
 console.log("listening");
