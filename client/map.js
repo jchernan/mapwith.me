@@ -22,10 +22,7 @@ MapApp.mapZooms = {
     foundZoom: 15
 };
 
-MapApp.tileStreamServer = "http://www.aeternitatis.org:8888";
-MapApp.addressServer = "http://www.aeternitatis.org/map_find";
-MapApp.venuesServer = "http://www.aeternitatis.org/venue_find";
-MapApp.tileStreamUrl = MapApp.tileStreamServer + "/v2/boston/{z}/{x}/{y}.png";
+MapApp.tileStreamUrl = Hosts.tileStream + "/v2/boston/{z}/{x}/{y}.png";
 
 MapApp.inBounds = function(point) {
     return (point.latitude >= MapApp.mapPoints.lowerRight.lat 
@@ -93,7 +90,7 @@ function find_and_display_address() {
     $('#address_search_field').css('background-image', 'url("images/ajax-loader.gif")');
 
     // query the address server
-    $.getJSON(MapApp.addressServer, address, function(data) {
+    $.getJSON(Hosts.addressFind, address, function(data) {
 
         if (data.length === 0) {
             $('#address_search_field').css('background-image', '');
@@ -106,7 +103,7 @@ function find_and_display_address() {
                 address.latitude = point.latitude;
                 address.longitude = point.longitude;
                 // query the venues server
-                $.getJSON(MapApp.venuesServer, address, processVenues).error(errorCallback);
+                $.getJSON(Hosts.venuesFind, address, processVenues).error(errorCallback);
             }
         }
     
