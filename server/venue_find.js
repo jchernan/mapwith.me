@@ -10,7 +10,7 @@ var venue_find = function (point, num_results, radius, callback) {
         host: "api.foursquare.com",
         path: "/v2/venues/search?ll=" + point.latitude + 
               escape(",") + point.longitude + 
-              "&limit=50&radius=1000&intent=browse" + 
+              "&limit=" + num_results + "&radius=" + radius + "&intent=browse" + 
               "&client_id=" + foursquare_client_id + 
 	      "&client_secret=" + foursquare_client_secret+ "&v=20120429", 
         method: "GET"
@@ -33,7 +33,9 @@ var venue_find = function (point, num_results, radius, callback) {
                     var address_entry = {
                         latitude : val.location.lat,
                         longitude : val.location.lng,
-                        name : val.name
+                        id : val.id,
+                        name : val.name,
+                        popularity : val.checkinsCount
                      };
 
                     return address_entry;
@@ -55,14 +57,11 @@ var venue_find = function (point, num_results, radius, callback) {
 }
 
 
-var parallel = new parallel_load(function(res) { 
-        console.log(res); 
-}); 
+exports.venue_find = venue_find;
 
+//var parallel = new parallel_load(function(res) { 
+//        console.log(res); 
+//}); 
 
-venue_find({latitude:42.3605, longitude:-71.0593}, 0, 1000, parallel.add(0)); 
-venue_find({latitude:42.3605, longitude:-71.0593}, 1, 2000, parallel.add(1)); 
-
-
-
-
+//venue_find({latitude:42.3605, longitude:-71.0593}, 50, 1000, parallel.add(1000)); 
+//venue_find({latitude:42.3605, longitude:-71.0593}, 50, 2000, parallel.add(2000)); 

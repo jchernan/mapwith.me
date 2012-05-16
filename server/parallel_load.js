@@ -27,8 +27,6 @@ parallel_load.prototype = {
      */
     add : function(id) {
         this.items++;
-        var all_results = this.results;
-        var item_count = this.items;
         var self = this;
 
         return function(partial_res) { 
@@ -49,5 +47,6 @@ parallel_load.prototype = {
         }
     }
 };
+
 
 exports.parallel_load = parallel_load;
