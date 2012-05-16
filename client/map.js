@@ -69,8 +69,14 @@ MapApp.map.addLayer(MapApp.tileLayer);
 // default center point
 MapApp.defaultCenter = new L.LatLng(
     MapApp.mapPoints.center.lat, MapApp.mapPoints.center.lon);
+MapApp.venues = [];
+MapApp.geopoint = null;
 
+// set initial center and zoom level
 MapApp.map.setView(MapApp.defaultCenter, MapApp.mapZooms.defaultZoom);
+
+// add listener function Renderer.draw() to zoom change event
+MapApp.map.on('zoomend', Renderer.draw);
 
 function find_and_display_address() {
 
@@ -117,8 +123,15 @@ function processVenues(data) {
     if (MapApp.inBounds(data.geopoint)) {
         MapApp.venues = data.venues;
         MapApp.geopoint = data.geopoint;
-        MapApp.map.on('zoomend', Renderer.draw);
         var markerLoc = new L.LatLng(MapApp.geopoint.latitude, MapApp.geopoint.longitude);
+        
+        // If setView() changes the zoom level it will trigger Renderer.draw().
+        // Otherwise we need to call draw() to render the points while staying
+        // on the same zoom level. 
+        if (MapApp.map.getZoom() === MapApp.mapZooms.foundZoom) {
+            Renderer.draw(); 
+        }
+
         MapApp.map.setView(markerLoc, MapApp.mapZooms.foundZoom);
     }
 

@@ -1,6 +1,11 @@
 var Renderer = {};
 
 Renderer.draw = function() {
+
+    if (!MapApp.geopoint || MapApp.venues.length === 0) {
+        return;
+    }
+
     var zoomLevel = MapApp.map.getZoom();
     var center = MapApp.map.getBounds().getCenter();
     var corner = MapApp.map.getBounds().getNorthWest();
@@ -15,16 +20,17 @@ Renderer.draw = function() {
     /* Render geopoint */
     Renderer.renderGeopoint(MapApp.geopoint);
     /* Render nearby locations */
+    // TODO: do not pass a new venues array
     Renderer.renderVenues(MapApp.venues.slice(0), MapApp.geopoint, Renderer.threshRadius);
 }
 
 Renderer.renderGeopoint = function(geopoint) {
+    console.log('call to renderGeopoint'); 
     MapApp.addMarker(geopoint, null, "pink");
 }
 
 Renderer.renderVenues = function(venues, geopoint, threshold) {    
-    console.log('call to render venues'); 
-
+    console.log('call to renderVenues'); 
     venues.sort(function(p1, p2) {
         return Renderer.distance(p1, geopoint) - Renderer.distance(p2, geopoint);
     });
