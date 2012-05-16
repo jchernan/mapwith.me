@@ -35,7 +35,7 @@ var venue_find = function (point, num_results, radius, callback) {
                         longitude : val.location.lng,
                         id : val.id,
                         name : val.name,
-                        popularity : val.checkinsCount
+                        popularity : val.stats.checkinsCount
                      };
 
                     return address_entry;
