@@ -43,11 +43,21 @@ Renderer.renderVenues = function(venues, geopoint, threshold) {
             var venue = venues[i];
             var nearest_venue_idx = Renderer.nearestNeighbor(venue, venues); 
             var nearest_venue = venues[nearest_venue_idx]; 
+            var venue_idx_to_splice; 
+
             console.log('distance between two venues is ' + Renderer.distance(nearest_venue, venue)); 
             console.log('. and threshold is  ' + threshold);
 
+            // Decide which venue to splice between nearest_venue and venue
+            // based on their popularity
+            if (nearest_venue.popularity > venue.popularity) {
+                venue_idx_to_splice = nearest_venue_idx;
+            } else {
+                venue_idx_to_splice = i;
+            } 
+
             if (Renderer.distance(nearest_venue, venue) < threshold) {
-                venues.splice(nearest_venue_idx, 1); 
+                venues.splice(venue_idx_to_splice, 1); 
                 console.log('splicing venue at ' + nearest_venue_idx); 
                 someone_is_spliced = true;
             }
