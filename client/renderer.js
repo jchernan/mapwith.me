@@ -67,7 +67,8 @@ Renderer.renderVenues = function(venues, geopoint, threshold) {
     for (var i = 0; i < venues.length; i++) {
         var point = venues[i];
         if (MapApp.inBounds(point)) {
-            MapApp.addMarker(point, point.name, "blue");
+            MapApp.addMarker(point, point.name + " " + point.popularity, "blue");
+            console.log(point);
         }
     }
 
