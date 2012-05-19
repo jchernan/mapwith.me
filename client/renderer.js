@@ -50,7 +50,7 @@ Renderer.renderVenues = function(venues, geopoint, threshold) {
 
             // Decide which venue to splice between nearest_venue and venue
             // based on their popularity
-            if (nearest_venue.popularity > venue.popularity) {
+            if (nearest_venue.popularity < venue.popularity) {
                 venue_idx_to_splice = nearest_venue_idx;
             } else {
                 venue_idx_to_splice = i;
