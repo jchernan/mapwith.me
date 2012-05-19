@@ -68,15 +68,17 @@ MapApp.map.addLayer(MapApp.tileLayer);
 
 // default center point
 MapApp.defaultCenter = new L.LatLng(
-    MapApp.mapPoints.center.lat, MapApp.mapPoints.center.lon);
-MapApp.venues = [];
-MapApp.geopoint = null;
+    MapApp.mapPoints.center.lat, 
+    MapApp.mapPoints.center.lon
+);
 
 // set initial center and zoom level
 MapApp.map.setView(MapApp.defaultCenter, MapApp.mapZooms.defaultZoom);
 
 // add listener function Renderer.draw() to zoom change event
-MapApp.map.on('zoomend', Renderer.draw);
+MapApp.places = null;
+MapApp.map.on('zoomend', Renderer.drawPlaces);
+
 
 function find_and_display_address() {
 
@@ -103,41 +105,85 @@ function find_and_display_address() {
             return;
         }
 
+        MapApp.layerGroup.clearLayers();
+        MapApp.places = null;
+        
+        var parallel = new parallel_load(processVenues); 
+        var geopointToCenter = null;
+
         for (var i = 0; i < data.length; i++) {
             var point = data[i];
             if (MapApp.inBounds(point)) {
-                address.latitude = point.latitude;
-                address.longitude = point.longitude;
+                Renderer.renderGeopoint(point);
+                geopointToCenter = point;
                 // query the venues server
-                $.getJSON(Hosts.venuesFind, address, processVenues).error(errorCallback);
+                console.log('Sending request to venue_find for (' 
+                    + point.latitude + ', ' + point.longitude + ')'); 
+                $.getJSON(Hosts.venuesFind, point, parallel.add(i)).error(errorCallback);
             }
         }
-    
+        
+        // Render and center in one geopoint 
+        if (geopointToCenter) {
+            var markerLoc = new L.LatLng(geopointToCenter.latitude, geopointToCenter.longitude);
+            MapApp.map.setView(markerLoc, MapApp.mapZooms.foundZoom);
+        } else {
+            $('#address_search_field').css('background-image', '');
+        }
+
     }).error(errorCallback);
 
     return false;
 }
 
-function processVenues(data) {
-    
-    if (MapApp.inBounds(data.geopoint)) {
-        MapApp.venues = data.venues;
-        MapApp.geopoint = data.geopoint;
-        var markerLoc = new L.LatLng(MapApp.geopoint.latitude, MapApp.geopoint.longitude);
-        
-        // If setView() changes the zoom level it will trigger Renderer.draw().
-        // Otherwise we need to call draw() to render the points while staying
-        // on the same zoom level. 
-        if (MapApp.map.getZoom() === MapApp.mapZooms.foundZoom) {
-            Renderer.draw(); 
-        }
 
-        MapApp.map.setView(markerLoc, MapApp.mapZooms.foundZoom);
+function processVenues(callback_result) {
+  
+    MapApp.places = callback_result;
+        
+    // If setView() changes the zoom level it will trigger Renderer.draw().
+    // Otherwise we need to call draw() to render the points while staying
+    // on the same zoom level. 
+    if (MapApp.map.getZoom() === MapApp.mapZooms.foundZoom) {
+        Renderer.drawPlaces(); 
     }
 
     /* Remove loading icon */
     $('#address_search_field').css('background-image', '');
 }
+
+function parallel_load(callback) {
+    this.callback = callback;
+    this.items = 0;
+    this.results = {};
+}
+
+parallel_load.prototype = { 
+    /* Use this as the callback to the asynchronous function you wish to
+       parallelize 
+     */
+    add : function(id) {
+        this.items++;
+        var self = this;
+
+        return function(partial_res) { 
+            self.partial_callback(id, partial_res); 
+        } 
+ 
+    },
+
+    /* TODO: Ideally this function would just be inlined into the return 
+             statement above, but referencing 'this' inside the function { } 
+             block doesn't work. Why?                                          */
+    partial_callback : function(id, partial_res) {
+        this.results[id] = partial_res;
+        this.items--; 
+
+        if (this.items == 0) {
+            this.callback(this.results);
+        }
+    }
+};
 
 function errorCallback(data) {
     // if there is an error, set view at the default center point

@@ -63,7 +63,8 @@ function (req, res) {
     var url_parts = url.parse(req.url, true);
     var latitude = url_parts.query.latitude;
     var longitude = url_parts.query.longitude;
-    console.log("Processing venue_find request for " + url_parts.query.address);
+    console.log('Processing venue_find request for (' 
+        + latitude + ', ' + longitude + ')');
 
     res.writeHead(200, 
         {'Content-Type' : 'application/json',

@@ -1,41 +1,55 @@
 var Renderer = {};
 
-Renderer.draw = function() {
+Renderer.drawPlaces = function() {
 
-    if (!MapApp.geopoint || MapApp.venues.length === 0) {
+    if (!MapApp.places) {
         return;
     }
+  
+    MapApp.layerGroup.clearLayers();
 
     var zoomLevel = MapApp.map.getZoom();
     var center = MapApp.map.getBounds().getCenter();
     var corner = MapApp.map.getBounds().getNorthWest();
-    Renderer.radiusOfInterest = Renderer.distance(
+    var radiusOfInterest = Renderer.distance(
         { latitude: center.lat, longitude: center.lng }, 
         { latitude: corner.lat, longitude: corner.lng }
     );
-    Renderer.threshRadius = Renderer.radiusOfInterest * 0.002;
-    console.log('zoom level: ' + zoomLevel + ', thresh radius: ' + Renderer.threshRadius);
-    
-    MapApp.layerGroup.clearLayers();
-    /* Render geopoint */
-    Renderer.renderGeopoint(MapApp.geopoint);
-    /* Render nearby locations */
-    // TODO: do not pass a new venues array
-    Renderer.renderVenues(MapApp.venues.slice(0), MapApp.geopoint, Renderer.threshRadius);
+    var threshRadius = radiusOfInterest * 0.002;
+    console.log('zoom level: ' + zoomLevel + ', thresh radius: ' + threshRadius);
+
+    // first draw all venues 
+    for (var geoId in MapApp.places) {
+        if (MapApp.places.hasOwnProperty(geoId))  {
+            var places = MapApp.places[geoId]; 
+            // TODO: do not pass a new venues array
+            Renderer.renderVenues(places.venues.slice(0), places.geopoint, threshRadius);
+        }
+    }
+
+    // then draw all geopoints
+    for (var geoId in MapApp.places) {
+        if (MapApp.places.hasOwnProperty(geoId))  {
+            var places = MapApp.places[geoId]; 
+            Renderer.renderGeopoint(places.geopoint);
+        }
+    }
 }
 
 Renderer.renderGeopoint = function(geopoint) {
-    console.log('call to renderGeopoint'); 
+    console.log('Call to renderGeopoint'); 
     MapApp.addMarker(geopoint, null, "pink");
 }
 
 Renderer.renderVenues = function(venues, geopoint, threshold) {    
-    console.log('call to renderVenues'); 
+    console.log('Call to renderVenues');
+    console.log('Received ' + venues.length + ' venues');
     venues.sort(function(p1, p2) {
         return Renderer.distance(p1, geopoint) - Renderer.distance(p2, geopoint);
     });
 
     var someone_is_spliced = true;
+    var splicedCount = 0;
 
     while (someone_is_spliced) { 
         someone_is_spliced = false;
@@ -60,10 +74,13 @@ Renderer.renderVenues = function(venues, geopoint, threshold) {
                 venues.splice(venue_idx_to_splice, 1); 
                 console.log('splicing venue at ' + nearest_venue_idx); 
                 someone_is_spliced = true;
+                splicedCount += 1;
             }
-       } 
-   }
+        } 
+    }
 
+    console.log('Spliced ' + splicedCount + ' venues');
+    console.log('Rendering ' + venues.length + ' venues');
     for (var i = 0; i < venues.length; i++) {
         var point = venues[i];
         if (MapApp.inBounds(point)) {
