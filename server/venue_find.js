@@ -2,6 +2,8 @@ var parallel_load = require("./parallel_load.js").parallel_load;
 var https = require("https");
 var jQuery = require("jquery"); 
 
+var MIN_VENUE_POPULARITY_THRESHOLD = 50;
+
 var venue_find = function (point, num_results, radius, callback) { 
     var foursquare_client_id = 'GXSFY2MK32QDGOZW4OT3VKFFYBJRZAQWKJVJGCYTS3MZAQ4L';
     var foursquare_client_secret = 'N3JVG0VY3XW0020PPIZXTRVSWCH3TRAZOIUBR35LMQVHAOCG';
@@ -35,12 +37,16 @@ var venue_find = function (point, num_results, radius, callback) {
                         longitude : val.location.lng,
                         id : val.id,
                         name : val.name,
-                        popularity : val.stats.checkinsCount
+                        popularity : val.stats.checkinsCount,
                      };
 
                     return address_entry;
                 });
-		
+
+                venues = venues.filter(function(venue) {
+                    return venue.popularity > MIN_VENUE_POPULARITY_THRESHOLD;
+	            });
+
                 var geopoint = {
                     "latitude":point.latitude,
                     "longitude":point.longitude
