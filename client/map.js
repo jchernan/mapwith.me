@@ -79,6 +79,9 @@ MapApp.map.setView(MapApp.defaultCenter, MapApp.mapZooms.defaultZoom);
 MapApp.places = null;
 MapApp.map.on('zoomend', Renderer.drawPlaces);
 
+var parallel_load = require('/parallel_load.js').parallel_load;
+var parallel = new parallel_load(processVenues);
+
 
 function find_and_display_address() {
 
@@ -107,19 +110,28 @@ function find_and_display_address() {
 
         MapApp.layerGroup.clearLayers();
         MapApp.places = null;
-        
-        var parallel = new parallel_load(processVenues); 
+        MapApp.geopoints = [];
+       
         var geopointToCenter = null;
 
         for (var i = 0; i < data.length; i++) {
             var point = data[i];
             if (MapApp.inBounds(point)) {
+                MapApp.geopoints.push(point);
                 Renderer.renderGeopoint(point);
                 geopointToCenter = point;
                 // query the venues server
                 console.log('Sending request to venue_find for (' 
                     + point.latitude + ', ' + point.longitude + ')'); 
-                $.getJSON(Hosts.venuesFind, point, parallel.add(i)).error(errorCallback);
+                $.getJSON(Hosts.venuesFind, point, parallel.add(i, 
+                    function(id, partialRes) {
+                        if (!MapApp.places) {
+                            MapApp.places = {};
+                        }   
+                        MapApp.places[id] = partialRes;
+                        Renderer.drawPlaces();
+                    }
+                )).error(errorCallback);
             }
         }
         
@@ -136,43 +148,10 @@ function find_and_display_address() {
     return false;
 }
 
-
 function processVenues() {
-
-    /* Remove loading icon */
+    // Remove loading icon 
     $('#address_search_field').css('background-image', '');
 }
-
-function parallel_load(callback) {
-    this.callback = callback;
-    this.items = 0;
-}
-
-parallel_load.prototype = { 
-    /* Use this as the callback to the asynchronous function you wish to
-       parallelize 
-     */
-    add : function(id) {
-        this.items++;
-        var self = this;
-
-        return function(partial_res) { 
-            //self.partial_callback(id, partial_res); 
-            if (!MapApp.places) {
-                MapApp.places = {};
-            }   
-
-            MapApp.places[id] = partial_res;
-            Renderer.drawPlaces();
-
-            self.items--; 
-            if (self.items == 0) {
-                self.callback();
-            }
-        } 
- 
-    }
-};
 
 function errorCallback(data) {
     // if there is an error, set view at the default center point
