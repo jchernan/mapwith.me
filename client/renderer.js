@@ -19,13 +19,10 @@ Renderer.drawPlaces = function() {
     console.log('zoom level: ' + zoomLevel + ', thresh radius: ' + threshRadius);
 
     // first draw all venues 
-    for (var geoId in MapApp.places) {
-        if (MapApp.places.hasOwnProperty(geoId))  {
-            var places = MapApp.places[geoId]; 
-            // TODO: do not pass a new venues array
-            Renderer.renderVenues(places.venues.slice(0), places.geopoint, threshRadius);
-        }
-    }
+    var mergedPlaces = venue_merge(MapApp.places);
+
+    // TODO: do not pass a new venues array
+    Renderer.renderVenues(mergedPlaces.venues.slice(0), threshRadius);
 
     // then draw all geopoints
     for (var geoId in MapApp.places) {
@@ -41,12 +38,9 @@ Renderer.renderGeopoint = function(geopoint) {
     MapApp.addMarker(geopoint, null, "pink");
 }
 
-Renderer.renderVenues = function(venues, geopoint, threshold) {    
+Renderer.renderVenues = function(venues, threshold) {    
     console.log('Call to renderVenues');
     console.log('Received ' + venues.length + ' venues');
-    venues.sort(function(p1, p2) {
-        return Renderer.distance(p1, geopoint) - Renderer.distance(p2, geopoint);
-    });
 
     var someone_is_spliced = true;
     var splicedCount = 0;

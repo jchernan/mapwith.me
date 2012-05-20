@@ -137,16 +137,7 @@ function find_and_display_address() {
 }
 
 
-function processVenues(callback_result) {
-  
-    MapApp.places = callback_result;
-        
-    // If setView() changes the zoom level it will trigger Renderer.draw().
-    // Otherwise we need to call draw() to render the points while staying
-    // on the same zoom level. 
-    if (MapApp.map.getZoom() === MapApp.mapZooms.foundZoom) {
-        Renderer.drawPlaces(); 
-    }
+function processVenues() {
 
     /* Remove loading icon */
     $('#address_search_field').css('background-image', '');
@@ -155,7 +146,6 @@ function processVenues(callback_result) {
 function parallel_load(callback) {
     this.callback = callback;
     this.items = 0;
-    this.results = {};
 }
 
 parallel_load.prototype = { 
@@ -167,21 +157,20 @@ parallel_load.prototype = {
         var self = this;
 
         return function(partial_res) { 
-            self.partial_callback(id, partial_res); 
+            //self.partial_callback(id, partial_res); 
+            if (!MapApp.places) {
+                MapApp.places = {};
+            }   
+
+            MapApp.places[id] = partial_res;
+            Renderer.drawPlaces();
+
+            self.items--; 
+            if (self.items == 0) {
+                self.callback();
+            }
         } 
  
-    },
-
-    /* TODO: Ideally this function would just be inlined into the return 
-             statement above, but referencing 'this' inside the function { } 
-             block doesn't work. Why?                                          */
-    partial_callback : function(id, partial_res) {
-        this.results[id] = partial_res;
-        this.items--; 
-
-        if (this.items == 0) {
-            this.callback(this.results);
-        }
     }
 };
 
