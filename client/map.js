@@ -1,17 +1,34 @@
 var MapApp = {};
 
-MapApp.mapPoints = {
+MapApp.mapPoints = {};
+
+MapApp.mapPoints.sanFrancisco = {
     center: {
-        lat: 42.3605,
-        lon: - 71.0593
+        latitude: 37.7785,
+        longitude: -122.4192
     },
     upperLeft: {
-        lat: 42.5711,
-        lon: - 71.3916
+        latitude: 38.4948,
+        longitude: -123.2128
     },
     lowerRight: {
-        lat: 42.1684,
-        lon: - 70.7029
+        latitude: 37.1716,
+        longitude: -121.5401
+    }
+};
+
+MapApp.mapPoints.boston = {
+    center: {
+        latitude: 42.3605,
+        longitude: -71.0593
+    },
+    upperLeft: {
+        latitude: 42.7020,
+        longitude: -71.861
+    },
+    lowerRight: {
+        latitude: 41.9510,
+        longitude: -70.285
     }
 };
 
@@ -22,13 +39,22 @@ MapApp.mapZooms = {
     foundZoom: 15
 };
 
-MapApp.tileStreamUrl = Hosts.tileStream + "/v2/boston/{z}/{x}/{y}.png";
+MapApp.tileStreamUrl = Hosts.tileStream + "/v2/maps/{z}/{x}/{y}.png";
 
 MapApp.inBounds = function(point) {
-    return (point.latitude >= MapApp.mapPoints.lowerRight.lat 
-        && point.latitude <= MapApp.mapPoints.upperLeft.lat 
-        && point.longitude >= MapApp.mapPoints.upperLeft.lon 
-        && point.longitude <= MapApp.mapPoints.lowerRight.lon);
+    for (var area in MapApp.mapPoints) {
+        if (MapApp.mapPoints.hasOwnProperty(area)) {
+            var mapArea = MapApp.mapPoints[area];
+            if (point.latitude >= mapArea.lowerRight.latitude 
+                && point.latitude <= mapArea.upperLeft.latitude 
+                && point.longitude >= mapArea.upperLeft.longitude 
+                && point.longitude <= mapArea.lowerRight.longitude) {
+                
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 MapApp.addMarker = function(point, name, color) {
@@ -68,8 +94,8 @@ MapApp.map.addLayer(MapApp.tileLayer);
 
 // default center point
 MapApp.defaultCenter = new L.LatLng(
-    MapApp.mapPoints.center.lat, 
-    MapApp.mapPoints.center.lon
+    MapApp.mapPoints.sanFrancisco.center.latitude, 
+    MapApp.mapPoints.sanFrancisco.center.longitude
 );
 
 // set initial center and zoom level
