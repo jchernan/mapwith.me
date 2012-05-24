@@ -1,7 +1,7 @@
 var MapApp = {};
 
 MapApp.mapAreas = Cities;
-MapApp.defaultArea = Cities["san-francisco"];
+MapApp.defaultArea = 'san-francisco';
 MapApp.tileStreamUrl = Hosts.tileStream + "/v2/maps/{z}/{x}/{y}.png";
 
 // zoom values for the different map behaviors
@@ -27,6 +27,14 @@ MapApp.inBounds = function(point) {
         }
     }
     return false;
+}
+
+MapApp.centerOn = function(area) {
+    var center = MapApp.mapAreas[area].center; 
+    MapApp.map.setView(
+        new L.LatLng(center.latitude, center.longitude), 
+        MapApp.mapZooms.defaultZoom
+    );
 }
 
 // adds a pin on the map at the given point
@@ -67,14 +75,8 @@ MapApp.map = new L.Map("map");
 MapApp.map.addLayer(MapApp.layerGroup);
 MapApp.map.addLayer(MapApp.tileLayer);
 
-// default center point
-MapApp.defaultCenter = new L.LatLng(
-    MapApp.defaultArea.center.latitude, 
-    MapApp.defaultArea.center.longitude
-);
-
 // set initial center and zoom level
-MapApp.map.setView(MapApp.defaultCenter, MapApp.mapZooms.defaultZoom);
+MapApp.centerOn(MapApp.defaultArea);
 
 // add listener function Renderer.draw() to zoom change event
 MapApp.places = null;
@@ -166,7 +168,7 @@ MapApp.findAddress = function() {
 
 MapApp.errorCallback = function(data) {
     // if there is an error, set view at the default center point
-    MapApp.map.setView(MapApp.defaultCenter, MapApp.mapZooms.defaultZoom).addLayer(MapApp.tileLayer);
+    MapApp.centerOn(MapApp.defaultArea);
     console.log("Error: " + data.statusText);
     console.log("Response text: " + data.responseText);
     $('#address_search_field').css('background-image', '');
