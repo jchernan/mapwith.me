@@ -1,37 +1,10 @@
 var MapApp = {};
 
-MapApp.mapPoints = {};
+MapApp.mapAreas = Cities;
+MapApp.defaultArea = Cities["san-francisco"];
+MapApp.tileStreamUrl = Hosts.tileStream + "/v2/maps/{z}/{x}/{y}.png";
 
-MapApp.mapPoints.sanFrancisco = {
-    center: {
-        latitude: 37.7785,
-        longitude: -122.4192
-    },
-    upperLeft: {
-        latitude: 38.4948,
-        longitude: -123.2128
-    },
-    lowerRight: {
-        latitude: 37.1716,
-        longitude: -121.5401
-    }
-};
-
-MapApp.mapPoints.boston = {
-    center: {
-        latitude: 42.3605,
-        longitude: -71.0593
-    },
-    upperLeft: {
-        latitude: 42.7020,
-        longitude: -71.861
-    },
-    lowerRight: {
-        latitude: 41.9510,
-        longitude: -70.285
-    }
-};
-
+// zoom values for the different map behaviors
 MapApp.mapZooms = {
     min: 11,
     max: 18,
@@ -39,12 +12,11 @@ MapApp.mapZooms = {
     foundZoom: 15
 };
 
-MapApp.tileStreamUrl = Hosts.tileStream + "/v2/maps/{z}/{x}/{y}.png";
-
+// checks if the given point is inside any of the map areas
 MapApp.inBounds = function(point) {
-    for (var area in MapApp.mapPoints) {
-        if (MapApp.mapPoints.hasOwnProperty(area)) {
-            var mapArea = MapApp.mapPoints[area];
+    for (var area in MapApp.mapAreas) {
+        if (MapApp.mapAreas.hasOwnProperty(area)) {
+            var mapArea = MapApp.mapAreas[area];
             if (point.latitude >= mapArea.lowerRight.latitude 
                 && point.latitude <= mapArea.upperLeft.latitude 
                 && point.longitude >= mapArea.upperLeft.longitude 
@@ -57,6 +29,8 @@ MapApp.inBounds = function(point) {
     return false;
 }
 
+// adds a pin on the map at the given point
+// TODO: improve this method, not good that it is so hardcoded
 MapApp.addMarker = function(point, name, color) {
     var markerLoc = new L.LatLng(point.latitude, point.longitude);
     var url = 'images/markers/color-pin.png';
@@ -71,6 +45,7 @@ MapApp.addMarker = function(point, name, color) {
     return markerLoc;
 }
 
+// custom icon for the marker pins
 MapApp.MarkerIcon = L.Icon.extend({
     iconUrl: 'images/markers/black-pin.png',
     shadowUrl: null,
@@ -94,8 +69,8 @@ MapApp.map.addLayer(MapApp.tileLayer);
 
 // default center point
 MapApp.defaultCenter = new L.LatLng(
-    MapApp.mapPoints.sanFrancisco.center.latitude, 
-    MapApp.mapPoints.sanFrancisco.center.longitude
+    MapApp.defaultArea.center.latitude, 
+    MapApp.defaultArea.center.longitude
 );
 
 // set initial center and zoom level
@@ -106,10 +81,29 @@ MapApp.places = null;
 MapApp.map.on('zoomend', Renderer.drawPlaces);
 
 var parallel_load = require('/parallel_load.js').parallel_load;
-var parallel = new parallel_load(processVenues);
 
+// a parallel_load object to process the callbacks of the 
+// requests made to the venues server. the final callback 
+// is simply removing the loading icon, since the partial 
+// callbacks are doing all the work.
+MapApp.parallelProcessVenues = new parallel_load(function() {
+    // Remove loading icon 
+    $('#address_search_field').css('background-image', '');
+});
 
-function find_and_display_address() {
+// partial callbacks for parallelProcessVenues
+MapApp.processVenues = function(id, partialRes)  {
+    if (!MapApp.places) {
+        MapApp.places = {};
+    }   
+    MapApp.places[id] = partialRes;
+    Renderer.drawPlaces();
+}
+
+// sends a request to the address server to get the coordinates
+// of the input address. then it sends a request to the venues 
+// server to get the venues around the coordinate.
+MapApp.findAddress = function() {
 
     var inputField = $('#address_search_field').val();
 
@@ -149,15 +143,11 @@ function find_and_display_address() {
                 // query the venues server
                 console.log('Sending request to venue_find for (' 
                     + point.latitude + ', ' + point.longitude + ')'); 
-                $.getJSON(Hosts.venuesFind, point, parallel.add(i, 
-                    function(id, partialRes) {
-                        if (!MapApp.places) {
-                            MapApp.places = {};
-                        }   
-                        MapApp.places[id] = partialRes;
-                        Renderer.drawPlaces();
-                    }
-                )).error(errorCallback);
+                $.getJSON(
+                    Hosts.venuesFind, 
+                    point, 
+                    MapApp.parallelProcessVenues.add(i, MapApp.processVenues)
+                ).error(MapApp.errorCallback);
             }
         }
         
@@ -169,17 +159,12 @@ function find_and_display_address() {
             $('#address_search_field').css('background-image', '');
         }
 
-    }).error(errorCallback);
+    }).error(MapApp.errorCallback);
 
     return false;
 }
 
-function processVenues() {
-    // Remove loading icon 
-    $('#address_search_field').css('background-image', '');
-}
-
-function errorCallback(data) {
+MapApp.errorCallback = function(data) {
     // if there is an error, set view at the default center point
     MapApp.map.setView(MapApp.defaultCenter, MapApp.mapZooms.defaultZoom).addLayer(MapApp.tileLayer);
     console.log("Error: " + data.statusText);
