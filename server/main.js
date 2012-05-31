@@ -7,10 +7,11 @@ var venue_find = require("./venue_find.js").venue_find;
 var venue_merge = require("../lib/venue_merge.js").venue_merge;
 var parallel_load = require("../lib/parallel_load.js").parallel_load;
  
-var foursquare_client_id = 'GXSFY2MK32QDGOZW4OT3VKFFYBJRZAQWKJVJGCYTS3MZAQ4L';
-var foursquare_client_secret = 'N3JVG0VY3XW0020PPIZXTRVSWCH3TRAZOIUBR35LMQVHAOCG';
-
-
+// venues server: receives an object of the form
+//    { latitude: 42.3605, longitude: -71.0593 }
+// and returns one of the form
+//    { geopoint: { latitude: 42.3605, longitude: -71.0593 },
+//      venues: [ [Object], [Object], ... ] }
 http.createServer(
 function (req, res) {
     var url_parts = url.parse(req.url, true);
@@ -43,7 +44,10 @@ function (req, res) {
 
 }).listen(4000); 
 
-
+// address server: receives an object of the form 
+//    { address: '77 Massachusetts Avenue, Cambridge, MA 02139' } 
+// and returns one of the form:
+//    { latitude: 42.3605, longitude: -71.0593 }
 http.createServer(
 function (req, res) {
     var url_parts = url.parse(req.url, true);
