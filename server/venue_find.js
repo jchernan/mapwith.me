@@ -1,4 +1,3 @@
-var parallel_load = require("./parallel_load.js").parallel_load;
 var https = require("https");
 var jQuery = require("jquery"); 
 
@@ -65,9 +64,3 @@ var venue_find = function (point, num_results, radius, callback) {
 
 exports.venue_find = venue_find;
 
-//var parallel = new parallel_load(function(res) { 
-//        console.log(res); 
-//}); 
-
-//venue_find({latitude:42.3605, longitude:-71.0593}, 50, 1000, parallel.add(1000)); 
-//venue_find({latitude:42.3605, longitude:-71.0593}, 50, 2000, parallel.add(2000)); 

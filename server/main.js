@@ -32,13 +32,14 @@ function (req, res) {
     var point = {
         "latitude":latitude, 
         "longitude":longitude
-    }; 
+    };
+
+    var partialCallback = function(id, res) {};
     
-    venue_find(point, 50, 500, parallel.add(1000)); 
-    venue_find(point, 50, 1000, parallel.add(1000)); 
-    venue_find(point, 50, 2000, parallel.add(2000)); 
-    venue_find(point, 50, 3000, parallel.add(3000)); 
-//    venue_find(point, 50, 4000, parallel.add(3000)); 
+    venue_find(point, 50, 500, parallel.add(500, partialCallback)); 
+    venue_find(point, 50, 1000, parallel.add(1000, partialCallback)); 
+    venue_find(point, 50, 2000, parallel.add(2000, partialCallback)); 
+    venue_find(point, 50, 3000, parallel.add(3000, partialCallback)); 
 
 }).listen(4000); 
 

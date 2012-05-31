@@ -1,20 +1,10 @@
 var MapApp = {};
 
-MapApp.mapPoints = {
-    center: {
-        lat: 42.3605,
-        lon: - 71.0593
-    },
-    upperLeft: {
-        lat: 42.5711,
-        lon: - 71.3916
-    },
-    lowerRight: {
-        lat: 42.1684,
-        lon: - 70.7029
-    }
-};
+MapApp.mapAreas = Cities;
+MapApp.defaultArea = 'san-francisco';
+MapApp.tileStreamUrl = Hosts.tileStream + "/v2/maps/{z}/{x}/{y}.png";
 
+// zoom values for the different map behaviors
 MapApp.mapZooms = {
     min: 11,
     max: 18,
@@ -22,15 +12,33 @@ MapApp.mapZooms = {
     foundZoom: 15
 };
 
-MapApp.tileStreamUrl = Hosts.tileStream + "/v2/boston/{z}/{x}/{y}.png";
-
+// checks if the given point is inside any of the map areas
 MapApp.inBounds = function(point) {
-    return (point.latitude >= MapApp.mapPoints.lowerRight.lat 
-        && point.latitude <= MapApp.mapPoints.upperLeft.lat 
-        && point.longitude >= MapApp.mapPoints.upperLeft.lon 
-        && point.longitude <= MapApp.mapPoints.lowerRight.lon);
+    for (var area in MapApp.mapAreas) {
+        if (MapApp.mapAreas.hasOwnProperty(area)) {
+            var mapArea = MapApp.mapAreas[area];
+            if (point.latitude >= mapArea.lowerRight.latitude 
+                && point.latitude <= mapArea.upperLeft.latitude 
+                && point.longitude >= mapArea.upperLeft.longitude 
+                && point.longitude <= mapArea.lowerRight.longitude) {
+                
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
+MapApp.centerOn = function(area) {
+    var center = MapApp.mapAreas[area].center; 
+    MapApp.map.setView(
+        new L.LatLng(center.latitude, center.longitude), 
+        MapApp.mapZooms.defaultZoom
+    );
+}
+
+// adds a pin on the map at the given point
+// TODO: improve this method, not good that it is so hardcoded
 MapApp.addMarker = function(point, name, color) {
     var markerLoc = new L.LatLng(point.latitude, point.longitude);
     var url = 'images/markers/color-pin.png';
@@ -45,6 +53,7 @@ MapApp.addMarker = function(point, name, color) {
     return markerLoc;
 }
 
+// custom icon for the marker pins
 MapApp.MarkerIcon = L.Icon.extend({
     iconUrl: 'images/markers/black-pin.png',
     shadowUrl: null,
@@ -66,21 +75,37 @@ MapApp.map = new L.Map("map");
 MapApp.map.addLayer(MapApp.layerGroup);
 MapApp.map.addLayer(MapApp.tileLayer);
 
-// default center point
-MapApp.defaultCenter = new L.LatLng(
-    MapApp.mapPoints.center.lat, 
-    MapApp.mapPoints.center.lon
-);
-
 // set initial center and zoom level
-MapApp.map.setView(MapApp.defaultCenter, MapApp.mapZooms.defaultZoom);
+MapApp.centerOn(MapApp.defaultArea);
 
 // add listener function Renderer.draw() to zoom change event
 MapApp.places = null;
 MapApp.map.on('zoomend', Renderer.drawPlaces);
 
+var parallel_load = require('/parallel_load.js').parallel_load;
 
-function find_and_display_address() {
+// a parallel_load object to process the callbacks of the 
+// requests made to the venues server. the final callback 
+// is simply removing the loading icon, since the partial 
+// callbacks are doing all the work.
+MapApp.parallelProcessVenues = new parallel_load(function() {
+    // Remove loading icon 
+    $('#address_search_field').css('background-image', '');
+});
+
+// partial callbacks for parallelProcessVenues
+MapApp.processVenues = function(id, partialRes)  {
+    if (!MapApp.places) {
+        MapApp.places = {};
+    }   
+    MapApp.places[id] = partialRes;
+    Renderer.drawPlaces();
+}
+
+// sends a request to the address server to get the coordinates
+// of the input address. then it sends a request to the venues 
+// server to get the venues around the coordinate.
+MapApp.findAddress = function() {
 
     var inputField = $('#address_search_field').val();
 
@@ -107,19 +132,24 @@ function find_and_display_address() {
 
         MapApp.layerGroup.clearLayers();
         MapApp.places = null;
-        
-        var parallel = new parallel_load(processVenues); 
+        MapApp.geopoints = [];
+       
         var geopointToCenter = null;
 
         for (var i = 0; i < data.length; i++) {
             var point = data[i];
             if (MapApp.inBounds(point)) {
+                MapApp.geopoints.push(point);
                 Renderer.renderGeopoint(point);
                 geopointToCenter = point;
                 // query the venues server
                 console.log('Sending request to venue_find for (' 
                     + point.latitude + ', ' + point.longitude + ')'); 
-                $.getJSON(Hosts.venuesFind, point, parallel.add(i)).error(errorCallback);
+                $.getJSON(
+                    Hosts.venuesFind, 
+                    point, 
+                    MapApp.parallelProcessVenues.add(i, MapApp.processVenues)
+                ).error(MapApp.errorCallback);
             }
         }
         
@@ -131,52 +161,14 @@ function find_and_display_address() {
             $('#address_search_field').css('background-image', '');
         }
 
-    }).error(errorCallback);
+    }).error(MapApp.errorCallback);
 
     return false;
 }
 
-
-function processVenues() {
-
-    /* Remove loading icon */
-    $('#address_search_field').css('background-image', '');
-}
-
-function parallel_load(callback) {
-    this.callback = callback;
-    this.items = 0;
-}
-
-parallel_load.prototype = { 
-    /* Use this as the callback to the asynchronous function you wish to
-       parallelize 
-     */
-    add : function(id) {
-        this.items++;
-        var self = this;
-
-        return function(partial_res) { 
-            //self.partial_callback(id, partial_res); 
-            if (!MapApp.places) {
-                MapApp.places = {};
-            }   
-
-            MapApp.places[id] = partial_res;
-            Renderer.drawPlaces();
-
-            self.items--; 
-            if (self.items == 0) {
-                self.callback();
-            }
-        } 
- 
-    }
-};
-
-function errorCallback(data) {
+MapApp.errorCallback = function(data) {
     // if there is an error, set view at the default center point
-    MapApp.map.setView(MapApp.defaultCenter, MapApp.mapZooms.defaultZoom).addLayer(MapApp.tileLayer);
+    MapApp.centerOn(MapApp.defaultArea);
     console.log("Error: " + data.statusText);
     console.log("Response text: " + data.responseText);
     $('#address_search_field').css('background-image', '');

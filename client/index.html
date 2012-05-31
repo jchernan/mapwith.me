@@ -19,12 +19,16 @@
       <div class="navbar-inner">
         <div class="container" style="width: 95%">
           <a class="brand" href="#">Maps</a>
-          <form class="navbar-form pull-right" onsubmit="return find_and_display_address();">
+          <form class="navbar-form pull-right" onsubmit="return MapApp.findAddress();">
             <input type="text" id="address_search_field" class="span3" 
                    style="height: 30px;background-repeat:no-repeat;background-position: 185px 5px;padding-right:30px"
                    placeholder="Search">
           </form>
-       </div>
+          <ul class="nav">
+            <li><a href="javascript:void(0);" onclick="MapApp.centerOn('san-francisco');">San Francisco</a></li>
+            <li><a href="javascript:void(0);" onclick="MapApp.centerOn('boston');">Boston</a></li>
+          </ul>
+        </div>
       </div>
     </div>
     
@@ -33,7 +37,7 @@
     <script type="text/javascript" src="leaflet/leaflet.js"></script>
     <script type="text/javascript" src="jquery/jquery.js"></script>
     <script type="text/javascript" src="globals.js"></script>
-    <script type="text/javascript" src="../lib/venue_merge.js"></script>
+    <script type="text/javascript" src="lib.js"></script>
     <script type="text/javascript" src="renderer.js"></script>
     <script type="text/javascript" src="map.js"></script>
     <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script> 

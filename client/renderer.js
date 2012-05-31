@@ -1,5 +1,7 @@
 var Renderer = {};
 
+var venue_merge = require("/venue_merge.js").venue_merge;
+
 Renderer.drawPlaces = function() {
 
     if (!MapApp.places) {
@@ -7,6 +9,7 @@ Renderer.drawPlaces = function() {
     }
   
     MapApp.layerGroup.clearLayers();
+    Renderer.renderAllGeopoints();
 
     var zoomLevel = MapApp.map.getZoom();
     var center = MapApp.map.getBounds().getCenter();
@@ -23,13 +26,13 @@ Renderer.drawPlaces = function() {
 
     // TODO: do not pass a new venues array
     Renderer.renderVenues(mergedPlaces.venues.slice(0), threshRadius);
+}
 
-    // then draw all geopoints
-    for (var geoId in MapApp.places) {
-        if (MapApp.places.hasOwnProperty(geoId))  {
-            var places = MapApp.places[geoId]; 
-            Renderer.renderGeopoint(places.geopoint);
-        }
+Renderer.renderAllGeopoints = function() {
+    // draw all geopoints in MapApp.geopoints
+    for (var i=0 ; i < MapApp.geopoints.length ; i++) {
+        var point = MapApp.geopoints[i];
+        Renderer.renderGeopoint(point);
     }
 }
 
@@ -53,8 +56,8 @@ Renderer.renderVenues = function(venues, threshold) {
             var nearest_venue = venues[nearest_venue_idx]; 
             var venue_idx_to_splice; 
 
-            console.log('distance between two venues is ' + Renderer.distance(nearest_venue, venue)); 
-            console.log('. and threshold is  ' + threshold);
+            //console.log('distance between two venues is ' + Renderer.distance(nearest_venue, venue)); 
+            //console.log('. and threshold is  ' + threshold);
 
             // Decide which venue to splice between nearest_venue and venue
             // based on their popularity
@@ -66,7 +69,7 @@ Renderer.renderVenues = function(venues, threshold) {
 
             if (Renderer.distance(nearest_venue, venue) < threshold) {
                 venues.splice(venue_idx_to_splice, 1); 
-                console.log('splicing venue at ' + nearest_venue_idx); 
+                //console.log('splicing venue at ' + nearest_venue_idx); 
                 someone_is_spliced = true;
                 splicedCount += 1;
             }
@@ -79,7 +82,7 @@ Renderer.renderVenues = function(venues, threshold) {
         var point = venues[i];
         if (MapApp.inBounds(point)) {
             MapApp.addMarker(point, point.name + " " + point.popularity, "blue");
-            console.log(point);
+            //console.log(point);
         }
     }
 
