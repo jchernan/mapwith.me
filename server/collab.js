@@ -23,7 +23,7 @@ io.sockets.on('connection', function(socket) {
             the server before any other function can be called. 
 
             Call to init requires arguments:
-              id        - id of the connection to open 
+              session_id        - id of the connection to open 
               center    - location of the center of the map currently being 
                           displayed by the client. Has two parts:
                             * latitude
@@ -37,26 +37,30 @@ io.sockets.on('connection', function(socket) {
                         + JSON.stringify(data)); 
     
             /* TODO: What if id is not received ? */
-            var id; 
-            if (data.id) {
-                id = data.id; 
-                assert.notEqual(typeof stateMap[id], "undefined");
+            
+            var session_id; 
+            if (data.session_id) {
+                session_id = data.session_id; 
+                assert.notEqual(typeof stateMap[session_id], "undefined");
             } else {
-                /* Initialize brand new id */
-                id = maxId + 1; 
-                maxId = id;
-                assert.equal(typeof stateMap[id], "undefined");
-                stateMap[id] = { 
+                session_id = maxId + 1; 
+                maxId = session_id;
+                assert.equal(typeof stateMap[session_id], "undefined");
+                stateMap[session_id] = { 
                         center: data.center, 
                         zoomLevel: data.zoomLevel 
                 };
             } 
+            
+            session_id = 1;
+            socket.session_id = session_id;
+            socket.join(session_id); 
+              
+            socket.emit('init_ack', { 
+                  "session_id": session_id, 
+                  "state": stateMap[session_id] 
+                }); 
 
-            socket.id = id;
-            socket.join(id); 
-                
-            socket.emit('init_ack', { id: "fuckyoufuckyoufuckyoufuckyou" });
-            //socket.emit('init_ack', { "id": id, "state": stateMap[id] }); 
             console.log("emit init_ack");
       });
 
@@ -74,12 +78,16 @@ io.sockets.on('connection', function(socket) {
          */
 
      socket.on('change_center', function(data) {
-               if (! (socket.id  && stateMap[socket.id])) {
+               if (! (socket.session_id  && stateMap[socket.session_id])) {
                     console.log("[ERR - change_center] Invalid state");
                }
                else {
-                    stateMap[socket.id].center = data.center; 
-                    io.sockets.in(socket.id).emit('change_center', data);  
+                    console.log("[change_center] Client " + 
+                                socket.session_id + " moved with args" 
+                                + JSON.stringify(data)); 
+ 
+                    stateMap[socket.session_id].center = data.center; 
+                    io.sockets.in(socket.session_id).emit('change_center', data);  
               }
         }); 
 
