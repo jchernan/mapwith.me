@@ -77,6 +77,8 @@ io.sockets.on('connection', function(socket) {
 
          */
 
+
+    
      socket.on('change_center', function(data) {
                if (! (socket.session_id  && stateMap[socket.session_id])) {
                     console.log("[ERR - change_center] Invalid state");
@@ -90,6 +92,38 @@ io.sockets.on('connection', function(socket) {
                     io.sockets.in(socket.session_id).emit('change_center', data);  
               }
         }); 
+
+     socket.on('change_zoom', function(data) {
+               if (! (socket.session_id  && stateMap[socket.session_id])) {
+                    console.log("[ERR - change_zoom] Invalid state");
+               }
+               else {
+                    console.log("[change_zoom] Client " + 
+                                socket.session_id + " changed zoom with args"
+                                + JSON.stringify(data)); 
+ 
+                    stateMap[socket.session_id].zoom= data.zoom; 
+                    io.sockets.in(socket.session_id).emit('change_zoom', data);  
+              }
+        }); 
+
+     socket.on('change_state', function(data) {
+               if (! (socket.session_id  && stateMap[socket.session_id])) {
+                    console.log("[ERR - change_state] Invalid state");
+               }
+               else {
+                    console.log("[change_state] Client " + 
+                                socket.session_id + " changed zoom with args"
+                                + JSON.stringify(data)); 
+ 
+                    stateMap[socket.session_id].center= data.center; 
+                    stateMap[socket.session_id].zoom= data.zoom; 
+                    io.sockets.in(socket.session_id).emit('change_state', data);  
+              }
+        }); 
+
+
+
 
 });
 
