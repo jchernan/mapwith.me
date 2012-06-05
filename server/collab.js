@@ -7,8 +7,8 @@ var app = http.createServer(function (req, res) {
 var io = require("socket.io").listen(app, {origins: '*:*'} ); 
 
 
-var stateMap  = {}; 
-var maxId = 0;
+var state_map  = {}; 
+var max_id = 0;
 
 app.listen(8000); 
 
@@ -41,12 +41,12 @@ io.sockets.on('connection', function(socket) {
             var session_id; 
             if (data.session_id) {
                 session_id = data.session_id; 
-                assert.notEqual(typeof stateMap[session_id], "undefined");
+                assert.notEqual(typeof state_map[session_id], "undefined");
             } else {
-                session_id = maxId + 1; 
-                maxId = session_id;
-                assert.equal(typeof stateMap[session_id], "undefined");
-                stateMap[session_id] = { 
+                session_id = max_id + 1; 
+                max_id = session_id;
+                assert.equal(typeof state_map[session_id], "undefined");
+                state_map[session_id] = { 
                         center: data.center, 
                         zoomLevel: data.zoomLevel 
                 };
@@ -58,73 +58,82 @@ io.sockets.on('connection', function(socket) {
               
             socket.emit('init_ack', { 
                   "session_id": session_id, 
-                  "state": stateMap[session_id] 
+                  "state": state_map[session_id] 
                 }); 
 
             console.log("emit init_ack");
       });
 
 
-        /*  
-            Signal from client that the user has moved inside the map to a new
-            center
-
-            Call to change_center requires arguments:
-              center    - location of the new center currently being 
-                          displayed by the client. Has two parts:
-                            * latitude
-                            * longitude
-
-         */
-
 
     
-     socket.on('change_center', function(data) {
-               if (! (socket.session_id  && stateMap[socket.session_id])) {
-                    console.log("[ERR - change_center] Invalid state");
-               }
-               else {
-                    console.log("[change_center] Client " + 
-                                socket.session_id + " moved with args" 
-                                + JSON.stringify(data)); 
+     /*  Change the state saved for the specified id.   
+         Parameters:
+           - id       - The session id 
+           - new_data -  Object whose fields will be set on the state's
+                         own object
+      
+      */
+     var change_state_map = function(session_id, new_data) {
+        console.log("[change_state_map] Client " + session_id +
+                    " moved with data " + JSON.stringify(new_data)); 
+
+        for (var field in new_data) {
+           if (new_data.hasOwnProperty(field)) {
+                state_map[session_id][field] = new_data[field];
+           } 
+        }
+
+     }
+
+    /*  
+        Signal from client that the user has moved inside the map to:
+        -  a new center (change_center), 
+        -  a new zoom level (change_zoom), or 
+        -  both (change_state). 
+
+        Call to these functions requires a data object which needs the following
+        fields depending on the function. 
+
+        center    (change_center)  - location of the new center currently being 
+                                     displayed by the client. Has two parts:
+                                    * latitude
+                                    * longitude
+
+        zoom      (change_zoom)    - new zoom level by the client. 
+        
+        Note that change_state requires both attributes. 
+    */
+    socket.on('change_center', function(data) {
+        if (! (socket.session_id  && state_map[socket.session_id])) {
+            console.log("[ERR - change_center] Invalid state");
+        }
+        else {
+            change_state_map(socket.session_id, data); 
+            io.sockets.in(socket.session_id).emit('change_center', data);  
+        }
+    });
+
+    socket.on('change_zoom', function(data) {
+        if (! (socket.session_id  && state_map[socket.session_id])) {
+            console.log("[ERR - change_zoom] Invalid state");
+        }
+        else {
+            change_state_map(socket.session_id, data); 
+            io.sockets.in(socket.session_id).emit('change_zoom', data);  
+        }
+    });
+
+    socket.on('change_state', function(data) {
+        if (! (socket.session_id  && state_map[socket.session_id])) {
+            console.log("[ERR - change_state] Invalid state");
+        }
+        else {
+            change_state_map(socket.session_id, data); 
+            io.sockets.in(socket.session_id).emit('change_state', data);  
+        }
+    });
  
-                    stateMap[socket.session_id].center = data.center; 
-                    io.sockets.in(socket.session_id).emit('change_center', data);  
-              }
-        }); 
-
-     socket.on('change_zoom', function(data) {
-               if (! (socket.session_id  && stateMap[socket.session_id])) {
-                    console.log("[ERR - change_zoom] Invalid state");
-               }
-               else {
-                    console.log("[change_zoom] Client " + 
-                                socket.session_id + " changed zoom with args"
-                                + JSON.stringify(data)); 
- 
-                    stateMap[socket.session_id].zoom= data.zoom; 
-                    io.sockets.in(socket.session_id).emit('change_zoom', data);  
-              }
-        }); 
-
-     socket.on('change_state', function(data) {
-               if (! (socket.session_id  && stateMap[socket.session_id])) {
-                    console.log("[ERR - change_state] Invalid state");
-               }
-               else {
-                    console.log("[change_state] Client " + 
-                                socket.session_id + " changed zoom with args"
-                                + JSON.stringify(data)); 
- 
-                    stateMap[socket.session_id].center= data.center; 
-                    stateMap[socket.session_id].zoom= data.zoom; 
-                    io.sockets.in(socket.session_id).emit('change_state', data);  
-              }
-        }); 
-
-
-
-
 });
 
 
