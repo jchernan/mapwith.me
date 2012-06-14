@@ -19,15 +19,32 @@
       <div class="navbar-inner">
         <div class="container" style="width: 95%">
           <a class="brand" href="#">Maps</a>
-          <form class="navbar-form pull-right" onsubmit="return MapApp.findAddress();">
-            <input type="text" id="address_search_field" class="span3" 
-                   style="height: 30px;background-repeat:no-repeat;background-position: 185px 5px;padding-right:30px"
-                   placeholder="Search">
-          </form>
-          <ul class="nav">
-            <li><a href="javascript:void(0);" onclick="MapApp.centerOn('san-francisco');">San Francisco</a></li>
-            <li><a href="javascript:void(0);" onclick="MapApp.centerOn('boston');">Boston</a></li>
-          </ul>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li><a href="javascript:void(0);" onclick="MapApp.centerOn('san-francisco');">San Francisco</a></li>
+              <li><a href="javascript:void(0);" onclick="MapApp.centerOn('boston');">Boston</a></li>
+            </ul>
+            <ul class="nav pull-right">
+              <!--li>
+                <button class="btn btn-large btn-inverse"><img style="width:18px;height:18px" src="bootstrap/img/glyphicons_152_new_window_white.png" /></button>
+              </li-->
+              <li>
+                <form class="navbar-form" style="margin-top:4px" onsubmit="return MapApp.findAddress();">
+                  <input type="text" id="address_search_field" class="span3"  
+                     style="height: 22px;background-repeat:no-repeat;background-position: 185px 5px;padding-right:30px" 
+                     placeholder="Search" /> 
+                </form>
+              </li>
+              <li class="dropdown">
+                <a href="#"
+                    class="dropdown-toggle"
+                    data-toggle="dropdown">
+                    Share
+                    <b class="caret"></b>
+                </a>
+              </li>
+            </ul>
+          </div>   
         </div>
       </div>
     </div>
