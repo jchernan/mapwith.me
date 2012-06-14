@@ -45,6 +45,7 @@ io.sockets.on('connection', function(socket) {
             } else {
                 /* Initialize a brand new session */
                 session_id = max_id + 1; 
+                console.log("New session with id " + session_id); 
                 max_id = session_id;
                 assert.equal(typeof state_map[session_id], "undefined");
                 state_map[session_id] = { 
@@ -53,7 +54,6 @@ io.sockets.on('connection', function(socket) {
                 };
             } 
             
-            session_id = 1;
             socket.session_id = session_id;
             socket.join(session_id); 
               

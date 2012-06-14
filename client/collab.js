@@ -66,7 +66,7 @@ socket.on('init_ack', function(data) {
     enableCollabListeners();
 });
 
-function setCenter(center) {
+function setCenterFromServer(center) {
     if (pendingAckState.center === null) {
         console.log('[change_center] Setting new center');
         MapApp.map.panTo(
@@ -81,10 +81,10 @@ function setCenter(center) {
     }
 }
 
-function setZoom(zoom) {
+function setZoomFromServer(zoom) {
     if (pendingAckState.zoom === null) {
         console.log('[change_zoom] Setting new zoom');
-        MapApp.map.setZoom(zoom);
+        MapApp.map.setZoomFromServer(zoom);
     } else if (pendingAckState.zoom === zoom) {
         console.log('[change_zoom] Received ack for emitted zoom');
         pendingAckState.zoom = null;
@@ -93,32 +93,47 @@ function setZoom(zoom) {
     }
 }
 
-function setState(center, zoom) {
-    setCenter(center);
-    setZoom(zoom);
+function setStateFromServer(center, zoom) {
+    setCenterFromServer(center);
+    setZoomFromServer(zoom);
 }
 
 // socket.io listener for center change
 socket.on('change_center', function(data) {
     console.log('[change_center] Received ' + JSON.stringify(data));
-    setCenter(data.center);
+    setCenterFromServer(data.center);
 });
 
 // socket.io listener for zoom change
 socket.on('change_zoom', function(data) {
     console.log('[change_zoom] Received ' + JSON.stringify(data));
-    setZoom(data.zoom);
+    setZoomFromServer(data.zoom);
 });
 
 // socket.io listener for view change
 socket.on('change_state', function(data) {
     console.log('[change_state] Received ' + JSON.stringify(data));
-    setState(data.center, data.zoom);
+    setStateFromServer(data.center, data.zoom);
 });
 
 socket.on('error', function(data) { 
     console.log("ERROR! " + JSON.stringify(data)); 
 });
+
+
+/* Initialize urlParam function. Code grabbed from 
+    http://www.jquery4u.com/snippets/url-parameters-jquery/#.T9lrKStYsoY
+*/
+var urlParam = function(name) {
+    console.log("starting urlParam " + name); 
+
+    var results = 
+        new RegExp('[\\?&]' + name + '=([^&#]*)').exec(
+            window.location.href);
+
+    console.log("regexp compiled  urlParam"); 
+    return (results) ? results[1] : null;
+};
 
 (function() {
     var data = { 
@@ -126,8 +141,10 @@ socket.on('error', function(data) {
             latitude: MapApp.map.getCenter().lat,
             longitude: MapApp.map.getCenter().lng
          },
+        session_id: urlParam('session_id'),
         zoom: MapApp.map.getZoom()
     } 
+
 
     console.log('[init] Emitting init: ' + JSON.stringify(data)); 
     socket.emit('init', data);
