@@ -1,86 +1,134 @@
 
 var socket = io.connect(Hosts.collaboration);
+var pendingAckState = {
+    center: null,
+    zoom: null
+};
 
 // Listener function for a change in map center
-function send_change_center() {
-    var center = MapApp.map.getCenter();
-    console.log('[change_center] Emiting center: ' 
+function sendChangeCenter() {
+    var mapCenter = MapApp.map.getCenter();
+    var center = { latitude: mapCenter.lat,  longitude: mapCenter.lng };
+    console.log('[change_center] Emitting center: ' 
                 + JSON.stringify(center));
+    pendingAckState.center = center;
     socket.emit('change_center', { 
-        center: { latitude: center.lat,  longitude: center.lng }
+        center: center
     });
 }
 
 // Listener function for a change in map zoom level
-function send_change_zoom() {
+function sendChangeZoom() {
     var zoom = MapApp.map.getZoom();
-    console.log('[change_zoom] Emiting zoom: ' + zoom);
+    console.log('[change_zoom] Emitting zoom: ' + zoom);
+    pendingAckState.zoom = zoom;
     socket.emit('change_zoom', { zoom: zoom });
 }
 
 // Listener function for a change in map view
-function send_change_state() {
-    var center = MapApp.map.getCenter();
+function sendChangeState() {
+    var mapCenter = MapApp.map.getCenter();
+    var center = { latitude: mapCenter.lat,  longitude: mapCenter.lng };
     var zoom = MapApp.map.getZoom();
-    console.log('[change_state] Emiting center: ' 
+    console.log('[change_state] Emitting center: ' 
                 + JSON.stringify(center) + ' and zoom: '
                 + zoom);
+    pendingAckState.center = center;
+    pendingAckState.zoom = zoom;
     socket.emit('change_state', { 
-        center: { latitude: center.lat,  longitude: center.lng },
+        center: center,
         zoom: zoom
     });
 }
 
-MapApp.map.on('dragend', send_change_center);
-MapApp.map.on('zoomend', send_change_zoom);
-MapApp.map.on('viewreset', send_change_state);
 
+function enableCollabListeners() {
+    MapApp.map.on('dragend', sendChangeCenter);
+    MapApp.map.on('zoomend', sendChangeZoom);
+    MapApp.map.on('viewreset', sendChangeState);
+}
 
-console.log("setting listener for init_ack");
-socket.on('message', function(msg) {
-    console.log("Message: " + msg); 
-});
+function disableCollabListeners() {
+    MapApp.map.off('dragend', sendChangeCenter);
+    MapApp.map.off('zoomend', sendChangeZoom);
+    MapApp.map.off('viewreset', sendChangeState);
+}
 
 socket.on('init_ack', function(data) {
     console.log('[init_ack] Received initialize ack for collab session: ' 
                 + JSON.stringify(data));
+ 
+    MapApp.map.setView(
+        new L.LatLng(data.state.center.latitude, data.state.center.longitude),
+        data.state.zoom
+    );
+    
+    enableCollabListeners();
 });
+
+function setCenter(center) {
+    if (pendingAckState.center === null) {
+        console.log('[change_center] Setting new center');
+        MapApp.map.panTo(
+            new L.LatLng(center.latitude, center.longitude) 
+        );
+    } else if (pendingAckState.center.latitude === center.latitude
+                && pendingAckState.center.longitude === center.longitude) {
+        console.log('[change_center] Received ack for emitted center');
+        pendingAckState.center = null;
+    } else {
+        console.log('[change_center] Skipping due to pending ack');
+    }
+}
+
+function setZoom(zoom) {
+    if (pendingAckState.zoom === null) {
+        console.log('[change_zoom] Setting new zoom');
+        MapApp.map.setZoom(zoom);
+    } else if (pendingAckState.zoom === zoom) {
+        console.log('[change_zoom] Received ack for emitted zoom');
+        pendingAckState.zoom = null;
+    } else {
+        console.log('[change_zoom] Skipping due to pending ack');
+    }
+}
+
+function setState(center, zoom) {
+    setCenter(center);
+    setZoom(zoom);
+}
 
 // socket.io listener for center change
 socket.on('change_center', function(data) {
-    console.log('[change_center] Received ack: '
-                + JSON.stringify(data));
-    MapApp.map.panTo(
-        new L.LatLng(data.center.latitude, data.center.longitude) 
-    );
+    console.log('[change_center] Received ' + JSON.stringify(data));
+    setCenter(data.center);
 });
 
 // socket.io listener for zoom change
 socket.on('change_zoom', function(data) {
-    console.log('[change_zoom] Received ack: '
-                + JSON.stringify(data));
-    MapApp.map.setZoom(data.zoom);
+    console.log('[change_zoom] Received ' + JSON.stringify(data));
+    setZoom(data.zoom);
 });
 
 // socket.io listener for view change
 socket.on('change_state', function(data) {
-    console.log('[change_state] Received ack: '
-                + JSON.stringify(data));
-    MapApp.map.setView(
-        new L.LatLng(data.center.latitude, data.center.longitude), 
-        data.zoom
-    );
+    console.log('[change_state] Received ' + JSON.stringify(data));
+    setState(data.center, data.zoom);
 });
 
 socket.on('error', function(data) { 
     console.log("ERROR! " + JSON.stringify(data)); 
 });
 
-// Connecting for the first time
-socket.emit('init', { 
-  center: { latitude: 18,  longitude: 19 },
-  zoomLevel: 20      
-});
+(function() {
+    var data = { 
+       center: {
+            latitude: MapApp.map.getCenter().lat,
+            longitude: MapApp.map.getCenter().lng
+         },
+        zoom: MapApp.map.getZoom()
+    } 
 
-
-
+    console.log('[init] Emitting init: ' + JSON.stringify(data)); 
+    socket.emit('init', data);
+})();

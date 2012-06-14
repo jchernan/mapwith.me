@@ -43,12 +43,13 @@ io.sockets.on('connection', function(socket) {
                 session_id = data.session_id; 
                 assert.notEqual(typeof state_map[session_id], "undefined");
             } else {
+                /* Initialize a brand new session */
                 session_id = max_id + 1; 
                 max_id = session_id;
                 assert.equal(typeof state_map[session_id], "undefined");
                 state_map[session_id] = { 
                         center: data.center, 
-                        zoomLevel: data.zoomLevel 
+                        zoom: data.zoom
                 };
             } 
             
@@ -62,6 +63,7 @@ io.sockets.on('connection', function(socket) {
                 }); 
 
             console.log("emit init_ack");
+
       });
 
 
