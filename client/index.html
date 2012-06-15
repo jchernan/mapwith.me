@@ -1,11 +1,20 @@
+<!doctype html>
 <html>
 
   <head>
     <link rel="stylesheet" href="leaflet/leaflet.css">
     <link rel="stylesheet" href="bootstrap/css/bootstrap.css">
     <style>
+      /* need to define html and body 100% height 
+      in order to use 100% height in map div */
+      html { 
+        height: 100%; 
+      }
       body {
-        padding-top: 40px; /* 60px to make the container go all the way to the bottom of the topbar */
+        height: 100%;
+        /* 60px padding will make the container go 
+        all the way to the bottom of the topbar */
+        padding-top: 40px; 
       }
     </style>
     <title>Maps</title>
@@ -29,9 +38,9 @@
                 <button class="btn btn-large btn-inverse"><img style="width:18px;height:18px" src="bootstrap/img/glyphicons_152_new_window_white.png" /></button>
               </li-->
               <li>
-                <form class="navbar-form" style="margin-top:4px" onsubmit="return MapApp.findAddress();">
+                <form class="navbar-form" onsubmit="return MapApp.findAddress();">
                   <input type="text" id="address_search_field" class="span3"  
-                     style="height: 22px;background-repeat:no-repeat;background-position: 185px 5px;padding-right:30px" 
+                     style="background-repeat:no-repeat;background-position:right;padding-right:28px" 
                      placeholder="Search" /> 
                 </form>
               </li>
@@ -49,7 +58,7 @@
       </div>
     </div>
     
-    <div id="map" style="height: 100%"> </div>
+    <div id="map" style="height:100%"> </div>
 
     <script type="text/javascript" src="leaflet/leaflet.js"></script>
     <script type="text/javascript" src="jquery/jquery.js"></script>

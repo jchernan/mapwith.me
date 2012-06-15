@@ -90,7 +90,7 @@ var parallel_load = require('/parallel_load.js').parallel_load;
 // callbacks are doing all the work.
 MapApp.parallelProcessVenues = new parallel_load(function() {
     // Remove loading icon 
-    $('#address_search_field').css('background-image', '');
+    MapApp.hideLoader();
 });
 
 // partial callbacks for parallelProcessVenues
@@ -120,13 +120,13 @@ MapApp.findAddress = function() {
     };
 
     // Show progress bar 
-    $('#address_search_field').css('background-image', 'url("images/ajax-loader.gif")');
+    MapApp.showLoader();
 
     // query the address server
     $.getJSON(Hosts.addressFind, address, function(data) {
 
         if (data.length === 0) {
-            $('#address_search_field').css('background-image', '');
+            MapApp.hideLoader();
             return;
         }
 
@@ -158,7 +158,7 @@ MapApp.findAddress = function() {
             var markerLoc = new L.LatLng(geopointToCenter.latitude, geopointToCenter.longitude);
             MapApp.map.setView(markerLoc, MapApp.mapZooms.foundZoom);
         } else {
-            $('#address_search_field').css('background-image', '');
+            MapApp.hideLoader();
         }
 
     }).error(MapApp.errorCallback);
@@ -171,6 +171,15 @@ MapApp.errorCallback = function(data) {
     MapApp.centerOn(MapApp.defaultArea);
     console.log("Error: " + data.statusText);
     console.log("Response text: " + data.responseText);
-    $('#address_search_field').css('background-image', '');
+    MapApp.hideLoader();
+}
+
+MapApp.showLoader = function() {
+  $('#address_search_field').css('background-image', 
+      'url("images/loader.gif")');
+}
+
+MapApp.hideLoader = function() {
+  $('#address_search_field').css('background-image', '');
 }
 
