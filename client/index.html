@@ -61,58 +61,60 @@
     <div id="map" style="height:100%"> </div>
 
     <style type="text/css">
-        div#whos_online {
+        div#right_bar {
             position: absolute;
             right: 50px;
             top: 90px;
-            width: 250px;
+            width: 290px;
+         }
+
+        div#whos_online {
             opacity: 0.8;
              
         }
 
         div#chat_window {
-            position: absolute;
-            right: 50px;
-            top: 200px;
-            width: 250px;
             opacity: 0.8;
+        }
+
+        form#chat_form {
+            margin-bottom: 0px; 
         }
     </style>
 
 
     <!-- Who's sharing --!> 
+<div id="right_bar" > 
     <div id="whos_online" class="well" > 
-        <ul class="nav nav-list" > 
-            <li class="nav-header" style="font-size:12px" >Two friends sharing this map:</li> 
-            <li><i class="icon-eye-open"></i>Jeremy Lee</li>
-            <li><i class="icon-hand-up"></i>Tim Stevens</li>
+        <ul class="nav nav-list" id="user_list"> 
+            <li class="nav-header" id="user_list_title" style="font-size:12px">
+                No one is sharing this map!
+            </li> 
         </ul>
     </div> 
 
-        <div id="chat_window" class="well" >
-            <!-- Conversation --!> 
-            <div> 
-                <table class="table">  
-                     <tbody>
-                        <tr><td><strong>Jeremy Lee</strong></td><td>Hi there!</td></tr>
-                        <tr><td><strong>Tim Stevens</strong></td><td>Hey. Where are you?!</td></tr>
-                        <tr><td><strong>Jeremy Lee</strong></td>
-                            <td>I'm having lunch at the Mission. Let me show you where... </td></tr>
-                    </tbody>
-                </table> 
-            </div>
+    <div id="chat_window" class="well" >
+        <!-- Conversation --!> 
+        <div> 
+            <table class="table" id="chat_table">  
+                 <tbody>
+                    <!-- tr to anchor new rows -->
+                    <tr> </tr>
+                </tbody>
+            </table> 
+        </div>
 
 
-            <!-- Send new message --> 
-            <form class="form-vertical">
-                <textarea class="input-xlarge" id="textarea" rows="3" style="width:166px"></textarea>
-                <input type="button" class="btn btn-large btn-primary" value="Send" 
-                       style="padding-top:22px;padding-bottom:22px;width:70px"
-                </input>
-            </form>
-        <!-- </div> -->
-
+        <!-- Send new message --> 
+        <form class="form-vertical" id="chat_form">
+            <textarea class="input-xlarge" id="chat_text" rows="3" style="width:166px"></textarea>
+            <input type="button" id="chat_button" class="btn btn-large btn-primary" value="Send" 
+                   style="padding-top:22px;padding-bottom:22px;width:70px" >
+            </input>
+        </form>
     </div> 
+
+</div>
 
     <script type="text/javascript" src="leaflet/leaflet.js"></script>
     <script type="text/javascript" src="jquery/jquery.js"></script>
@@ -124,6 +126,7 @@
     <script type="text/javascript" src="renderer.js"></script>
     <script type="text/javascript" src="map.js"></script>
     <script type="text/javascript" src="collab.js"></script>
+    <script type="text/javascript" src="right-menu.js"></script>
 
   </body>
 
