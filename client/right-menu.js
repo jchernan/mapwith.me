@@ -7,6 +7,10 @@ CollabBar.postMessage = function postMessage(sender, msg) {
                + "<td> <strong>" + sender + "</strong> </td>" 
                + "<td>" + msg + "</td>"
           + "</tr>");
+
+    /* Ensure chat is scrolled to the bottom to ensure last messages are 
+       visible */
+    $("#chat_msg_panel").scrollTop($("#chat_msg_panel").height());
 }
 
 CollabBar.sharingIconClass = "icon-eye-open"; 

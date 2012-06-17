@@ -77,44 +77,49 @@
             opacity: 0.8;
         }
 
-        form#chat_form {
+        div#chat_msg_panel {
+            max-height: 400px;
+            overflow: scroll;
+        } 
+
+        form#chat_send_msg_form {
             margin-bottom: 0px; 
         }
     </style>
 
 
     <!-- Who's sharing --!> 
-<div id="right_bar" > 
-    <div id="whos_online" class="well" > 
-        <ul class="nav nav-list" id="user_list"> 
-            <li class="nav-header" id="user_list_title" style="font-size:13px">
-                No one is sharing this map!
-            </li> 
-        </ul>
-    </div> 
+    <div id="right_bar" > 
+        <div id="whos_online" class="well" > 
+            <ul class="nav nav-list" id="user_list"> 
+                <li class="nav-header" id="user_list_title" style="font-size:13px">
+                    No one is sharing this map!
+                </li> 
+            </ul>
+        </div> 
 
-    <div id="chat_window" class="well" >
-        <!-- Conversation --!> 
-        <div> 
-            <table class="table" id="chat_table">  
-                 <tbody>
-                    <!-- tr to anchor new rows -->
-                    <tr> </tr>
-                </tbody>
-            </table> 
-        </div>
+        <div id="chat_window" class="well" >
+            <!-- Conversation --!> 
+            <div id="chat_msg_panel">  
+                <table class="table" id="chat_table">  
+                     <tbody>
+                        <!-- tr to anchor new rows -->
+                        <tr> </tr>
+                    </tbody>
+                </table> 
+            </div> 
 
 
-        <!-- Send new message --> 
-        <form class="form-vertical" id="chat_form">
-            <textarea class="input-xlarge" id="chat_text" rows="3" style="width:166px"></textarea>
-            <input type="button" id="chat_button" class="btn btn-large btn-primary" value="Send" 
-                   style="padding-top:22px;padding-bottom:22px;width:70px" >
-            </input>
-        </form>
-    </div> 
+            <!-- Send new message --> 
+            <form class="form-vertical" id="chat_send_msg_form">
+                <textarea class="input-xlarge" id="chat_text" rows="3" style="width:166px"></textarea>
+                <input type="button" id="chat_button" class="btn btn-large btn-primary" value="Send" 
+                       style="padding-top:22px;padding-bottom:22px;width:70px" >
+                </input>
+            </form>
+        </div> 
 
-</div>
+    </div>
 
     <script type="text/javascript" src="leaflet/leaflet.js"></script>
     <script type="text/javascript" src="jquery/jquery.js"></script>
