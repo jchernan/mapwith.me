@@ -136,6 +136,25 @@ io.sockets.on('connection', function(socket) {
         }
     });
  
+    /*  
+        Signal from client that the user has sent a message. 
+
+        Call to this function requires a data object with the following field:
+        
+        message  - message sent by the user
+
+     */
+
+     socket.on('send_message', function(data) {
+        if (! (socket.session_id  && state_map[socket.session_id])) {
+            console.log("[ERR - send_message Invalid state");
+        }
+        else {
+            socket.broadcast.to(socket.session_id).emit(
+                'send_message', data);  
+        }
+    });
+
 });
 
 

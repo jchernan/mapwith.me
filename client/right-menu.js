@@ -1,7 +1,7 @@
-MapApp.CollabBar = {}; 
+CollabBar = {}; 
 
 
-MapApp.CollabBar.postMessage = function postMessage(sender, msg) {
+CollabBar.postMessage = function postMessage(sender, msg) {
     $("#chat_table tr:last").after(
             "<tr>"  
                + "<td> <strong>" + sender + "</strong> </td>" 
@@ -9,19 +9,19 @@ MapApp.CollabBar.postMessage = function postMessage(sender, msg) {
           + "</tr>");
 }
 
-MapApp.CollabBar.sharingIconClass = "icon-eye-open"; 
-MapApp.CollabBar.editingIconClass = "icon-hand-up"; 
+CollabBar.sharingIconClass = "icon-eye-open"; 
+CollabBar.editingIconClass = "icon-hand-up"; 
 
-MapApp.CollabBar.addUser = function addUser(username) {
+CollabBar.addUser = function addUser(username) {
     var icon_id = "icon_" + username; 
     var user_list_elem_id = "user_list_elem_" + username; 
 
     $("#user_list li:last").after(
             "<li id='" + user_list_elem_id  + "'>"  
-               + "<i id='" + icon_id+ "' class='" + MapApp.CollabBar.sharingIconClass + "'></i>" + username 
+               + "<i id='" + icon_id+ "' class='" + CollabBar.sharingIconClass + "'></i>" + username 
           + "</li>");
 
-    MapApp.CollabBar.stopEditing(username);
+    CollabBar.stopEditing(username);
 
     var num_friends = $("#user_list li").length - 1; 
     var friend_name = num_friends > 1 ? " friends" : " friend" ; 
@@ -30,36 +30,45 @@ MapApp.CollabBar.addUser = function addUser(username) {
             + friend_name + ": ");
 }
 
-MapApp.CollabBar.startEditing = function startEditing(username) {
+CollabBar.startEditing = function startEditing(username) {
     var icon_id = "icon_" + username; 
     var user_list_elem_id = "user_list_elem_" + username; 
 
-    $("#" + icon_id).attr("class", MapApp.CollabBar.editingIconClass); 
+    $("#" + icon_id).attr("class", CollabBar.editingIconClass); 
 
     
 }
 
-MapApp.CollabBar.stopEditing = function stopEditing(username) {
+CollabBar.stopEditing = function stopEditing(username) {
     var icon_id = "icon_" + username; 
-    $("#" + icon_id).attr("class", MapApp.CollabBar.sharingIconClass); 
+    $("#" + icon_id).attr("class", CollabBar.sharingIconClass); 
 }
 
-/* Set up listeners */
+/* Initialize Map. buttonListener sets up a callback for the chat button */
+CollabBar.init = function init(buttonListener) {
+    $("#chat_button").click(function() { 
+            var message_to_send = $("#chat_text").val();
+            CollabBar.postMessage("Me", message_to_send);
+            if (buttonListener)  {
+                buttonListener(message_to_send); 
+            } 
+            $("#chat_text").val("");
+    }); 
+    
+    CollabBar.addUser("Me");
+    
+}
 
-$("#chat_button").click(function() { 
-    MapApp.CollabBar.postMessage("Me", $("#chat_text").val());
-    $("#chat_text").val("");
-}); 
+
 
 /* Begin simulation */
-MapApp.CollabBar.addUser("Me");
 
-setTimeout(function() { MapApp.CollabBar.addUser("Jeremy") }, 200);
-setTimeout(function() { MapApp.CollabBar.addUser("Laura") }, 500);
+setTimeout(function() { CollabBar.addUser("Jeremy") }, 200);
+setTimeout(function() { CollabBar.addUser("Laura") }, 500);
 
-setTimeout(function() { MapApp.CollabBar.postMessage("Jeremy",    "Hi Laura. Thai tonight?") }, 1000);
-setTimeout(function() { MapApp.CollabBar.postMessage("Laura", "Sure. Where are you?") } , 3000);
-setTimeout(function() { MapApp.CollabBar.postMessage("Jeremy",    "I'm at the Mission. Let me show you where...") } , 7000);
-setTimeout(function() { MapApp.CollabBar.startEditing("Jeremy") }, 8000);
-setTimeout(function() { MapApp.CollabBar.postMessage("Me",            "Is there room for one more?") } , 13000);
-setTimeout(function() { MapApp.CollabBar.stopEditing("Jeremy") }, 15000);
+setTimeout(function() { CollabBar.postMessage("Jeremy",    "Hi Laura. Thai tonight?") }, 1000);
+setTimeout(function() { CollabBar.postMessage("Laura", "Sure. Where are you?") } , 3000);
+setTimeout(function() { CollabBar.postMessage("Jeremy",    "I'm at the Mission. Let me show you where...") } , 7000);
+setTimeout(function() { CollabBar.startEditing("Jeremy") }, 8000);
+setTimeout(function() { CollabBar.postMessage("Me",            "Is there room for one more?") } , 13000);
+setTimeout(function() { CollabBar.stopEditing("Jeremy") }, 15000);

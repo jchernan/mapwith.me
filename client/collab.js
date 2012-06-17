@@ -1,4 +1,5 @@
 
+/* TODO (jmunizn): This should be done on init, not here */
 var socket = io.connect(Hosts.collaboration);
 var pendingAckState = {
     center: null,
@@ -116,6 +117,13 @@ socket.on('change_state', function(data) {
     setStateFromServer(data.center, data.zoom);
 });
 
+// socket.io listener for send message
+socket.on('send_message', function(data) {
+    console.log('[send_message] Received ' + JSON.stringify(data));
+    CollabBar.postMessage("Someone", data.message);  
+});
+
+
 socket.on('error', function(data) { 
     console.log("ERROR! " + JSON.stringify(data)); 
 });
@@ -136,6 +144,8 @@ var urlParam = function(name) {
 };
 
 (function() {
+    /* Initialize sharing session */
+
     var data = { 
        center: {
             latitude: MapApp.map.getCenter().lat,
@@ -146,6 +156,11 @@ var urlParam = function(name) {
     } 
 
 
+    /* Initialize right bar */
+    CollabBar.init(function(message) {
+        socket.emit('send_message', { "message": message }); 
+    });
+ 
     console.log('[init] Emitting init: ' + JSON.stringify(data)); 
     socket.emit('init', data);
 })();
