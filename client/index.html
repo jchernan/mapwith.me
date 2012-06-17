@@ -59,30 +59,45 @@
     </div>
     
     <div id="map" style="height:100%"> </div>
-    <div style="position:absolute;right:50px;top:90px;height:300px;width:250px;opacity:0.8" class="well"> 
-        <!-- Who's sharing --!> 
-        <div style="">
-            <ul class="nav nav-list"> 
-               <li class="nav-header" > 
-                    Two people are sharing this map:
-               </li> 
 
-                <li><i class="icon-eye-open"> </i>Julian</li>
-                <li><i class="icon-hand-up"> </i> Rodrigo</li>
-            </ul>
+    <style type="text/css">
+        div#whos_online {
+            position: absolute;
+            right: 50px;
+            top: 90px;
+            width: 250px;
+            opacity: 0.8;
+             
+        }
 
-        </div> 
+        div#chat_window {
+            position: absolute;
+            right: 50px;
+            top: 200px;
+            width: 250px;
+            opacity: 0.8;
+        }
+    </style>
 
-    
-        <div style="width:95%;position:absolute;left:3%;bottom:0px" >
 
+    <!-- Who's sharing --!> 
+    <div id="whos_online" class="well" > 
+        <ul class="nav nav-list" > 
+            <li class="nav-header" style="font-size:12px" >Two friends sharing this map:</li> 
+            <li><i class="icon-eye-open"></i>Jeremy Lee</li>
+            <li><i class="icon-hand-up"></i>Tim Stevens</li>
+        </ul>
+    </div> 
+
+        <div id="chat_window" class="well" >
             <!-- Conversation --!> 
             <div> 
                 <table class="table">  
                      <tbody>
-                        <tr><td><strong>Julian</strong></td><td>Sup man!</td>
-                        <tr><td><strong>Rodrigo</strong></td><td>Yo dude. Where are you?!</td>
-                        <tr><td><strong>Julian</strong></td><td>I'm having lunch here. </td>
+                        <tr><td><strong>Jeremy Lee</strong></td><td>Hi there!</td></tr>
+                        <tr><td><strong>Tim Stevens</strong></td><td>Hey. Where are you?!</td></tr>
+                        <tr><td><strong>Jeremy Lee</strong></td>
+                            <td>I'm having lunch at the Mission. Let me show you where... </td></tr>
                     </tbody>
                 </table> 
             </div>
@@ -90,12 +105,12 @@
 
             <!-- Send new message --> 
             <form class="form-vertical">
-                <textarea class="input-xlarge" id="textarea" rows="3" style="width:65%"></textarea>
+                <textarea class="input-xlarge" id="textarea" rows="3" style="width:166px"></textarea>
                 <input type="button" class="btn btn-large btn-primary" value="Send" 
-                       style="padding-top:22px;padding-bottom:22px;width:30%">
+                       style="padding-top:22px;padding-bottom:22px;width:70px"
                 </input>
             </form>
-        </div>
+        <!-- </div> -->
 
     </div> 
 
