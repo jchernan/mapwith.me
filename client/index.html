@@ -14,7 +14,16 @@
         height: 100%;
         /* 60px padding will make the container go 
         all the way to the bottom of the topbar */
-        padding-top: 40px; 
+        padding-top: 40px;
+        /* disable scroll animations */
+        overflow: hidden;
+      }
+      #map {
+        position: absolute;
+        top: 40px;
+        bottom: 0;
+        right: 0;
+        left: 0;
       }
     </style>
     <title>Maps</title>
@@ -58,7 +67,7 @@
       </div>
     </div>
     
-    <div id="map" style="height:100%"> </div>
+    <div id="map"/>
 
     <style type="text/css">
         div#right_bar {
