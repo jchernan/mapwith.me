@@ -85,7 +85,7 @@ function setCenterFromServer(center) {
 function setZoomFromServer(zoom) {
     if (pendingAckState.zoom === null) {
         console.log('[change_zoom] Setting new zoom');
-        MapApp.map.setZoomFromServer(zoom);
+        MapApp.map.setZoom(zoom);
     } else if (pendingAckState.zoom === zoom) {
         console.log('[change_zoom] Received ack for emitted zoom');
         pendingAckState.zoom = null;
