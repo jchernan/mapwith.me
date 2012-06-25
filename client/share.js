@@ -82,27 +82,36 @@
 
 }(window.jQuery);
 
-
 $(function () {
     $('#share').sharepopover({
         trigger: 'manual',
         title: 'Share what you are viewing!',
         html: true,
-        content: Share.windowContent()
+        content: Share.getWindowContent(null)
     });
 });
 
 var Share = {};
 
-Share.windowContent = function() {
-    return '<form>'
-        + '<p>Type your name and then click <strong>Start</strong>. This will create a link that you can share with your friends.</p>'
-        + '<br>'
-        + '<div class="input-append">'
-        + '<input type="text" class="span2" placeholder="Type your name">'
-        + '<button type="submit" onclick="Share.startSharing();" class="btn">Start</button>'
-        + '</div>'
-        + '</form>';
+Share.getWindowContent = function(link) {
+    if (link === null) {
+        return '<form>'
+            + '<p>Type your name and then click <strong>Start</strong>. '
+            + 'This will create a link that you can share with your friends.</p>'
+            + '<br>'
+            + '<div class="input-append">'
+            + '<input type="text" class="span2" placeholder="Type your name">'
+            + '<button class="btn" onclick="return Share.startSharing();">'
+            + 'Start</button>'
+            + '</div>'
+            + '</form>';
+    } else {
+        return '<div class="well">'
+            + '<p>' 
+            + link 
+            + '</p>'
+            + '</div>';
+    }
 }
 
 Share.showWindow = function() {
@@ -114,9 +123,19 @@ Share.hideWindow = function() {
 }
 
 Share.startSharing = function() {
-    console.log("User is starting sharing session");
+    
+    console.log('User is starting share session');
+    
+    var popover = $('#share').data('sharepopover');
+    popover.options.animation = false;
+    popover.options.content = Share.getWindowContent('some link');
+    $('#share').sharepopover('show');
+    popover.options.animation = true;
+
     $('#share').removeClass('btn-inverse');
     $('#share').addClass('btn-success');
+    return false;
 }
 
 window.onresize = Share.hideWindow;
+
