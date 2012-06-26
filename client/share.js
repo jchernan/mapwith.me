@@ -77,7 +77,7 @@
   $.fn.sharepopover.Constructor = SharePopover
 
   $.fn.sharepopover.defaults = $.extend({} , $.fn.popover.defaults, {
-    template: '<div class="popover"><div class="arrow" style="left:91%"></div><div class="popover-inner"><h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>'
+    template: '<div class="popover"><div class="arrow" style="left:94.5%"></div><div class="popover-inner" style="width:500px;"><h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>'
   })
 
 }(window.jQuery);
@@ -91,31 +91,50 @@ $(function () {
     });
 });
 
+(function ($) {
+// VERTICALLY ALIGN FUNCTION
+$.fn.vAlign = function() {
+	return this.each(function(i){
+	var ah = $(this).height();
+	var ph = $(this).parent().height();
+	var mh = Math.ceil((ph-ah) / 2);
+	$(this).css('margin-top', mh);
+	});
+};
+})(window.jQuery);
+
 var Share = {};
 
 Share.getWindowContent = function(link) {
     if (link === null) {
-        return '<form>'
+        return '<div class="row-fluid">'
+            + '<div class="span12">'
+            + '<div class="span6">'
             + '<p>Type your name and then click <strong>Start</strong>. '
             + 'This will create a link that you can share with your friends.</p>'
-            + '<br>'
+            + '</div>' // end text span6
+            + '<div class="span6">'
+            + '<form id="share-name-input-form">'
             + '<div class="input-append">'
-            + '<input type="text" class="span2" placeholder="Type your name">'
-            + '<button class="btn" onclick="return Share.startSharing();">'
-            + 'Start</button>'
-            + '</div>'
-            + '</form>';
+            + '<input id="share-name-input" class="input-medium" type="text" placeholder="Type your name">'
+            + '<button class="btn" type="submit" onclick="return Share.startSharing()">Start</button>'
+            + '</div>' // end input-append
+            + '</form>' // end form
+            + '</div>' // end span6
+            + '</div>' // end span12 
+            + '</div>'; // end row 
     } else {
-        return '<div class="well">'
-            + '<p>' 
-            + link 
-            + '</p>'
+        return '<div>'
+            + '<code>'
+            + link
+            + '</code>'
             + '</div>';
     }
 }
 
 Share.showWindow = function() {
     $('#share').sharepopover('toggle');
+    $('#share-name-input-form').vAlign();
 }
 
 Share.hideWindow = function() {
@@ -128,7 +147,8 @@ Share.startSharing = function() {
     
     var popover = $('#share').data('sharepopover');
     popover.options.animation = false;
-    popover.options.content = Share.getWindowContent('some link');
+    var link = 'http://www.aeternitatis.org?session_id=1';
+    popover.options.content = Share.getWindowContent(link);
     $('#share').sharepopover('show');
     popover.options.animation = true;
 
