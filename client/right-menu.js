@@ -48,7 +48,11 @@ CollabBar.stopEditing = function stopEditing(username) {
     $("#" + icon_id).attr("class", CollabBar.sharingIconClass); 
 }
 
-/* Initialize Map. buttonListener sets up a callback for the chat button */
+/*
+  Initialize right menu. 
+
+  buttonListener sets up a callback for the chat button 
+*/
 CollabBar.init = function init(buttonListener) {
     $("#chat_button").click(function() { 
             var message_to_send = $("#chat_text").val();
@@ -59,13 +63,13 @@ CollabBar.init = function init(buttonListener) {
             $("#chat_text").val("");
     }); 
     
-    CollabBar.addUser("Me");
-    
+    CollabBar.addUser("Me");   
+    $("#right_bar").css("display", "");
 }
 
 
 
-/* Begin simulation */
+/* Begin simulation 
 
 setTimeout(function() { CollabBar.addUser("Jeremy") }, 200);
 setTimeout(function() { CollabBar.addUser("Laura") }, 500);
@@ -76,3 +80,5 @@ setTimeout(function() { CollabBar.postMessage("Jeremy",    "I'm at the Mission. 
 setTimeout(function() { CollabBar.startEditing("Jeremy") }, 8000);
 setTimeout(function() { CollabBar.postMessage("Me",            "Is there room for one more?") } , 13000);
 setTimeout(function() { CollabBar.stopEditing("Jeremy") }, 15000);
+
+*/

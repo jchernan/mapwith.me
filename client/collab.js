@@ -143,24 +143,21 @@ var urlParam = function(name) {
     return (results) ? results[1] : null;
 };
 
-(function() {
-    /* Initialize sharing session */
 
+
+/* If user has specified a session_id, then initialize a sharing session 
+   immediately */
+if (urlParam('session_id')) {
+    /* Send a message to server indicating our desire to join a session */
     var data = { 
-       center: {
-            latitude: MapApp.map.getCenter().lat,
-            longitude: MapApp.map.getCenter().lng
-         },
         session_id: urlParam('session_id'),
-        zoom: MapApp.map.getZoom()
+        username:  "Unknown" //TODO(jmunizn) Define me later
     } 
 
-
+    console.log('[init] Emitting init: ' + JSON.stringify(data)); 
     /* Initialize right bar */
     CollabBar.init(function(message) {
-        socket.emit('send_message', { "message": message }); 
+            socket.emit('send_message', { "message": message }); 
     });
- 
-    console.log('[init] Emitting init: ' + JSON.stringify(data)); 
     socket.emit('init', data);
-})();
+} 

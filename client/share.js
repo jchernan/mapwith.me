@@ -145,15 +145,59 @@ Share.startSharing = function() {
     
     console.log('User is starting share session');
     
-    var popover = $('#share').data('sharepopover');
+/*    var popover = $('#share').data('sharepopover');
     popover.options.animation = false;
     var link = 'http://www.aeternitatis.org?session_id=1';
     popover.options.content = Share.getWindowContent(link);
     $('#share').sharepopover('show');
     popover.options.animation = true;
-
     $('#share').removeClass('btn-inverse');
     $('#share').addClass('btn-success');
+*/
+
+
+    /* Send a message to server indicating our desire to join a session */
+    var data = { 
+       center: {
+            latitude:  MapApp.map.getCenter().lat,
+            longitude: MapApp.map.getCenter().lng,
+         },
+        username:  $('#share-name-input').val(),
+        zoom: MapApp.map.getZoom()
+    } 
+
+
+
+    console.log('[init] Emitting init: ' + JSON.stringify(data)); 
+
+    var display_session_id_handler = function(data) {
+
+        var popover = $('#share').data('sharepopover');
+        popover.options.animation = false;
+        var link = Hosts.baseURL + '?session_id=' + data.session_id;
+        popover.options.content = Share.getWindowContent(link);
+        $('#share').sharepopover('show');
+        popover.options.animation = true;
+
+
+        $('#share').removeClass('btn-inverse');
+        $('#share').addClass('btn-success');
+
+        /* Initialize right bar */
+        CollabBar.init(function(message) {
+                socket.emit('send_message', { "message": message }); 
+        });
+ 
+        socket.off(display_session_id_handler); 
+    }
+
+    socket.on('init_ack', display_session_id_handler); 
+    
+    socket.emit('init', data);
+    
+
+    /* TODO(jmunizn) Add loading animation */
+
     return false;
 }
 
