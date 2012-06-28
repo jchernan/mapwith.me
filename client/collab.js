@@ -1,3 +1,10 @@
+/*  
+   collab.js  - Framework for sending/receiving map sharing information with server
+
+   Requires:
+    - right-bar.js 
+
+ */
 
 /* TODO (jmunizn): This should be done on init, not here */
 var socket = io.connect(Hosts.collaboration);
@@ -120,7 +127,7 @@ socket.on('change_state', function(data) {
 // socket.io listener for send message
 socket.on('send_message', function(data) {
     console.log('[send_message] Received ' + JSON.stringify(data));
-    CollabBar.postMessage("Someone", data.message);  
+    CollabBar.postMessage(data.from, data.message);  
 });
 
 

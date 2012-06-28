@@ -50,11 +50,13 @@ io.sockets.on('connection', function(socket) {
                 assert.equal(typeof state_map[session_id], "undefined");
                 state_map[session_id] = { 
                         center: data.center, 
-                        zoom: data.zoom
+                        zoom: data.zoom,
+                        username: data.username
                 };
             } 
             
             socket.session_id = session_id;
+            socket.username = data.username;
             socket.join(session_id); 
               
             socket.emit('init_ack', { 
@@ -150,6 +152,7 @@ io.sockets.on('connection', function(socket) {
             console.log("[ERR - send_message Invalid state");
         }
         else {
+            data.from = socket.username;
             socket.broadcast.to(socket.session_id).emit(
                 'send_message', data);  
         }
