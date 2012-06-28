@@ -155,16 +155,48 @@ var urlParam = function(name) {
 /* If user has specified a session_id, then initialize a sharing session 
    immediately */
 if (urlParam('session_id')) {
-    /* Send a message to server indicating our desire to join a session */
-    var data = { 
-        session_id: urlParam('session_id'),
-        username:  "Unknown" //TODO(jmunizn) Define me later
-    } 
 
-    console.log('[init] Emitting init: ' + JSON.stringify(data)); 
-    /* Initialize right bar */
-    CollabBar.init(function(message) {
-            socket.emit('send_message', { "message": message }); 
-    });
-    socket.emit('init', data);
+    /* Prompt user TODO(jmunizn) Move me */
+    var text =   $('<div class="modal fade hide" id="initial-modal" style="width:350px">'
+                + '<div class="modal-header">'
+                + '<button type="button" class="close" data-dismiss="modal">x</button>'
+                + "<h3> Your friend wants to map with you</h3>"
+                + '</div>'
+
+                + '<div class="modal-body" >'
+
+                + '<div>'
+                    + '<p>Type your name and then click <strong>Join</strong> to start sharing.</p> '
+                + '</div>' 
+
+                + '<form id="share-name-input-form">'
+                    + ' <center><input id="share-name-input-modal" class="input-large" type="text" placeholder="Type your name"></center>'
+                + '</form>' 
+                + '</div>' 
+                + '<div class="modal-footer">'
+                + '<a href="#" class="btn" data-dismiss="modal">Close</a>'
+                + '<a href="#" class="btn btn-primary" id="join-modal">Join</a>'
+                + '</div>'
+                + '</div>');
+
+   $('body').append(text);
+
+   $('#join-modal').click(function() { 
+        /* Send a message to server indicating our desire to join a session */
+        var data = { 
+            session_id: urlParam('session_id'),
+            username:  $("#share-name-input-modal").val()
+        } 
+
+        console.log('[init] Emitting init: ' + JSON.stringify(data)); 
+        /* Initialize right bar */
+        CollabBar.init(function(message) {
+                socket.emit('send_message', { "message": message }); 
+        });
+        socket.emit('init', data);
+
+        text.modal('hide');
+   });
+
+   text.modal('show');
 } 
