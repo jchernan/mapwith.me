@@ -181,19 +181,20 @@ if (urlParam('session_id')) {
 
    $('body').append(text);
 
+   var id = urlParam('session_id');
+
    $('#join-modal').click(function() { 
         /* Send a message to server indicating our desire to join a session */
         var data = { 
-            session_id: urlParam('session_id'),
+            session_id: id,
             username:  $("#share-name-input-modal").val()
         } 
 
         console.log('[init] Emitting init: ' + JSON.stringify(data)); 
-        /* Initialize right bar */
-        CollabBar.init(function(message) {
-                socket.emit('send_message', { "message": message }); 
-        });
         socket.emit('init', data);
+
+        var link = Hosts.baseURL + '?session_id=' + id;
+        Share.setSharingMode(link, false);
 
         text.modal('hide');
    });
