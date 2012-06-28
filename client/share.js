@@ -82,15 +82,6 @@
 
 }(window.jQuery);
 
-$(function () {
-    $('#share').sharepopover({
-        trigger: 'manual',
-        title: 'Share what you are viewing!',
-        html: true,
-        content: Share.getWindowContent(null)
-    });
-});
-
 (function ($) {
 // VERTICALLY ALIGN FUNCTION
 $.fn.vAlign = function() {
@@ -132,6 +123,14 @@ Share.getWindowContent = function(link) {
     }
 }
 
+Share.getWindowTitle = function(link) {
+    if (link === null) {
+        return 'Share what you are viewing!';
+    } else {
+        return 'You are now sharing this map!';
+    }
+}
+
 Share.showWindow = function() {
     $('#share').sharepopover('toggle');
     $('#share-name-input-form').vAlign();
@@ -145,18 +144,7 @@ Share.startSharing = function() {
     
     console.log('User is starting share session');
     
-/*    var popover = $('#share').data('sharepopover');
-    popover.options.animation = false;
-    var link = 'http://www.aeternitatis.org?session_id=1';
-    popover.options.content = Share.getWindowContent(link);
-    $('#share').sharepopover('show');
-    popover.options.animation = true;
-    $('#share').removeClass('btn-inverse');
-    $('#share').addClass('btn-success');
-*/
-
-
-    /* Send a message to server indicating our desire to join a session */
+    // Send a message to server indicating our desire to join a session
     var data = { 
        center: {
             latitude:  MapApp.map.getCenter().lat,
@@ -166,40 +154,52 @@ Share.startSharing = function() {
         zoom: MapApp.map.getZoom()
     } 
 
-
-
-    console.log('[init] Emitting init: ' + JSON.stringify(data)); 
-
-    var display_session_id_handler = function(data) {
-
-        var popover = $('#share').data('sharepopover');
-        popover.options.animation = false;
+    socket.on('init_ack', function(data){
         var link = Hosts.baseURL + '?session_id=' + data.session_id;
-        popover.options.content = Share.getWindowContent(link);
-        $('#share').sharepopover('show');
-        popover.options.animation = true;
+        Share.setSharingMode(link, true);
+    });
 
-
-        $('#share').removeClass('btn-inverse');
-        $('#share').addClass('btn-success');
-
-        /* Initialize right bar */
-        CollabBar.init(function(message) {
-                socket.emit('send_message', { "message": message }); 
-        });
- 
-        socket.off(display_session_id_handler); 
-    }
-
-    socket.on('init_ack', display_session_id_handler); 
-    
+    console.log('Emitting init: ' + JSON.stringify(data)); 
     socket.emit('init', data);
-    
 
     /* TODO(jmunizn) Add loading animation */
 
     return false;
 }
+
+Share.setSharingMode = function(link, showPopover) {
+    // get popover from share button
+    var popover = $('#share').data('sharepopover');
+    if (showPopover) {
+        // need to turn off animation to make a smooth 
+        // transition if popover is already open
+        popover.options.animation = false;
+    }
+    // get the content and title for the popover 
+    popover.options.content = Share.getWindowContent(link);
+    popover.options.title = Share.getWindowTitle(link);
+    // change the color of the share button
+    $('#share').removeClass('btn-inverse');
+    $('#share').addClass('btn-success');
+    if (showPopover) {
+        // call 'show' to refresh the popover content.
+        // then turn animation on again.
+        $('#share').sharepopover('show');
+        popover.options.animation = true;
+    }
+    
+    // Initialize right bar 
+    CollabBar.init(function(message) {
+        socket.emit('send_message', { "message": message }); 
+    });
+}
+
+$('#share').sharepopover({
+    trigger: 'manual',
+    html: true,
+    content: Share.getWindowContent(null),
+    title: Share.getWindowTitle(null)
+});
 
 window.onresize = Share.hideWindow;
 
