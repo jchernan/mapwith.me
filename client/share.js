@@ -98,28 +98,10 @@ var Share = {};
 
 Share.getWindowContent = function(link) {
     if (link === null) {
-        return '<div class="row-fluid">'
-            + '<div class="span12">'
-            + '<div class="span6">'
-            + '<p>Type your name and then click <strong>Start</strong>. '
-            + 'This will create a link that you can share with your friends.</p>'
-            + '</div>' // end text span6
-            + '<div class="span6">'
-            + '<form id="popover-form">'
-            + '<div class="input-append">'
-            + '<input id="popover-form-input" class="input-medium" type="text" placeholder="Type your name">'
-            + '<button id="popover-form-button" class="btn" type="submit">Start</button>'
-            + '</div>' // end input-append
-            + '</form>' // end form
-            + '</div>' // end span6
-            + '</div>' // end span12 
-            + '</div>'; // end row 
+        return HtmlContent.shareStart;   
     } else {
-        return '<div>'
-            + '<code>'
-            + link
-            + '</code>'
-            + '</div>';
+        var content = HtmlContent.shareLink.replace('LINK', link);
+        return content;
     }
 }
 

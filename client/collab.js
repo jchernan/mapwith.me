@@ -156,28 +156,7 @@ var urlParam = function(name) {
    immediately */
 if (urlParam('session_id')) {
 
-    /* Prompt user TODO(jmunizn) Move me */
-    var text =   $('<div class="modal fade hide" id="initial-modal" style="width:350px">'
-                + '<div class="modal-header">'
-                + '<button type="button" class="close" data-dismiss="modal">x</button>'
-                + "<h3> Your friend wants to map with you</h3>"
-                + '</div>'
-
-                + '<div class="modal-body" >'
-
-                + '<div>'
-                    + '<p>Type your name and then click <strong>Join</strong> to start sharing.</p> '
-                + '</div>' 
-
-                + '<form id="modal-form">'
-                    + ' <center><input id="modal-form-input" class="input-large" type="text" placeholder="Type your name"></center>'
-                + '</form>' 
-                + '</div>' 
-                + '<div class="modal-footer">'
-                + '<a href="#" class="btn" data-dismiss="modal">Close</a>'
-                + '<a href="#" class="btn btn-primary" id="join-modal">Join</a>'
-                + '</div>'
-                + '</div>');
+    var text = $(HtmlContent.shareJoin);
 
    $('body').append(text);
 
