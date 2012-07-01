@@ -54,14 +54,26 @@ CollabBar.stopEditing = function stopEditing(username) {
   buttonListener sets up a callback for the chat button 
 */
 CollabBar.init = function init(buttonListener) {
-    $("#chat_button").click(function() { 
-            var message_to_send = $("#chat_text").val();
-            CollabBar.postMessage("Me", message_to_send);
-            if (buttonListener)  {
-                buttonListener(message_to_send); 
-            } 
-            $("#chat_text").val("");
-    }); 
+    
+    var messageAction = function() { 
+        var message_to_send = $("#chat_text").val();
+        CollabBar.postMessage("Me", message_to_send);
+        if (buttonListener)  {
+            buttonListener(message_to_send); 
+        } 
+        $("#chat_text").val("");
+        return false;
+    }
+
+    $("#chat_button").click(messageAction);
+    // By default, hitting 'Enter' on a textarea will create a new line. 
+    // We change the behavior to submit the message upon hitting 'Enter'.
+    // http://stackoverflow.com/questions/4418819/submit-form-on-enter-when-in-text-field
+    $("#chat_text").keyup(function(e) {
+        if (e.keyCode === 13) {
+            messageAction();
+        }
+    });
     
     CollabBar.addUser("Me");   
     $("#right_bar").css("display", "");

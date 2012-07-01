@@ -169,8 +169,8 @@ if (urlParam('session_id')) {
                     + '<p>Type your name and then click <strong>Join</strong> to start sharing.</p> '
                 + '</div>' 
 
-                + '<form id="share-name-input-form">'
-                    + ' <center><input id="share-name-input-modal" class="input-large" type="text" placeholder="Type your name"></center>'
+                + '<form id="modal-form">'
+                    + ' <center><input id="modal-form-input" class="input-large" type="text" placeholder="Type your name"></center>'
                 + '</form>' 
                 + '</div>' 
                 + '<div class="modal-footer">'
@@ -183,11 +183,11 @@ if (urlParam('session_id')) {
 
    var id = urlParam('session_id');
 
-   $('#join-modal').click(function() { 
+   var joinSession = function() { 
         /* Send a message to server indicating our desire to join a session */
         var data = { 
             session_id: id,
-            username:  $("#share-name-input-modal").val()
+            username:  $("#modal-form-input").val()
         } 
 
         console.log('[init] Emitting init: ' + JSON.stringify(data)); 
@@ -197,7 +197,12 @@ if (urlParam('session_id')) {
         Share.setSharingMode(link, false);
 
         text.modal('hide');
-   });
+        
+        return false;
+   }
+    
+   $('#modal-form').submit(joinSession);
+   $('#join-modal').click(joinSession);
 
    text.modal('show');
 } 

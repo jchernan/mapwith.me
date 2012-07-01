@@ -105,10 +105,10 @@ Share.getWindowContent = function(link) {
             + 'This will create a link that you can share with your friends.</p>'
             + '</div>' // end text span6
             + '<div class="span6">'
-            + '<form id="share-name-input-form">'
+            + '<form id="popover-form">'
             + '<div class="input-append">'
-            + '<input id="share-name-input" class="input-medium" type="text" placeholder="Type your name">'
-            + '<button class="btn" type="submit" onclick="return Share.startSharing()">Start</button>'
+            + '<input id="popover-form-input" class="input-medium" type="text" placeholder="Type your name">'
+            + '<button id="popover-form-button" class="btn" type="submit">Start</button>'
             + '</div>' // end input-append
             + '</form>' // end form
             + '</div>' // end span6
@@ -133,7 +133,12 @@ Share.getWindowTitle = function(link) {
 
 Share.showWindow = function() {
     $('#share').sharepopover('toggle');
-    $('#share-name-input-form').vAlign();
+    // check if #popover-form exists
+    if ($('#popover-form').length > 0) {
+        $('#popover-form').vAlign();
+        $('#popover-form').submit(Share.startSharing);
+        $('#popover-form-button').click(Share.startSharing);
+    }
 }
 
 Share.hideWindow = function() {
@@ -150,7 +155,7 @@ Share.startSharing = function() {
             latitude:  MapApp.map.getCenter().lat,
             longitude: MapApp.map.getCenter().lng,
          },
-        username:  $('#share-name-input').val(),
+        username:  $('#popover-form-input').val(),
         zoom: MapApp.map.getZoom()
     } 
 
