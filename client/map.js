@@ -13,21 +13,21 @@ MapApp.mapZooms = {
 };
 
 // checks if the given point is inside any of the map areas
-MapApp.inBounds = function(point) {
+MapApp.inBounds = function (point) {
     for (var area in MapApp.mapAreas) {
         if (MapApp.mapAreas.hasOwnProperty(area)) {
             var mapArea = MapApp.mapAreas[area];
-            if (point.latitude >= mapArea.lowerRight.latitude 
-                && point.latitude <= mapArea.upperLeft.latitude 
-                && point.longitude >= mapArea.upperLeft.longitude 
-                && point.longitude <= mapArea.lowerRight.longitude) {
+            if (point.latitude >= mapArea.lowerRight.latitude && 
+                point.latitude <= mapArea.upperLeft.latitude && 
+                point.longitude >= mapArea.upperLeft.longitude && 
+                point.longitude <= mapArea.lowerRight.longitude) {
                 
                 return true;
             }
         }
     }
     return false;
-}
+};
 
 MapApp.centerOn = function(area) {
     var center = MapApp.mapAreas[area].center; 
@@ -35,7 +35,7 @@ MapApp.centerOn = function(area) {
         new L.LatLng(center.latitude, center.longitude), 
         MapApp.mapZooms.defaultZoom
     );
-}
+};
 
 // adds a pin on the map at the given point
 // TODO: improve this method, not good that it is so hardcoded
@@ -46,12 +46,12 @@ MapApp.addMarker = function(point, name, color) {
     var marker = new L.Marker(markerLoc, {
         icon: icon
     });
-    if (name != null) {
+    if (name !== null) {
         marker.bindPopup(name).openPopup();
     }
     MapApp.layerGroup.addLayer(marker);
     return markerLoc;
-}
+};
 
 // custom icon for the marker pins
 MapApp.MarkerIcon = L.Icon.extend({
@@ -100,7 +100,7 @@ MapApp.processVenues = function(id, partialRes)  {
     }   
     MapApp.places[id] = partialRes;
     Renderer.drawPlaces();
-}
+};
 
 // sends a request to the address server to get the coordinates
 // of the input address. then it sends a request to the venues 
@@ -143,8 +143,8 @@ MapApp.findAddress = function() {
                 Renderer.renderGeopoint(point);
                 geopointToCenter = point;
                 // query the venues server
-                console.log('Sending request to venue_find for (' 
-                    + point.latitude + ', ' + point.longitude + ')'); 
+                console.log('Sending request to venue_find for (' + 
+                    point.latitude + ', ' + point.longitude + ')'); 
                 $.getJSON(
                     Hosts.venuesFind, 
                     point, 
@@ -164,7 +164,7 @@ MapApp.findAddress = function() {
     }).error(MapApp.errorCallback);
 
     return false;
-}
+};
 
 MapApp.errorCallback = function(data) {
     // if there is an error, set view at the default center point
@@ -172,14 +172,14 @@ MapApp.errorCallback = function(data) {
     console.log("Error: " + data.statusText);
     console.log("Response text: " + data.responseText);
     MapApp.hideLoader();
-}
+};
 
 MapApp.showLoader = function() {
   $('#address_search_field').css('background-image', 
       'url("images/loader.gif")');
-}
+};
 
 MapApp.hideLoader = function() {
   $('#address_search_field').css('background-image', '');
-}
+};
 
