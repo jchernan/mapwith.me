@@ -183,5 +183,14 @@ if (urlParam('session_id')) {
    $('#modal-form').submit(joinSession);
    $('#join-modal').click(joinSession);
 
+   /* Ensure modal is always centered */
+   text.modal({ 
+        backdrop: true
+   }).css({
+        width: 'auto', 
+        'margin-left': function () {
+            return -($(this).width() / 2);
+        }
+   });
    text.modal('show');
 } 
