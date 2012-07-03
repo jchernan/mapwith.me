@@ -168,6 +168,7 @@ Share.setSharingMode = function(link, showPopover) {
     // change the color of the share button
     $('#share').removeClass('btn-inverse');
     $('#share').addClass('btn-success');
+    $('#share').html('Sharing');
     if (showPopover) {
         // call 'show' to refresh the popover content.
         // then turn animation on again.
