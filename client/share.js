@@ -8,57 +8,53 @@
   * =============================== */
 
   var SharePopover = function ( element, options ) {
-    this.init('sharepopover', element, options)
-  }
+    this.init('sharepopover', element, options);
+  };
 
   /* NOTE: SHAREPOPOVER EXTENDS BOOTSTRAP-POPOVER.js
      ========================================== */
 
   SharePopover.prototype = $.extend({}, $.fn.popover.Constructor.prototype, {
 
-    constructor: SharePopover
- 
-    , show: function () {
-      var $tip
-        , inside
-        , pos
-        , actualWidth
-        , actualHeight
-        , placement
-        , tp
+    constructor: SharePopover, 
+    show: function () {
+      var $tip, inside, pos, actualWidth, actualHeight, placement, tp;
 
       if (this.hasContent() && this.enabled) {
-        $tip = this.tip()
-        this.setContent()
+        $tip = this.tip();
+        this.setContent();
 
         if (this.options.animation) {
-          $tip.addClass('fade')
+          $tip.addClass('fade');
         }
 
         placement = 'bottom';
 
-        inside = /in/.test(placement)
+        inside = /in/.test(placement);
 
         $tip
           .remove()
           .css({ top: 0, left: 0, display: 'block' })
-          .appendTo(inside ? this.$element : document.body)
+          .appendTo(inside ? this.$element : document.body);
 
-        pos = this.getPosition(inside)
+        pos = this.getPosition(inside);
 
-        actualWidth = $tip[0].offsetWidth
-        actualHeight = $tip[0].offsetHeight
+        actualWidth = $tip[0].offsetWidth;
+        actualHeight = $tip[0].offsetHeight;
 
-        tp = {top: pos.top + pos.height + 3, left: pos.left + pos.width - actualWidth}
+        tp = {
+          top: pos.top + pos.height + 3, 
+          left: pos.left + pos.width - actualWidth
+        };
 
         $tip
           .css(tp)
           .addClass(placement)
-          .addClass('in')
+          .addClass('in');
       }
     }
 
-  })
+  });
 
 
  /* SHAREPOPOVER PLUGIN DEFINITION
@@ -77,7 +73,7 @@
   $.fn.sharepopover.Constructor = SharePopover
 
   $.fn.sharepopover.defaults = $.extend({} , $.fn.popover.defaults, {
-    template: '<div class="popover"><div class="arrow" style="left:94.5%"></div><div class="popover-inner" style="width:500px;"><h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>'
+    template: '<div class="popover"><div class="arrow" style="left:93%"></div><div class="popover-inner" style="width:500px;"><h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>'
   })
 
 }(window.jQuery);
@@ -103,7 +99,7 @@ Share.getWindowContent = function(link) {
         var content = HtmlContent.shareLink.replace('LINK', link);
         return content;
     }
-}
+};
 
 Share.getWindowTitle = function(link) {
     if (link === null) {
@@ -111,7 +107,7 @@ Share.getWindowTitle = function(link) {
     } else {
         return 'You are now sharing this map!';
     }
-}
+};
 
 Share.showWindow = function() {
     $('#share').sharepopover('toggle');
@@ -121,11 +117,11 @@ Share.showWindow = function() {
         $('#popover-form').submit(Share.startSharing);
         $('#popover-form-button').click(Share.startSharing);
     }
-}
+};
 
 Share.hideWindow = function() {
     $('#share').sharepopover('hide');
-}
+};
 
 Share.startSharing = function() {
     
@@ -135,11 +131,11 @@ Share.startSharing = function() {
     var data = { 
        center: {
             latitude:  MapApp.map.getCenter().lat,
-            longitude: MapApp.map.getCenter().lng,
+            longitude: MapApp.map.getCenter().lng
          },
         username:  $('#popover-form-input').val(),
         zoom: MapApp.map.getZoom()
-    } 
+    }; 
 
     socket.on('init_ack', function(data){
         var link = Hosts.baseURL + '?session_id=' + data.session_id;
@@ -152,7 +148,7 @@ Share.startSharing = function() {
     /* TODO(jmunizn) Add loading animation */
 
     return false;
-}
+};
 
 Share.setSharingMode = function(link, showPopover) {
     // get popover from share button
@@ -180,7 +176,7 @@ Share.setSharingMode = function(link, showPopover) {
     CollabBar.init(function(message) {
         socket.emit('send_message', { "message": message }); 
     });
-}
+};
 
 $('#share').sharepopover({
     trigger: 'manual',
