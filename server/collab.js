@@ -161,3 +161,4 @@ io.sockets.on('connection', function(socket) {
 });
 
 
+process.title = 'collab_server';
