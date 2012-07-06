@@ -17,8 +17,8 @@ var pendingAckState = {
 function sendChangeCenter() {
     var mapCenter = MapApp.map.getCenter();
     var center = { latitude: mapCenter.lat,  longitude: mapCenter.lng };
-    console.log('[change_center] Emitting center: ' 
-                + JSON.stringify(center));
+    console.log('[change_center] Emitting center: ' + 
+        JSON.stringify(center));
     pendingAckState.center = center;
     socket.emit('change_center', { 
         center: center
@@ -38,9 +38,8 @@ function sendChangeState() {
     var mapCenter = MapApp.map.getCenter();
     var center = { latitude: mapCenter.lat,  longitude: mapCenter.lng };
     var zoom = MapApp.map.getZoom();
-    console.log('[change_state] Emitting center: ' 
-                + JSON.stringify(center) + ' and zoom: '
-                + zoom);
+    console.log('[change_state] Emitting center: ' + 
+        JSON.stringify(center) + ' and zoom: ' + zoom);
     pendingAckState.center = center;
     pendingAckState.zoom = zoom;
     socket.emit('change_state', { 
@@ -62,9 +61,9 @@ function disableCollabListeners() {
     MapApp.map.off('viewreset', sendChangeState);
 }
 
-socket.on('init_ack', function(data) {
-    console.log('[init_ack] Received initialize ack for collab session: ' 
-                + JSON.stringify(data));
+socket.on('init_ack', function (data) {
+    console.log('[init_ack] Received initialize ack for collab session: ' + 
+        JSON.stringify(data));
  
     MapApp.map.setView(
         new L.LatLng(data.state.center.latitude, data.state.center.longitude),
@@ -80,8 +79,9 @@ function setCenterFromServer(center) {
         MapApp.map.panTo(
             new L.LatLng(center.latitude, center.longitude) 
         );
-    } else if (pendingAckState.center.latitude === center.latitude
-                && pendingAckState.center.longitude === center.longitude) {
+    } else if (pendingAckState.center.latitude === center.latitude && 
+        pendingAckState.center.longitude === center.longitude) {
+
         console.log('[change_center] Received ack for emitted center');
         pendingAckState.center = null;
     } else {
@@ -107,31 +107,31 @@ function setStateFromServer(center, zoom) {
 }
 
 // socket.io listener for center change
-socket.on('change_center', function(data) {
+socket.on('change_center', function (data) {
     console.log('[change_center] Received ' + JSON.stringify(data));
     setCenterFromServer(data.center);
 });
 
 // socket.io listener for zoom change
-socket.on('change_zoom', function(data) {
+socket.on('change_zoom', function (data) {
     console.log('[change_zoom] Received ' + JSON.stringify(data));
     setZoomFromServer(data.zoom);
 });
 
 // socket.io listener for view change
-socket.on('change_state', function(data) {
+socket.on('change_state', function (data) {
     console.log('[change_state] Received ' + JSON.stringify(data));
     setStateFromServer(data.center, data.zoom);
 });
 
 // socket.io listener for send message
-socket.on('send_message', function(data) {
+socket.on('send_message', function (data) {
     console.log('[send_message] Received ' + JSON.stringify(data));
     CollabBar.postMessage(data.from, data.message);  
 });
 
 
-socket.on('error', function(data) { 
+socket.on('error', function (data) { 
     console.log("ERROR! " + JSON.stringify(data)); 
 });
 
@@ -139,7 +139,7 @@ socket.on('error', function(data) {
 /* Initialize urlParam function. Code grabbed from 
     http://www.jquery4u.com/snippets/url-parameters-jquery/#.T9lrKStYsoY
 */
-var urlParam = function(name) {
+var urlParam = function (name) {
     console.log("starting urlParam " + name); 
 
     var results = 
@@ -156,41 +156,43 @@ var urlParam = function(name) {
    immediately */
 if (urlParam('session_id')) {
 
+    // display the modal 
     var text = $(HtmlContent.shareJoin);
+    $('body').append(text);
 
-   $('body').append(text);
+    var id = urlParam('session_id');
 
-   var id = urlParam('session_id');
-
-   var joinSession = function() { 
+    var joinSession = function () { 
         /* Send a message to server indicating our desire to join a session */
         var data = { 
             session_id: id,
             username:  $("#modal-form-input").val()
-        } 
+        }; 
+  
+        socket.on('init_ack', function (data) {
+            var link = Hosts.baseURL + '?session_id=' + data.session_id;
+            Share.setSharingMode(link, false);
+        });
 
         console.log('[init] Emitting init: ' + JSON.stringify(data)); 
         socket.emit('init', data);
 
-        var link = Hosts.baseURL + '?session_id=' + id;
-        Share.setSharingMode(link, false);
-
         text.modal('hide');
         
         return false;
-   }
+    };
     
-   $('#modal-form').submit(joinSession);
-   $('#join-modal').click(joinSession);
+    $('#modal-form').submit(joinSession);
+    $('#join-modal').click(joinSession);
 
-   /* Ensure modal is always centered */
-   text.modal({ 
+    /* Ensure modal is always centered */
+    text.modal({ 
         backdrop: true
-   }).css({
+    }).css({
         width: 'auto', 
         'margin-left': function () {
             return -($(this).width() / 2);
         }
-   });
-   text.modal('show');
+    });
+    text.modal('show');
 } 
