@@ -41,25 +41,50 @@
         z-index: 2;
       }
       #whos_online {
-        opacity: 0.8;
+        opacity: 0.85;
       }
-      #chat_window {
-        opacity: 0.8;
+      #chat-window {
+        opacity: 0.85;
+      }
+      #chat-panel {
+        height: 260px;
+        width: 260px;
         overflow: hidden;
+        /* the next two properties make the 
+        message rows stack from bottom to top 
+        http://stackoverflow.com/questions/6401869/ */ 
+        vertical-align: bottom;
+        display: table-cell;
       }
-      #chat_msg_panel {
-        max-height: 400px;
+      #chat-panel-rows {
+        max-height: 240px;
+        max-width: 240px;
         overflow: auto;
-      } 
-      #chat_send_msg_form {
+        margin-bottom: 20px;
+      }
+      #chat-panel-rows .message {
+        margin: 5px 5px;
+        /* preserve whitespace and wrap test */
+        white-space: pre-wrap;
+        /* break words when they hit max-width */
+        word-wrap: break-word;
+        word-break: normal;
+      }
+      #chat-panel-rows .message .sender {
+        font-weight: bold;
+        /* use margin to have some spacing between
+        the sender's name and the message text */
+        margin-right: 10px;
+      }
+      #chat-send-form {
         margin-bottom: 0px;
       }
-      #chat_send_msg_form textarea {
+      #chat-send-form textarea {
         overflow: hidden;
         resize: none;
         width:166px;
       }
-      #chat_send_msg_form .btn {
+      #chat-send-form .btn {
         padding-top:13px;
         padding-bottom:13px;
         width:70px;
@@ -127,18 +152,15 @@
         </ul>
       </div> <!-- end whos_online -->
 
-      <div id="chat_window" class="well">
+      <div id="chat-window" class="well">
         <!-- Conversation --!> 
-        <div id="chat_msg_panel">  
-          <table class="table" id="chat_table">  
-            <tbody>
-              <!-- tr to anchor new rows -->
-              <tr> </tr>
-            </tbody>
-          </table> 
-        </div> <!-- end chat_msg_panel --> 
+        <div id="chat-panel">
+          <div id="chat-panel-rows">
+            <div class="message"></div>
+          </div>
+        </div> <!-- end chat-panel --> 
         <!-- Send new message --> 
-        <form class="form-vertical" id="chat_send_msg_form">
+        <form class="form-vertical" id="chat-send-form">
           <textarea class="input-xlarge" 
                     id="chat_text" 
                     rows="2"></textarea>
@@ -148,7 +170,7 @@
                  value="Send"> 
           </input>
         </form> <!-- end form -->
-      </div> <!-- end chat_window -->
+      </div> <!-- end chat-window -->
 
     </div> <!-- end right_bar -->
 

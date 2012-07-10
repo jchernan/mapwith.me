@@ -2,16 +2,18 @@ CollabBar = {};
 
 
 CollabBar.postMessage = function postMessage(sender, msg) {
-    $("#chat_table tr:last").after(
-            "<tr>"  
-               + "<td> <strong>" + sender + "</strong> </td>" 
-               + "<td>" + msg + "</td>"
-          + "</tr>");
-
-    /* Ensure chat is scrolled to the bottom to ensure last messages are 
-       visible */
-    $("#chat_msg_panel").scrollTop($("#chat_msg_panel").height());
-}
+    $('#chat-panel-rows .message:last').after(
+        '<div class="message"><span class="sender">' + 
+            sender + '</span>'  + msg + '</div>'      
+    );
+    // chat should be scrolled to the bottom 
+    // to ensure last messages are visible.
+    // http://stackoverflow.com/questions/13362/
+    $('#chat-panel-rows').each(function () {
+        var scrollHeight = Math.max(this.scrollHeight, this.clientHeight);
+        this.scrollTop = scrollHeight - this.clientHeight;
+    });
+};
 
 CollabBar.sharingIconClass = "icon-eye-open"; 
 CollabBar.editingIconClass = "icon-hand-up"; 
@@ -21,32 +23,29 @@ CollabBar.addUser = function addUser(username) {
     var user_list_elem_id = "user_list_elem_" + username; 
 
     $("#user_list li:last").after(
-            "<li id='" + user_list_elem_id  + "'>"  
-               + "<i id='" + icon_id+ "' class='" + CollabBar.sharingIconClass + "'></i>" + username 
-          + "</li>");
+            "<li id='" + user_list_elem_id  + "'>" + 
+            "<i id='" + icon_id + "' class='" + CollabBar.sharingIconClass + 
+            "'></i>" + username + "</li>");
 
     CollabBar.stopEditing(username);
 
     var num_friends = $("#user_list li").length - 1; 
-    var friend_name = num_friends > 1 ? " friends" : " friend" ; 
-    $("#user_list_title").text( "Sharing with " 
-            + num_friends  
-            + friend_name + ": ");
-}
+    var friend_name = num_friends > 1 ? " friends" : " friend"; 
+    $("#user_list_title").text("Sharing with " + 
+        num_friends + friend_name + ": ");
+};
 
 CollabBar.startEditing = function startEditing(username) {
     var icon_id = "icon_" + username; 
     var user_list_elem_id = "user_list_elem_" + username; 
 
-    $("#" + icon_id).attr("class", CollabBar.editingIconClass); 
-
-    
-}
+    $("#" + icon_id).attr("class", CollabBar.editingIconClass);   
+};
 
 CollabBar.stopEditing = function stopEditing(username) {
     var icon_id = "icon_" + username; 
     $("#" + icon_id).attr("class", CollabBar.sharingIconClass); 
-}
+};
 
 /*
   Initialize right menu. 
@@ -55,7 +54,7 @@ CollabBar.stopEditing = function stopEditing(username) {
 */
 CollabBar.init = function init(buttonListener) {
     
-    var messageAction = function() { 
+    var messageAction = function () { 
         var message_to_send = $("#chat_text").val();
         CollabBar.postMessage("Me", message_to_send);
         if (buttonListener)  {
@@ -63,13 +62,13 @@ CollabBar.init = function init(buttonListener) {
         } 
         $("#chat_text").val("");
         return false;
-    }
+    };
 
     $("#chat_button").click(messageAction);
     // By default, hitting 'Enter' on a textarea will create a new line. 
     // We change the behavior to submit the message upon hitting 'Enter'.
     // http://stackoverflow.com/questions/4418819/submit-form-on-enter-when-in-text-field
-    $("#chat_text").keyup(function(e) {
+    $("#chat_text").keyup(function (e) {
         if (e.keyCode === 13) {
             messageAction();
         }
@@ -77,7 +76,7 @@ CollabBar.init = function init(buttonListener) {
     
     CollabBar.addUser("Me");   
     $("#right_bar").css("display", "");
-}
+};
 
 
 
