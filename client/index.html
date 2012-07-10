@@ -80,14 +80,13 @@
         margin-bottom: 0px;
       }
       #chat-send-form textarea {
-        overflow: hidden;
         resize: none;
-        width:166px;
+        height: 38px; 
+        width: 166px;
       }
       #chat-send-form .btn {
-        padding-top:13px;
-        padding-bottom:13px;
-        width:70px;
+        width: 70px;
+        height: 48px;
       }
     </style>
     <title>Maps</title>
@@ -161,9 +160,8 @@
         </div> <!-- end chat-panel --> 
         <!-- Send new message --> 
         <form class="form-vertical" id="chat-send-form">
-          <textarea class="input-xlarge" 
-                    id="chat_text" 
-                    rows="2"></textarea>
+          <textarea class="input" 
+                    id="chat_text"></textarea>
           <input type="button" 
                  id="chat_button" 
                  class="btn btn-large btn-primary" 
