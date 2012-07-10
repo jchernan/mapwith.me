@@ -29,7 +29,7 @@ MapApp.inBounds = function (point) {
     return false;
 };
 
-MapApp.centerOn = function(area) {
+MapApp.centerOn = function (area) {
     var center = MapApp.mapAreas[area].center; 
     MapApp.map.setView(
         new L.LatLng(center.latitude, center.longitude), 
@@ -39,7 +39,7 @@ MapApp.centerOn = function(area) {
 
 // adds a pin on the map at the given point
 // TODO: improve this method, not good that it is so hardcoded
-MapApp.addMarker = function(point, name, color) {
+MapApp.addMarker = function (point, name, color) {
     var markerLoc = new L.LatLng(point.latitude, point.longitude);
     var url = 'images/markers/color-pin.png';
     var icon = new MapApp.MarkerIcon(url.replace("color", color));
@@ -75,6 +75,15 @@ MapApp.map = new L.Map("map");
 MapApp.map.addLayer(MapApp.layerGroup);
 MapApp.map.addLayer(MapApp.tileLayer);
 
+// add map attributions
+MapApp.map.attributionControl.setPrefix(
+    'Powered by <a href="http://leaflet.cloudmade.com">Leaflet</a> ' + 
+    'and <a href="http://foursquare.com">Foursquare</a>'
+);
+MapApp.map.attributionControl.addAttribution(
+    'Map Data &copy; <a href="http://www.openstreetmap.org">OpenStreetMap</a>'
+);
+
 // set initial center and zoom level
 MapApp.centerOn(MapApp.defaultArea);
 
@@ -88,13 +97,13 @@ var parallel_load = require('/parallel_load.js').parallel_load;
 // requests made to the venues server. the final callback 
 // is simply removing the loading icon, since the partial 
 // callbacks are doing all the work.
-MapApp.parallelProcessVenues = new parallel_load(function() {
+MapApp.parallelProcessVenues = new parallel_load(function () {
     // Remove loading icon 
     MapApp.hideLoader();
 });
 
 // partial callbacks for parallelProcessVenues
-MapApp.processVenues = function(id, partialRes)  {
+MapApp.processVenues = function (id, partialRes)  {
     if (!MapApp.places) {
         MapApp.places = {};
     }   
@@ -105,9 +114,9 @@ MapApp.processVenues = function(id, partialRes)  {
 // sends a request to the address server to get the coordinates
 // of the input address. then it sends a request to the venues 
 // server to get the venues around the coordinate.
-MapApp.findAddress = function() {
+MapApp.findAddress = function () {
 
-    var inputField = $('#address_search_field').val();
+    var inputField = $('#address-input').val();
 
     // check if input is undefined, empty, or all whitespaces 
     if (!inputField || /^\s*$/.test(inputField)) {
@@ -123,7 +132,7 @@ MapApp.findAddress = function() {
     MapApp.showLoader();
 
     // query the address server
-    $.getJSON(Hosts.addressFind, address, function(data) {
+    $.getJSON(Hosts.addressFind, address, function (data) {
 
         if (data.length === 0) {
             MapApp.hideLoader();
@@ -166,7 +175,7 @@ MapApp.findAddress = function() {
     return false;
 };
 
-MapApp.errorCallback = function(data) {
+MapApp.errorCallback = function (data) {
     // if there is an error, set view at the default center point
     MapApp.centerOn(MapApp.defaultArea);
     console.log("Error: " + data.statusText);
@@ -174,12 +183,14 @@ MapApp.errorCallback = function(data) {
     MapApp.hideLoader();
 };
 
-MapApp.showLoader = function() {
-  $('#address_search_field').css('background-image', 
-      'url("images/loader.gif")');
+MapApp.showLoader = function () {
+    $('#address-input').css(
+        'background-image', 
+        'url("images/loader.gif")'
+    );
 };
 
-MapApp.hideLoader = function() {
-  $('#address_search_field').css('background-image', '');
+MapApp.hideLoader = function () {
+    $('#address-input').css('background-image', '');
 };
 
