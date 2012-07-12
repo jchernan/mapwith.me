@@ -54,12 +54,15 @@ CollabBar.stopEditing = function stopEditing(username) {
 */
 CollabBar.init = function init(buttonListener) {
     
+    var ENTER_KEY = 13;
     var messageAction = function () { 
-        var message_to_send = $("#chat_text").val();
-        CollabBar.postMessage("Me", message_to_send);
-        if (buttonListener)  {
-            buttonListener(message_to_send); 
-        } 
+        var message_to_send = $.trim($("#chat_text").val());
+        if (message_to_send !== "") {
+            CollabBar.postMessage("Me", message_to_send);
+            if (buttonListener)  {
+                buttonListener(message_to_send); 
+            } 
+        }
         $("#chat_text").val("");
         return false;
     };
@@ -67,29 +70,14 @@ CollabBar.init = function init(buttonListener) {
     $("#chat_button").click(messageAction);
     // By default, hitting 'Enter' on a textarea will create a new line. 
     // We change the behavior to submit the message upon hitting 'Enter'.
-    // http://stackoverflow.com/questions/4418819/submit-form-on-enter-when-in-text-field
-    $("#chat_text").keyup(function (e) {
-        if (e.keyCode === 13) {
+    // http://stackoverflow.com/questions/4418819/
+    $("#chat_text").keydown(function (e) {
+        if (e.keyCode === ENTER_KEY) {
             messageAction();
+            return false;
         }
     });
-    
+ 
     CollabBar.addUser("Me");   
     $("#right_bar").css("display", "");
 };
-
-
-
-/* Begin simulation 
-
-setTimeout(function() { CollabBar.addUser("Jeremy") }, 200);
-setTimeout(function() { CollabBar.addUser("Laura") }, 500);
-
-setTimeout(function() { CollabBar.postMessage("Jeremy",    "Hi Laura. Thai tonight?") }, 1000);
-setTimeout(function() { CollabBar.postMessage("Laura", "Sure. Where are you?") } , 3000);
-setTimeout(function() { CollabBar.postMessage("Jeremy",    "I'm at the Mission. Let me show you where...") } , 7000);
-setTimeout(function() { CollabBar.startEditing("Jeremy") }, 8000);
-setTimeout(function() { CollabBar.postMessage("Me",            "Is there room for one more?") } , 13000);
-setTimeout(function() { CollabBar.stopEditing("Jeremy") }, 15000);
-
-*/
