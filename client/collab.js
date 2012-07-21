@@ -1,71 +1,101 @@
 /*  
-   collab.js  - Framework for sending/receiving map sharing information with server
+  collab.js  - Framework for sending/receiving map sharing information with server
 
-   Requires:
+  Requires:
     - socket.io
+    - globals.js  (Host information)
     - backbone.js (Event handling)
-    - right-bar.js 
-
  */
 
-MapApp.Log = function() {
+MapApp.log = function() {
     return {
         warn: console.log,
         err: console.log,
         info: console.log
     };
-}
+};
 
-MapApp.Collab = function() {
+MapApp.assert = function(expression, message) {
+  if (! expression) {
+    MapApp.log.err(message);
+    throw new AssertException(message);
+  }
+};
+
+MapApp.collab = function() {
   var socket;
+
   // Stores the latest map movement to have been sent to the server. Any map
   // movement while pendingAckState is non-null can be ignored until we've
   // received our own movement back from the server 
-  var init = function() {
-    socket = io.connect(hosts.collaboration);
+  var pendingAckState = {
+    center: null,
+    zoom: null
+  };
+
+
+  
+  var setupSocketListeners = function() {
+    MapApp.assert(socket, "Socket must be initialized");
+
     // socket.io listener for center change
     socket.on('change_center', function (data) {
-      MapApp.Log.info('[change_center] Received ' + JSON.stringify(data));
-      setCenterFromServer(data.center);
+      MapApp.log.info('[change_center] Received ' + JSON.stringify(data));
+      /* TODO: Add validation */
+      this.trigger('change_center', data);
     });
 
     // socket.io listener for zoom change
     socket.on('change_zoom', function (data) {
-      MapApp.Log.info('[change_zoom] Received ' + JSON.stringify(data));
-      setZoomFromServer(data.zoom);
+      MapApp.log.info('[change_zoom] Received ' + JSON.stringify(data));
+      /* TODO: Add validation */
+      this.trigger('change_zoom', data);
     });
 
     // socket.io listener for view change
     socket.on('change_state', function (data) {
-      MapApp.Log.info('[change_state] Received ' + JSON.stringify(data));
-      setStateFromServer(data.center, data.zoom);
+      MapApp.log.info('[change_state] Received ' + JSON.stringify(data));
+      /* TODO: Add validation */
+      this.trigger('change_state', data);
     });
 
     // socket.io listener for send message
     socket.on('send_message', function (data) {
-      MapApp.Log.info('[send_message] Received ' + JSON.stringify(data));
-      CollabBar.postMessage(data.from, data.message);  
+      MapApp.log.info('[send_message] Received ' + JSON.stringify(data));
+      /* TODO: Add validation */
+      this.trigger('send_message', data);
     });
 
     // socket.io listener for init_ack message
     socket.on('init_ack', function (data) {
       console.log('[init_ack] Received initialize ack for collab session: ' + 
           JSON.stringify(data));
- 
-      MapApp.map.setView(
-          new L.LatLng(data.state.center.latitude, data.state.center.longitude),
-          data.state.zoom
-      );
-    
-      enableCollabListeners();
-    });
 
+      this.trigger('init_ack', data);
+      this.trigger('change_state', {
+        center: {
+          latitude: data.state.center.latitude,
+          longitude: data.state.center.longitude
+        },
+        zoom : data.state.zoom
+      });
+    });
 
     // socket.io listener for error message
     socket.on('error', function (data) { 
-      MapApp.Log.err(JSON.stringify(data)); 
+      MapApp.log.err(JSON.stringify(data)); 
      });
 
+  };
+
+  var init = function(data) {
+    _.extend(this, Backbone.Events);
+
+    socket = io.connect(Hosts.collaboration);
+    setupSocketListeners();
+
+    // Send initialization message to server
+    socket.emit(data);
   };
     
   /*
@@ -78,9 +108,11 @@ MapApp.Collab = function() {
         }
    */
   var sendChangeCenter = function(center) {
-    socket.emit('change_center', {center: center});
-    MapApp.Log.info('[change_center] Emitting center: ' + 
+    MapApp.log.info('[change_center] Emitting center: ' + 
         JSON.stringify(center));
+
+    pendingAckState.center = center;
+    socket.emit('change_center', {center: center});
   };
 
   /*
@@ -90,7 +122,8 @@ MapApp.Collab = function() {
         zoom = New zoom level
    */
   var sendChangeZoom = function(zoom) {
-    MapApp.Log.info('[change_zoom] Emitting zoom: ' + zoom);
+    MapApp.log.info('[change_zoom] Emitting zoom: ' + zoom);
+
     socket.emit('change_zoom', { zoom: zoom });
   };
 
@@ -105,8 +138,9 @@ MapApp.Collab = function() {
         zoom = New zoom level
    */
   function sendChangeState(center, zoom) {
-    MapApp.Log.info('[change_state] Emitting center: ' + JSON.stringify(center)
-                  + ' and zoom: ' + zoom);
+    MapApp.log.info('[change_state] Emitting center: ' + 
+                     JSON.stringify(center) + ' and zoom: ' + zoom);
+
     socket.emit('change_state', { 
         center: center,
         zoom: zoom
@@ -114,22 +148,27 @@ MapApp.Collab = function() {
   }
 
 
-
   return {
     init: init,
     sendChangeCenter: sendChangeCenter,
     sendChangeZoom: sendChangeZoom,
     sendChangeState: sendChangeState
-  }
+  };
 
 }();
 
 
 
-MapApp.Collab.init();
+MapApp.collab.init();
+MapApp.map.off('dragend', MapApp.collab.sendChangeCenter);
+MapApp.map.off('zoomend', MapApp.collab.sendChangeZoom);
+MapApp.map.off('viewreset', MapApp.collab.sendChangeState);
+
+var socket = { on: function() {}};
 
 /* TODO (jmunizn): This should be done on init, not here */
 //var socket = io.connect(Hosts.collaboration);
+/*
 var pendingAckState = {
     center: null,
     zoom: null
@@ -174,6 +213,7 @@ function sendChangeState() {
 function enableCollabListeners() {
     MapApp.map.on('dragend', sendChangeCenter);
     MapApp.map.on('zoomend', sendChangeZoom);
+
     MapApp.map.on('viewreset', sendChangeState);
 }
 
@@ -256,6 +296,10 @@ socket.on('send_message', function (data) {
 socket.on('error', function (data) { 
     console.log("ERROR! " + JSON.stringify(data)); 
 });
+
+
+*/
+
 
 
 /* Initialize urlParam function. Code grabbed from 
