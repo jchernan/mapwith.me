@@ -87,110 +87,121 @@ MapApp.map.attributionControl.addAttribution(
 // set initial center and zoom level
 MapApp.centerOn(MapApp.defaultArea);
 
-// add listener function Renderer.draw() to zoom change event
-MapApp.places = null;
-MapApp.map.on('zoomend', Renderer.drawPlaces);
+var Renderer = {};
 
-var parallel_load = require('/parallel_load.js').parallel_load;
+var venue_merge = require("/venue_merge.js").venue_merge;
 
-// a parallel_load object to process the callbacks of the 
-// requests made to the venues server. the final callback 
-// is simply removing the loading icon, since the partial 
-// callbacks are doing all the work.
-MapApp.parallelProcessVenues = new parallel_load(function () {
-    // Remove loading icon 
-    MapApp.hideLoader();
-});
+Renderer.drawPlaces = function() {
 
-// partial callbacks for parallelProcessVenues
-MapApp.processVenues = function (id, partialRes)  {
     if (!MapApp.places) {
-        MapApp.places = {};
-    }   
-    MapApp.places[id] = partialRes;
-    Renderer.drawPlaces();
-};
+        return;
+    }
+  
+    MapApp.layerGroup.clearLayers();
+    Renderer.renderAllGeopoints();
 
-// sends a request to the address server to get the coordinates
-// of the input address. then it sends a request to the venues 
-// server to get the venues around the coordinate.
-MapApp.findAddress = function () {
+    var zoomLevel = MapApp.map.getZoom();
+    var center = MapApp.map.getBounds().getCenter();
+    var corner = MapApp.map.getBounds().getNorthWest();
+    var radiusOfInterest = Renderer.distance(
+        { latitude: center.lat, longitude: center.lng }, 
+        { latitude: corner.lat, longitude: corner.lng }
+    );
+    var threshRadius = radiusOfInterest * 0.002;
+    console.log('zoom level: ' + zoomLevel + ', thresh radius: ' + threshRadius);
 
-    var inputField = $('#address-input').val();
+    // first draw all venues 
+    var mergedPlaces = venue_merge(MapApp.places);
 
-    // check if input is undefined, empty, or all whitespaces 
-    if (!inputField || /^\s*$/.test(inputField)) {
-        console.log('Undefined or empty input');
-        return false;
+    // TODO: do not pass a new venues array
+    Renderer.renderVenues(mergedPlaces.venues.slice(0), threshRadius);
+}
+
+Renderer.renderAllGeopoints = function() {
+    // draw all geopoints in MapApp.geopoints
+    for (var i=0 ; i < MapApp.geopoints.length ; i++) {
+        var point = MapApp.geopoints[i];
+        Renderer.renderGeopoint(point);
+    }
+}
+
+Renderer.renderGeopoint = function(geopoint) {
+    console.log('Call to renderGeopoint'); 
+    MapApp.addMarker(geopoint, null, "pink");
+}
+
+Renderer.renderVenues = function(venues, threshold) {    
+    console.log('Call to renderVenues');
+    console.log('Received ' + venues.length + ' venues');
+
+    var someone_is_spliced = true;
+    var splicedCount = 0;
+
+    while (someone_is_spliced) { 
+        someone_is_spliced = false;
+        for (var i = 0; i < venues.length; i++) {
+            var venue = venues[i];
+            var nearest_venue_idx = Renderer.nearestNeighbor(venue, venues); 
+            var nearest_venue = venues[nearest_venue_idx]; 
+            var venue_idx_to_splice; 
+
+            //console.log('distance between two venues is ' + Renderer.distance(nearest_venue, venue)); 
+            //console.log('. and threshold is  ' + threshold);
+
+            // Decide which venue to splice between nearest_venue and venue
+            // based on their popularity
+            if (nearest_venue.popularity < venue.popularity) {
+                venue_idx_to_splice = nearest_venue_idx;
+            } else {
+                venue_idx_to_splice = i;
+            } 
+
+            if (Renderer.distance(nearest_venue, venue) < threshold) {
+                venues.splice(venue_idx_to_splice, 1); 
+                //console.log('splicing venue at ' + nearest_venue_idx); 
+                someone_is_spliced = true;
+                splicedCount += 1;
+            }
+        } 
     }
 
-    var address = {
-        "address": inputField
-    };
-
-    // Show progress bar 
-    MapApp.showLoader();
-
-    // query the address server
-    $.getJSON(Hosts.addressFind, address, function (data) {
-
-        if (data.length === 0) {
-            MapApp.hideLoader();
-            return;
+    console.log('Spliced ' + splicedCount + ' venues');
+    console.log('Rendering ' + venues.length + ' venues');
+    for (var i = 0; i < venues.length; i++) {
+        var point = venues[i];
+        if (MapApp.inBounds(point)) {
+            MapApp.addMarker(point, point.name + " " + point.popularity, "blue");
+            //console.log(point);
         }
+    }
 
-        MapApp.layerGroup.clearLayers();
-        MapApp.places = null;
-        MapApp.geopoints = [];
-       
-        var geopointToCenter = null;
+}
 
-        for (var i = 0; i < data.length; i++) {
-            var point = data[i];
-            if (MapApp.inBounds(point)) {
-                MapApp.geopoints.push(point);
-                Renderer.renderGeopoint(point);
-                geopointToCenter = point;
-                // query the venues server
-                console.log('Sending request to venue_find for (' + 
-                    point.latitude + ', ' + point.longitude + ')'); 
-                $.getJSON(
-                    Hosts.venuesFind, 
-                    point, 
-                    MapApp.parallelProcessVenues.add(i, MapApp.processVenues)
-                ).error(MapApp.errorCallback);
-            }
+Renderer.nearestNeighbor = function(point, points) {
+    var distances = $.map(points, function(point_i, i) {    
+       if (point_i === point)
+         return Number.MAX_VALUE; //Avoid comparing the point against itself
+       else 
+        return Renderer.distance(point_i, point);
+    }); 
+
+    var min_distance = Number.MAX_VALUE;
+    var min_point_idx = 0;
+
+    for (var i = 0; i < points.length; i++) {
+        if (distances[i] < min_distance) {
+            min_point_idx = i;
+            min_distance = distances[i];            
         }
-        
-        // Render and center in one geopoint 
-        if (geopointToCenter) {
-            var markerLoc = new L.LatLng(geopointToCenter.latitude, geopointToCenter.longitude);
-            MapApp.map.setView(markerLoc, MapApp.mapZooms.foundZoom);
-        } else {
-            MapApp.hideLoader();
-        }
+    }
 
-    }).error(MapApp.errorCallback);
+    return min_point_idx;
+}
 
-    return false;
-};
+Renderer.distance = function(p1, p2) {
+    return Math.pow(p1.latitude - p2.latitude, 2) 
+        + Math.pow(p1.longitude - p2.longitude, 2);
+}
 
-MapApp.errorCallback = function (data) {
-    // if there is an error, set view at the default center point
-    MapApp.centerOn(MapApp.defaultArea);
-    console.log("Error: " + data.statusText);
-    console.log("Response text: " + data.responseText);
-    MapApp.hideLoader();
-};
-
-MapApp.showLoader = function () {
-    $('#address-input').css(
-        'background-image', 
-        'url("images/loader.gif")'
-    );
-};
-
-MapApp.hideLoader = function () {
-    $('#address-input').css('background-image', '');
-};
-
+// add listener function Renderer.draw() to zoom change event
+MapApp.map.on('zoomend', Renderer.drawPlaces);
