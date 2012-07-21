@@ -2,12 +2,134 @@
    collab.js  - Framework for sending/receiving map sharing information with server
 
    Requires:
+    - socket.io
+    - backbone.js (Event handling)
     - right-bar.js 
 
  */
 
+MapApp.Log = function() {
+    return {
+        warn: console.log,
+        err: console.log,
+        info: console.log
+    };
+}
+
+MapApp.Collab = function() {
+  var socket;
+  // Stores the latest map movement to have been sent to the server. Any map
+  // movement while pendingAckState is non-null can be ignored until we've
+  // received our own movement back from the server 
+  var init = function() {
+    socket = io.connect(hosts.collaboration);
+    // socket.io listener for center change
+    socket.on('change_center', function (data) {
+      MapApp.Log.info('[change_center] Received ' + JSON.stringify(data));
+      setCenterFromServer(data.center);
+    });
+
+    // socket.io listener for zoom change
+    socket.on('change_zoom', function (data) {
+      MapApp.Log.info('[change_zoom] Received ' + JSON.stringify(data));
+      setZoomFromServer(data.zoom);
+    });
+
+    // socket.io listener for view change
+    socket.on('change_state', function (data) {
+      MapApp.Log.info('[change_state] Received ' + JSON.stringify(data));
+      setStateFromServer(data.center, data.zoom);
+    });
+
+    // socket.io listener for send message
+    socket.on('send_message', function (data) {
+      MapApp.Log.info('[send_message] Received ' + JSON.stringify(data));
+      CollabBar.postMessage(data.from, data.message);  
+    });
+
+    // socket.io listener for init_ack message
+    socket.on('init_ack', function (data) {
+      console.log('[init_ack] Received initialize ack for collab session: ' + 
+          JSON.stringify(data));
+ 
+      MapApp.map.setView(
+          new L.LatLng(data.state.center.latitude, data.state.center.longitude),
+          data.state.zoom
+      );
+    
+      enableCollabListeners();
+    });
+
+
+    // socket.io listener for error message
+    socket.on('error', function (data) { 
+      MapApp.Log.err(JSON.stringify(data)); 
+     });
+
+  };
+    
+  /*
+     Send message to change map center location
+    
+     Parameters:
+        center = {
+            - latitude: Latitude to move to
+            - longitude: Longitude to move to
+        }
+   */
+  var sendChangeCenter = function(center) {
+    socket.emit('change_center', {center: center});
+    MapApp.Log.info('[change_center] Emitting center: ' + 
+        JSON.stringify(center));
+  };
+
+  /*
+     Send message to change map zoom level
+    
+     Parameters:
+        zoom = New zoom level
+   */
+  var sendChangeZoom = function(zoom) {
+    MapApp.Log.info('[change_zoom] Emitting zoom: ' + zoom);
+    socket.emit('change_zoom', { zoom: zoom });
+  };
+
+  /*
+     Send message to change both the map's zoom level and its center location
+    
+     Parameters:
+        center = {
+            - latitude: Latitude to move to
+            - longitude: Longitude to move to
+        }
+        zoom = New zoom level
+   */
+  function sendChangeState(center, zoom) {
+    MapApp.Log.info('[change_state] Emitting center: ' + JSON.stringify(center)
+                  + ' and zoom: ' + zoom);
+    socket.emit('change_state', { 
+        center: center,
+        zoom: zoom
+    });
+  }
+
+
+
+  return {
+    init: init,
+    sendChangeCenter: sendChangeCenter,
+    sendChangeZoom: sendChangeZoom,
+    sendChangeState: sendChangeState
+  }
+
+}();
+
+
+
+MapApp.Collab.init();
+
 /* TODO (jmunizn): This should be done on init, not here */
-var socket = io.connect(Hosts.collaboration);
+//var socket = io.connect(Hosts.collaboration);
 var pendingAckState = {
     center: null,
     zoom: null
