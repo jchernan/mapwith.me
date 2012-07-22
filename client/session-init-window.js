@@ -128,10 +128,7 @@ Share.startSharing = function() {
   MapApp.log.info('[Share.startSharing] User is starting share session');
   // Send a message to server indicating our desire to join a session
   var data = { 
-    center: {
-      latitude:  MapApp.map.getCenter().lat,
-      longitude: MapApp.map.getCenter().lng
-     },
+     center: MapApp.map.getCenter(),
      username:  $('#popover-form-input').val(),
      zoom: MapApp.map.getZoom()
   }; 

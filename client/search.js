@@ -1,6 +1,21 @@
 
 MapApp.places = null;
 
+var venueMerge = require("/venue_merge.js").venue_merge;
+
+var drawPlaces = function () {
+  if (MapApp.places) {
+    var mergedPlaces = venueMerge(MapApp.places);
+    MapApp.map.clear();
+    MapApp.map.renderGeopoints(MapApp.geopoints);
+    // TODO: do not pass a new venues array
+    MapApp.map.renderVenues(mergedPlaces.venues.slice(0));
+  }
+}
+
+// add listener function renderPlaces to zoom change event
+MapApp.map.on('zoomend', drawPlaces);
+
 var parallel_load = require('/parallel_load.js').parallel_load;
 
 // a parallel_load object to process the callbacks of the 
@@ -18,7 +33,7 @@ MapApp.processVenues = function (id, partialRes)  {
         MapApp.places = {};
     }   
     MapApp.places[id] = partialRes;
-    Renderer.drawPlaces();
+    drawPlaces();
 };
 
 // sends a request to the address server to get the coordinates
@@ -49,7 +64,7 @@ MapApp.findAddress = function () {
             return;
         }
 
-        MapApp.layerGroup.clearLayers();
+        MapApp.map.clear();
         MapApp.places = null;
         MapApp.geopoints = [];
        
@@ -57,9 +72,9 @@ MapApp.findAddress = function () {
 
         for (var i = 0; i < data.length; i++) {
             var point = data[i];
-            if (MapApp.inBounds(point)) {
+            if (MapApp.map.inBounds(point)) {
                 MapApp.geopoints.push(point);
-                Renderer.renderGeopoint(point);
+                MapApp.map.renderGeopoints([point]);
                 geopointToCenter = point;
                 // query the venues server
                 console.log('Sending request to venue_find for (' + 
@@ -74,8 +89,7 @@ MapApp.findAddress = function () {
         
         // Render and center in one geopoint 
         if (geopointToCenter) {
-            var markerLoc = new L.LatLng(geopointToCenter.latitude, geopointToCenter.longitude);
-            MapApp.map.setView(markerLoc, MapApp.mapZooms.foundZoom);
+            MapApp.map.centerOn(geopointToCenter, MapApp.map.mapZooms.foundZoom);
         } else {
             MapApp.hideLoader();
         }
@@ -87,7 +101,7 @@ MapApp.findAddress = function () {
 
 MapApp.errorCallback = function (data) {
     // if there is an error, set view at the default center point
-    MapApp.centerOn(MapApp.defaultArea);
+    MapApp.map.centerOn(MapApp.map.defaultArea);
     console.log("Error: " + data.statusText);
     console.log("Response text: " + data.responseText);
     MapApp.hideLoader();
