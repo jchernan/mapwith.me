@@ -39,29 +39,35 @@ io.sockets.on('connection', function(socket) {
             /* TODO: What if id is not received ? */
             
             var session_id; 
+            var cid; 
             if (data.session_id) {
                 session_id = data.session_id; 
                 assert.notEqual(typeof state_map[session_id], "undefined");
+                cid = ++(state_map[session_id].max_cid);
             } else {
                 /* Initialize a brand new session */
                 session_id = max_id + 1; 
+                cid = 1;
                 console.log("New session with id " + session_id); 
                 max_id = session_id;
                 assert.equal(typeof state_map[session_id], "undefined");
                 state_map[session_id] = { 
                         center: data.center, 
                         zoom: data.zoom,
-                        username: data.username
+                        username: data.username,
+                        max_cid: cid
                 };
             } 
             
             socket.session_id = session_id;
+            socket.cid = cid;
             socket.username = data.username;
             socket.join(session_id); 
               
             socket.emit('init_ack', { 
                   "session_id": session_id, 
-                  "state": state_map[session_id] 
+                  "state": state_map[session_id],
+                  "cid": cid 
                 }); 
 
             console.log("emit init_ack");
@@ -90,6 +96,21 @@ io.sockets.on('connection', function(socket) {
 
      }
 
+    /* 
+        Annotate received message with sender information 
+        Parameters:
+          - data - Incoming message from some client. 
+        Side effects:
+          Adds two fields to data:
+            - from_cid (cid from which message was received)
+            - from     (sender's username)
+
+     */
+    var annotate_data = function(data) {
+        data.from_cid = socket.cid;
+        data.from = socket.username;
+    }
+
     /*  
         Signal from client that the user has moved inside the map to:
         -  a new center (change_center), 
@@ -114,6 +135,7 @@ io.sockets.on('connection', function(socket) {
         }
         else {
             change_state_map(socket.session_id, data); 
+            annotate_data(data);
             io.sockets.in(socket.session_id).emit('change_center', data);  
         }
     });
@@ -124,6 +146,7 @@ io.sockets.on('connection', function(socket) {
         }
         else {
             change_state_map(socket.session_id, data); 
+            annotate_data(data);
             io.sockets.in(socket.session_id).emit('change_zoom', data);  
         }
     });
@@ -134,6 +157,7 @@ io.sockets.on('connection', function(socket) {
         }
         else {
             change_state_map(socket.session_id, data); 
+            annotate_data(data);
             io.sockets.in(socket.session_id).emit('change_state', data);  
         }
     });
@@ -152,7 +176,7 @@ io.sockets.on('connection', function(socket) {
             console.log("[ERR - send_message Invalid state");
         }
         else {
-            data.from = socket.username;
+            annotate_data(data);
             socket.broadcast.to(socket.session_id).emit(
                 'send_message', data);  
         }

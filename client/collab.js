@@ -24,52 +24,95 @@ MapApp.assert = function(expression, message) {
 
 MapApp.collab = function() {
   var socket;
+  var cid;    // The client id of this client
+  var maxXid; // The largest xid sent by this client
 
-  // Stores the latest map movement to have been sent to the server. Any map
-  // movement while pendingAckState is non-null can be ignored until we've
-  // received our own movement back from the server 
-  var pendingAckState = {
-    center: null,
-    zoom: null
+  /* 
+    Stores the latest map movement that was sent to the server and the server
+    hasn't yet acknowledged. In other words, the last map movement that has been 
+    sent by the client that hasn't been forwarded back by the server.   
+    
+    Any map movement of the same type as this pending message can be ignored 
+    until this message is acknowledged.
+   */
+  var pendingMsg = { opType: null, xid: null };
+
+  /*
+     Before sending a message via socket.io, assign it a XID and register its
+     opType (changeCenter, changeZoom, etc). This allows us to ignore some
+     messages while we're waiting for an acknowledgement.
+   */
+  var preSendMsg = function (opType) {
+    pendingMsg.opType = opType;
+    pendingMsg.xid = ++maxXid;
+  };
+
+  /* Before processing an incoming server message, decide if it can be ignored
+     based on any outstanding pending out-going messagse.
+   */
+  var preReceiveMessage = function (data, opType) {
+    if (pendingMsg.opType === opType) {
+      // There's a pending outgoing message of the same type, so we can ignore
+      // it. If this is our ack, though, then we can clear the pendingMsg.
+      if (data.xid === pendingMsg.xid) {
+        pendingMsg = { opType: null, xid: null };
+      }
+      return true;
+    } else {
+      // No pending outgoing message, so we cannot ignore
+      return false;
+    } 
   };
 
 
-  
-  var setupSocketListeners = function() {
+  var setupSocketListeners = function () {
     MapApp.assert(socket, "Socket must be initialized");
 
+    var on = function(msgType, fn) {
+      socket.on(msgType, function(data) {
+        if (preReceiveMessage(data, msgType)) {
+          fn.apply(data); 
+        } else {
+          MapApp.log.info('[' + msgType + '] Filtered message due to ' + 
+            'pending state. Message was: ' + JSON.stringify(data));
+        }
+      });
+    }; 
+
     // socket.io listener for center change
-    socket.on('change_center', function (data) {
+    on('change_center', function (data) {
       MapApp.log.info('[change_center] Received ' + JSON.stringify(data));
       /* TODO: Add validation */
-      this.trigger('change_center', data);
+        this.trigger('change_center', data);
     });
 
     // socket.io listener for zoom change
-    socket.on('change_zoom', function (data) {
+    on('change_zoom', function (data) {
       MapApp.log.info('[change_zoom] Received ' + JSON.stringify(data));
       /* TODO: Add validation */
       this.trigger('change_zoom', data);
     });
 
     // socket.io listener for view change
-    socket.on('change_state', function (data) {
+    on('change_state', function (data) {
       MapApp.log.info('[change_state] Received ' + JSON.stringify(data));
       /* TODO: Add validation */
       this.trigger('change_state', data);
     });
 
     // socket.io listener for send message
-    socket.on('send_message', function (data) {
+    on('send_message', function (data) {
       MapApp.log.info('[send_message] Received ' + JSON.stringify(data));
       /* TODO: Add validation */
       this.trigger('send_message', data);
     });
 
     // socket.io listener for init_ack message
-    socket.on('init_ack', function (data) {
+    on('init_ack', function (data) {
       console.log('[init_ack] Received initialize ack for collab session: ' + 
           JSON.stringify(data));
+
+      this.cid = data.cid;
 
       this.trigger('init_ack', data);
       this.trigger('change_state', {
@@ -82,20 +125,40 @@ MapApp.collab = function() {
     });
 
     // socket.io listener for error message
-    socket.on('error', function (data) { 
+    on('error', function (data) { 
       MapApp.log.err(JSON.stringify(data)); 
      });
 
   };
 
+  /*
+     Initialize a sharing session
+
+     Parameters:
+
+       * If this is a brand-new session:
+           center =  The current center location before starting to share the map.
+           { 
+             - latitude:  Current latitude
+             - longitude: Current longitude
+           } 
+           zoom = The current zoom level before starting to share the map.
+           username = Username selected by this user.
+
+       * If we want to join an existing session:
+           session_id = The id of the session we wish to join.
+           username = Username selected by this user. 
+  */ 
   var init = function(data) {
+    MapApp.log.info('[init] Emitting init: ' + JSON.stringify(data)); 
+
     _.extend(this, Backbone.Events);
 
     socket = io.connect(Hosts.collaboration);
     setupSocketListeners();
 
     // Send initialization message to server
-    socket.emit(data);
+    socket.emit('init', data);
   };
     
   /*
@@ -103,15 +166,16 @@ MapApp.collab = function() {
     
      Parameters:
         center = {
-            - latitude: Latitude to move to
-            - longitude: Longitude to move to
+          - latitude: Latitude to move to
+          - longitude: Longitude to move to
         }
    */
-  var sendChangeCenter = function(center) {
+  var sedChangeCenter = function(center) {
     MapApp.log.info('[change_center] Emitting center: ' + 
-        JSON.stringify(center));
+      JSON.stringify(center));
 
-    pendingAckState.center = center;
+    
+    preSendMsg('change_center');
     socket.emit('change_center', {center: center});
   };
 
@@ -124,6 +188,7 @@ MapApp.collab = function() {
   var sendChangeZoom = function(zoom) {
     MapApp.log.info('[change_zoom] Emitting zoom: ' + zoom);
 
+    preSendMsg('change_zoom');
     socket.emit('change_zoom', { zoom: zoom });
   };
 
@@ -141,6 +206,7 @@ MapApp.collab = function() {
     MapApp.log.info('[change_state] Emitting center: ' + 
                      JSON.stringify(center) + ' and zoom: ' + zoom);
 
+    preSendMsg('change_state');
     socket.emit('change_state', { 
         center: center,
         zoom: zoom
