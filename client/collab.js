@@ -210,7 +210,7 @@ MapApp.collab = function() {
                      JSON.stringify(center) + ' and zoom: ' + zoom);
 
     var xid = preSendMsg('change_state');
-    socket.emit('change_state', xid, { 
+    emit('change_state', xid, { 
         center: center,
         zoom: zoom
     });
