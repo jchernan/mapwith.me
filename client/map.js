@@ -124,17 +124,44 @@ MapApp.map = function () {
     return markerLoc;
   };
 
-  var on = function (type, fn) {
-    map.on(type, fn);
-  };
-
   /*
-    Rendering methods
+    Rendering methods. The map stores the points that it is
+    currently rendering. A point can be either a geopoint
+    or a venue. 
+    
+    A geopoint is a geographical coordinate in the map retrieved from 
+    a geolocator search using an input address.
+
+    A venue is a geographical coordinate that represents a place of 
+    interest near a geopoint.
   */
 
+  var storedGeopoints = null;
+  var storedVenues = null;
+
   var clear = function () {
+    storedGeopoints = null;
+    storedVenues = null;
     layerGroup.clearLayers();
   };
+
+  var drawPlaces = function (geopoints, venues) {
+    storedGeopoints = geopoints;
+    storedVenues = venues;
+    if (geopoints) {
+      renderGeopoints(geopoints);
+    }
+    if (venues) {
+      // TODO: do not pass a new venues array
+      renderVenues(venues.slice(0));
+    }
+  };
+
+  // add listener function drawPlaces to zoom change event
+  map.on('zoomend', function () {
+    layerGroup.clearLayers();
+    drawPlaces(storedGeopoints, storedVenues);
+  });
 
   var renderGeopoints = function (geopoints) {
     MapApp.log.info('Call to renderGeopoints. Received ' + geopoints.length + ' points.');
@@ -144,10 +171,11 @@ MapApp.map = function () {
   };
 
   var renderVenues = function (venues) {    
-    
     MapApp.log.info('Call to renderVenues. Received ' + venues.length + ' points.');
-
     var zoomLevel = map.getZoom();
+    if (venues.length === 0) {
+      return;
+    }
     var center = map.getBounds().getCenter();
     var corner = map.getBounds().getNorthWest();
     var radiusOfInterest = distance(
@@ -293,11 +321,9 @@ MapApp.map = function () {
     centerOn: centerOn,
     centerOnArea: centerOnArea,
     clear: clear,
-    renderVenues: renderVenues,
-    renderGeopoints: renderGeopoints,
+    drawPlaces: drawPlaces,
     getCenter: getCenter,
     getZoom: getZoom,
-    on: on
   };
 
 }();
