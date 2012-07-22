@@ -81,3 +81,11 @@ CollabBar.init = function init(buttonListener) {
     CollabBar.addUser("Me");   
     $("#right_bar").css("display", "");
 };
+
+
+// Listener to add message from server to chat area 
+MapApp.collab.on("send_message",  function(data) {
+  CollabBar.postMessage(data.from, data.message);
+});
+
+

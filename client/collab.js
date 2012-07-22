@@ -411,13 +411,13 @@ if (urlParam('session_id')) {
             username:  $("#modal-form-input").val()
         }; 
   
-        socket.on('init_ack', function (data) {
+        MapApp.collab.on('init_ack', function (data) {
             var link = Hosts.baseURL + '?session_id=' + data.session_id;
             Share.setSharingMode(link, false);
         });
 
         console.log('[init] Emitting init: ' + JSON.stringify(data)); 
-        socket.emit('init', data);
+        MapApp.collab.init(data);
 
         text.modal('hide');
         
