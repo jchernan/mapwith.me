@@ -125,29 +125,28 @@ Share.hideWindow = function() {
 
 Share.startSharing = function() {
     
-    console.log('User is starting share session');
-    
-    // Send a message to server indicating our desire to join a session
-    var data = { 
-       center: {
-            latitude:  MapApp.map.getCenter().lat,
-            longitude: MapApp.map.getCenter().lng
-         },
-        username:  $('#popover-form-input').val(),
-        zoom: MapApp.map.getZoom()
-    }; 
+  MapApp.log.info('[Share.startSharing] User is starting share session');
+  // Send a message to server indicating our desire to join a session
+  var data = { 
+    center: {
+      latitude:  MapApp.map.getCenter().lat,
+      longitude: MapApp.map.getCenter().lng
+     },
+     username:  $('#popover-form-input').val(),
+     zoom: MapApp.map.getZoom()
+  }; 
 
-    socket.on('init_ack', function(data){
-        var link = Hosts.baseURL + '?session_id=' + data.session_id;
-        Share.setSharingMode(link, true);
-    });
+  MapApp.collab.on('init_ack', function(data){
+    var link = Hosts.baseURL + '?session_id=' + data.session_id;
+    Share.setSharingMode(link, true);
+   });
 
-    console.log('Emitting init: ' + JSON.stringify(data)); 
-    socket.emit('init', data);
+  MapApp.log.info('Emitting init: ' + JSON.stringify(data)); 
+  MapApp.collab.init(data);
 
     /* TODO(jmunizn) Add loading animation */
 
-    return false;
+  return false;
 };
 
 Share.setSharingMode = function(link, showPopover) {
@@ -172,7 +171,7 @@ Share.setSharingMode = function(link, showPopover) {
     
     // Initialize right bar 
     CollabBar.init(function(message) {
-        socket.emit('send_message', { "message": message }); 
+        MapApp.collab.sendMessage(message);
     });
 };
 

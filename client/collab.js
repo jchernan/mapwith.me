@@ -10,14 +10,12 @@
 MapApp.log = {
   warn: console.log,
   err: console.log,
-  info: console.log
+  info: function (msg) { console.log(msg); }
 };
 
 MapApp.assert = function(expression, message) {
   if (! expression) {
-    MapApp.log.err(message);
-    throw new AssertException(message);
-  }
+    MapApp.log.err(message); throw new AssertException(message); }
 };
 
 MapApp.collab = function() {
@@ -56,10 +54,10 @@ MapApp.collab = function() {
       if (data.xid === pendingMsg.xid) {
         pendingMsg = { opType: null, xid: null };
       }
-      return true;
+      return false;
     } else {
       // No pending outgoing message, so we cannot ignore
-      return false;
+      return true;
     } 
   };
 
@@ -70,7 +68,7 @@ MapApp.collab = function() {
     var on = function(msgType, fn) {
       socket.on(msgType, function(data) {
         if (preReceiveMessage(data, msgType)) {
-          fn.apply(data); 
+          fn(data); 
         } else {
           MapApp.log.info('[' + msgType + '] Filtered message due to ' + 
             'pending state. Message was: ' + JSON.stringify(data));
@@ -82,28 +80,28 @@ MapApp.collab = function() {
     on('change_center', function (data) {
       MapApp.log.info('[change_center] Received ' + JSON.stringify(data));
       /* TODO: Add validation */
-        this.trigger('change_center', data);
+        MapApp.collab.trigger('change_center', data);
     });
 
     // socket.io listener for zoom change
     on('change_zoom', function (data) {
       MapApp.log.info('[change_zoom] Received ' + JSON.stringify(data));
       /* TODO: Add validation */
-      this.trigger('change_zoom', data);
+      MapApp.collab.trigger('change_zoom', data);
     });
 
     // socket.io listener for view change
     on('change_state', function (data) {
       MapApp.log.info('[change_state] Received ' + JSON.stringify(data));
       /* TODO: Add validation */
-      this.trigger('change_state', data);
+      MapApp.collab.trigger('change_state', data);
     });
 
     // socket.io listener for send message
     on('send_message', function (data) {
       MapApp.log.info('[send_message] Received ' + JSON.stringify(data));
       /* TODO: Add validation */
-      this.trigger('send_message', data);
+      MapApp.collab.trigger('send_message', data);
     });
 
     // socket.io listener for init_ack message
@@ -113,8 +111,8 @@ MapApp.collab = function() {
 
       this.cid = data.cid;
 
-      this.trigger('init_ack', data);
-      this.trigger('change_state', {
+      MapApp.collab.trigger('init_ack', data);
+      MapApp.collab.trigger('change_state', {
         center: {
           latitude: data.state.center.latitude,
           longitude: data.state.center.longitude
@@ -212,11 +210,24 @@ MapApp.collab = function() {
   }
 
 
+  /*
+     Send a chat message.
+    
+     Parameters:
+        message = Textual content of the message
+   */
+  function sendMessage(message) {
+    MapApp.log.info('[message] Emitting message: ' +  message);
+
+    socket.emit('send_message', { message: message });
+  }
+
   return {
     init: init,
     sendChangeCenter: sendChangeCenter,
     sendChangeZoom: sendChangeZoom,
-    sendChangeState: sendChangeState
+    sendChangeState: sendChangeState,
+    sendMessage: sendMessage
   };
 
 }();
