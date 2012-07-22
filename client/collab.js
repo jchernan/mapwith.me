@@ -170,7 +170,7 @@ MapApp.collab = function() {
           - longitude: Longitude to move to
         }
    */
-  var sedChangeCenter = function(center) {
+  var sendChangeCenter = function(center) {
     MapApp.log.info('[change_center] Emitting center: ' + 
       JSON.stringify(center));
 
