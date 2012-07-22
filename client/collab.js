@@ -7,12 +7,10 @@
     - backbone.js (Event handling)
  */
 
-MapApp.log = function() {
-    return {
-        warn: console.log,
-        err: console.log,
-        info: console.log
-    };
+MapApp.log = {
+  warn: console.log,
+  err: console.log,
+  info: console.log
 };
 
 MapApp.assert = function(expression, message) {
