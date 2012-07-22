@@ -21,7 +21,7 @@ MapApp.assert = function(expression, message) {
 MapApp.collab = function() {
   var socket;
   var cid;    // The client id of this client
-  var maxXid; // The largest xid sent by this client
+  var maxXid = 0; // The largest xid sent by this client
 
 
   /* 
@@ -42,11 +42,11 @@ MapApp.collab = function() {
   var preSendMsg = function (opType) {
     pendingMsg.opType = opType;
     pendingMsg.xid = ++maxXid;
+    return pendingMsg.xid; 
   };
 
-  /* Before processing an incoming server message, decide if it can be ignored
-     based on any outstanding pending out-going messagse.
-   */
+  // Before processing an incoming server message, decide if it can be ignored
+  //   based on any outstanding pending out-going messagse.
   var preReceiveMessage = function (data, opType) {
     if (pendingMsg.opType === opType) {
       // There's a pending outgoing message of the same type, so we can ignore
@@ -59,6 +59,12 @@ MapApp.collab = function() {
       // No pending outgoing message, so we cannot ignore
       return true;
     } 
+  };
+
+  // Send a message to the server
+  var emit = function (msg, xid, args) {
+    args.xid = xid;
+    socket.emit(msg, args);
   };
 
 
@@ -154,7 +160,8 @@ MapApp.collab = function() {
     setupSocketListeners();
 
     // Send initialization message to server
-    socket.emit('init', data);
+    var xid = preSendMsg('init');
+    emit('init', xid, data);
   };
     
   /*
@@ -171,8 +178,8 @@ MapApp.collab = function() {
       JSON.stringify(center));
 
     
-    preSendMsg('change_center');
-    socket.emit('change_center', {center: center});
+    var xid = preSendMsg('change_center');
+    emit('change_center', xid, {center: center});
   };
 
   /*
@@ -184,8 +191,8 @@ MapApp.collab = function() {
   var sendChangeZoom = function(zoom) {
     MapApp.log.info('[change_zoom] Emitting zoom: ' + zoom);
 
-    preSendMsg('change_zoom');
-    socket.emit('change_zoom', { zoom: zoom });
+    var xid = preSendMsg('change_zoom');
+    socket.emit('change_zoom', xid, { zoom: zoom });
   };
 
   /*
@@ -202,8 +209,8 @@ MapApp.collab = function() {
     MapApp.log.info('[change_state] Emitting center: ' + 
                      JSON.stringify(center) + ' and zoom: ' + zoom);
 
-    preSendMsg('change_state');
-    socket.emit('change_state', { 
+    var xid = preSendMsg('change_state');
+    socket.emit('change_state', xid, { 
         center: center,
         zoom: zoom
     });
@@ -219,6 +226,8 @@ MapApp.collab = function() {
   function sendMessage(message) {
     MapApp.log.info('[message] Emitting message: ' +  message);
 
+    // Don't use emit to avoid assigning an xid to this message. We don't need
+    // an xid for this message since we don't care about receiving its ack
     socket.emit('send_message', { message: message });
   }
 
