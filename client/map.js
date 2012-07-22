@@ -1,4 +1,3 @@
-var MapApp = {};
 
 MapApp.mapAreas = Cities;
 MapApp.defaultArea = 'san-francisco';
@@ -205,3 +204,75 @@ Renderer.distance = function(p1, p2) {
 
 // add listener function Renderer.draw() to zoom change event
 MapApp.map.on('zoomend', Renderer.drawPlaces);
+
+MapApp.themap = function () {
+
+  var map = MapApp.map;
+
+  // Listener function for a change in map center
+  var sendChangeCenter = function () {
+    var mapCenter = MapApp.map.getCenter();
+    var center = { latitude: mapCenter.lat,  longitude: mapCenter.lng };
+    MapApp.collab.sendChangeCenter(center);
+  }
+
+  // Listener function for a change in map zoom level
+  var sendChangeZoom = function () {
+    var zoom = MapApp.map.getZoom();
+    MapApp.collab.sendChangeZoom(zoom);
+  }
+
+  // Listener function for a change in map view
+  var sendChangeState = function () {
+    var mapCenter = MapApp.map.getCenter();
+    var center = { latitude: mapCenter.lat,  longitude: mapCenter.lng };
+    var zoom = MapApp.map.getZoom();
+    MapApp.collab.sendChangeState(center, zoom);
+  }
+
+  var enableCollabListeners = function () {
+    map.on('dragend', sendChangeCenter);
+    map.on('zoomend', sendChangeZoom);
+    map.on('viewreset', sendChangeState);
+  }
+
+  var disableCollabListeners = function() {
+    map.off('dragend', sendChangeCenter);
+    map.off('zoomend', sendChangeZoom);
+    map.off('viewreset', sendChangeState);
+  }
+
+  var setCenterFromServer = function (center) {
+    MapApp.log.info('[change_center] Setting new center');
+    map.panTo(new L.LatLng(
+      center.latitude, 
+      center.longitude) 
+    );
+  };
+
+  var setZoomFromServer = function (zoom) {
+    MapApp.log.info('[change_zoom] Setting new zoom');
+    map.setZoom(zoom);
+  };
+  
+  MapApp.collab.on('change_center', function (data) {
+    setCenterFromServer(data.center);
+  });
+
+  MapApp.collab.on('change_zoom', function (data) {
+    setZoomFromServer(data.zoom);
+  });
+
+  MapApp.collab.on('change_state', function (data) {
+    setCenterFromServer(data.center);
+    setZoomFromServer(data.zoom);
+  });
+
+  MapApp.collab.on('init_ack', function (data) {
+    console.log('[init_ack] Received initialize ack for collab session: ' 
+      + JSON.stringify(data));
+    enableCollabListeners(); 
+  });
+  
+}();
+

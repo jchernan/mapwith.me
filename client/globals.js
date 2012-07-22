@@ -40,3 +40,5 @@ var Cities = {
     "san-francisco": SanFrancisco,
     "boston": Boston
 };
+
+var MapApp = {};

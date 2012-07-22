@@ -25,6 +25,7 @@ MapApp.collab = function() {
   var cid;    // The client id of this client
   var maxXid; // The largest xid sent by this client
 
+
   /* 
     Stores the latest map movement that was sent to the server and the server
     hasn't yet acknowledged. In other words, the last map movement that has been 
@@ -150,7 +151,6 @@ MapApp.collab = function() {
   var init = function(data) {
     MapApp.log.info('[init] Emitting init: ' + JSON.stringify(data)); 
 
-    _.extend(this, Backbone.Events);
 
     socket = io.connect(Hosts.collaboration);
     setupSocketListeners();
@@ -221,15 +221,16 @@ MapApp.collab = function() {
 
 }();
 
+_.extend(MapApp.collab, Backbone.Events);
 
-
+/*
 MapApp.collab.init();
 MapApp.map.off('dragend', MapApp.collab.sendChangeCenter);
 MapApp.map.off('zoomend', MapApp.collab.sendChangeZoom);
 MapApp.map.off('viewreset', MapApp.collab.sendChangeState);
 
 var socket = { on: function() {}};
-
+*/
 /* TODO (jmunizn): This should be done on init, not here */
 //var socket = io.connect(Hosts.collaboration);
 /*
