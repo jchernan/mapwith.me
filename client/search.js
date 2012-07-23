@@ -13,7 +13,7 @@ MapApp.search = function () {
   // callbacks are doing all the work.
   var parallelProcessVenues = new parallelLoad(function () {
     // Remove loading icon 
-    MapApp.hideLoader();
+    MapApp.searchField.hideLoader();
   });
 
   // partial callbacks for parallelProcessVenues
@@ -32,11 +32,11 @@ MapApp.search = function () {
   // server to get the venues around the coordinate.
   var findAddress = function () {
 
-    var inputField = $('#address-input').val();
+    var inputField = MapApp.searchField.getInput();
 
     // check if input is undefined, empty, or all whitespaces 
     if (!inputField || /^\s*$/.test(inputField)) {
-      console.log('Undefined or empty input');
+      MapApp.log.warn('Undefined or empty input');
       return false;
     }
 
@@ -45,13 +45,13 @@ MapApp.search = function () {
     };
 
     // Show progress bar 
-    MapApp.showLoader();
+    MapApp.searchField.showLoader();
 
     // query the address server
     $.getJSON(Hosts.addressFind, address, function (data) {
 
       if (data.length === 0) {
-        MapApp.hideLoader();
+        MapApp.searchField.hideLoader();
         return;
       }
 
@@ -79,7 +79,7 @@ MapApp.search = function () {
       if (geopointToCenter) {
         MapApp.map.centerOn(geopointToCenter, MapApp.map.mapZooms.foundZoom);
       } else {
-        MapApp.hideLoader();
+        MapApp.searchField.hideLoader();
       }
 
     }).error(errorCallback);
@@ -91,7 +91,7 @@ MapApp.search = function () {
     // if there is an error, set view at the default center point
     MapApp.log.err("Error: " + data.statusText);
     MapApp.log.err("Response text: " + data.responseText);
-    MapApp.hideLoader();
+    MapApp.searchField.hideLoader();
   };
 
   return {
