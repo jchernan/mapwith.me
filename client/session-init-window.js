@@ -167,7 +167,7 @@ Share.setSharingMode = function(link, showPopover) {
     }
     
     // Initialize right bar 
-    CollabBar.init(function(message) {
+    MapApp.chatWindow.init(function(message) {
         MapApp.collab.sendMessage(message);
     });
 };
