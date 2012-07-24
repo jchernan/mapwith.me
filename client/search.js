@@ -1,108 +1,107 @@
 
-MapApp.places = null;
+MapApp.search = function () {
+ 
+  var partialPlaces = null;
 
-var venueMerge = require("/venue_merge.js").venue_merge;
+  var venueMerge = require("/venue_merge.js").venue_merge;
 
-var drawPlaces = function () {
-  if (MapApp.places) {
-    var mergedPlaces = venueMerge(MapApp.places);
-    MapApp.map.clear();
-    MapApp.map.renderGeopoints(MapApp.geopoints);
-    // TODO: do not pass a new venues array
-    MapApp.map.renderVenues(mergedPlaces.venues.slice(0));
-  }
-}
+  var parallelLoad = require('/parallel_load.js').parallel_load;
 
-// add listener function renderPlaces to zoom change event
-MapApp.map.on('zoomend', drawPlaces);
-
-var parallel_load = require('/parallel_load.js').parallel_load;
-
-// a parallel_load object to process the callbacks of the 
-// requests made to the venues server. the final callback 
-// is simply removing the loading icon, since the partial 
-// callbacks are doing all the work.
-MapApp.parallelProcessVenues = new parallel_load(function () {
+  // a parallel_load object to process the callbacks of the 
+  // requests made to the venues server. the final callback 
+  // is simply removing the loading icon, since the partial 
+  // callbacks are doing all the work.
+  var parallelProcessVenues = new parallelLoad(function () {
     // Remove loading icon 
-    MapApp.hideLoader();
-});
+    MapApp.searchField.hideLoader();
+  });
 
-// partial callbacks for parallelProcessVenues
-MapApp.processVenues = function (id, partialRes)  {
-    if (!MapApp.places) {
-        MapApp.places = {};
+  // partial callbacks for parallelProcessVenues
+  var processVenues = function (id, partialResult)  {
+    if (!partialPlaces) {
+      partialPlaces = {};
     }   
-    MapApp.places[id] = partialRes;
-    drawPlaces();
-};
+    partialPlaces[id] = partialResult;
+    var mergedPlaces = venueMerge(partialPlaces);
+    //MapApp.map.clear();
+    MapApp.map.drawPlaces(mergedPlaces.geopoints, mergedPlaces.venues);
+  };
 
-// sends a request to the address server to get the coordinates
-// of the input address. then it sends a request to the venues 
-// server to get the venues around the coordinate.
-MapApp.findAddress = function () {
+  // sends a request to the address server to get the coordinates
+  // of the input address. then it sends a request to the venues 
+  // server to get the venues around the coordinate.
+  var findAddress = function () {
 
-    var inputField = $('#address-input').val();
+    var inputField = MapApp.searchField.getInput();
 
     // check if input is undefined, empty, or all whitespaces 
     if (!inputField || /^\s*$/.test(inputField)) {
-        console.log('Undefined or empty input');
-        return false;
+      MapApp.log.warn('Undefined or empty input');
+      return false;
     }
 
     var address = {
-        "address": inputField
+      "address": inputField
     };
 
     // Show progress bar 
-    MapApp.showLoader();
+    MapApp.searchField.showLoader();
 
     // query the address server
     $.getJSON(Hosts.addressFind, address, function (data) {
 
-        if (data.length === 0) {
-            MapApp.hideLoader();
-            return;
-        }
+      if (data.length === 0) {
+        MapApp.searchField.hideLoader();
+        return;
+      }
 
-        MapApp.map.clear();
-        MapApp.places = null;
-        MapApp.geopoints = [];
-       
-        var geopointToCenter = null;
+      MapApp.map.clear();
+      partialPlaces = null;
+      var geopointToCenter = null;
 
-        for (var i = 0; i < data.length; i++) {
-            var point = data[i];
-            if (MapApp.map.inBounds(point)) {
-                MapApp.geopoints.push(point);
-                MapApp.map.renderGeopoints([point]);
-                geopointToCenter = point;
-                // query the venues server
-                console.log('Sending request to venue_find for (' + 
-                    point.latitude + ', ' + point.longitude + ')'); 
-                $.getJSON(
-                    Hosts.venuesFind, 
-                    point, 
-                    MapApp.parallelProcessVenues.add(i, MapApp.processVenues)
-                ).error(MapApp.errorCallback);
-            }
+      for (var i = 0; i < data.length; i++) {
+        var point = data[i];
+        if (MapApp.map.inBounds(point)) {
+          MapApp.map.drawPlaces([point], null);
+          geopointToCenter = point;
+          // query the venues server
+          MapApp.log.info('Sending request to venue_find for (' + 
+            point.latitude + ', ' + point.longitude + ')'); 
+          $.getJSON(
+            Hosts.venuesFind, 
+            point, 
+            parallelProcessVenues.add(i, processVenues)
+          ).error(errorCallback);
         }
-        
-        // Render and center in one geopoint 
-        if (geopointToCenter) {
-            MapApp.map.centerOn(geopointToCenter, MapApp.map.mapZooms.foundZoom);
-        } else {
-            MapApp.hideLoader();
-        }
+      }
+      
+      // Render and center in one geopoint 
+      if (geopointToCenter) {
+        MapApp.map.centerOn(geopointToCenter, MapApp.map.mapZooms.foundZoom);
+      } else {
+        MapApp.searchField.hideLoader();
+      }
 
-    }).error(MapApp.errorCallback);
+    }).error(errorCallback);
 
     return false;
-};
+  };
 
-MapApp.errorCallback = function (data) {
+  var errorCallback = function (data) {
     // if there is an error, set view at the default center point
-    MapApp.map.centerOn(MapApp.map.defaultArea);
-    console.log("Error: " + data.statusText);
-    console.log("Response text: " + data.responseText);
-    MapApp.hideLoader();
-};
+    MapApp.log.err("Error: " + data.statusText);
+    MapApp.log.err("Response text: " + data.responseText);
+    MapApp.searchField.hideLoader();
+  };
+
+  return {
+    findAddress: findAddress
+  }
+
+}();
+
+
+
+
+
+
