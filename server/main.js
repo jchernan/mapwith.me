@@ -6,12 +6,19 @@ var jQuery = require('jquery');
 var venue_find = require("./venue_find.js").venue_find;
 var venue_merge = require("../lib/venue_merge.js").venue_merge;
 var parallel_load = require("../lib/parallel_load.js").parallel_load;
- 
-// venues server: receives an object of the form
-//    { latitude: 42.3605, longitude: -71.0593 }
-// and returns one of the form
-//    { geopoint: { latitude: 42.3605, longitude: -71.0593 },
-//      venues: [ [Object], [Object], ... ] }
+
+
+/*
+  Foursquare Venues API
+
+  https://developer.foursquare.com/docs/venues/search
+
+  venues server: receives an object of the form
+    { latitude: 42.3605, longitude: -71.0593 }
+  and returns one of the form
+    { geopoint: { latitude: 42.3605, longitude: -71.0593 },
+      venues: [ [Object], [Object], ... ] }
+*/
 http.createServer(
 function (req, res) {
     var url_parts = url.parse(req.url, true);
@@ -44,10 +51,16 @@ function (req, res) {
 
 }).listen(4000); 
 
-// address server: receives an object of the form 
-//    { address: '77 Massachusetts Avenue, Cambridge, MA 02139' } 
-// and returns one of the form:
-//    { latitude: 42.3605, longitude: -71.0593 }
+/*
+  NOMINATIM 
+  
+  http://wiki.openstreetmap.org/wiki/Nominatim
+
+  address server: receives an object of the form 
+    { address: '77 Massachusetts Avenue, Cambridge, MA 02139' } 
+  and returns one of the form:
+    { latitude: 42.3605, longitude: -71.0593 }
+*/
 http.createServer(
 function (req, res) {
     var url_parts = url.parse(req.url, true);
@@ -102,6 +115,75 @@ function (req, res) {
      
 
 }).listen(3000); 
+
+/*
+  Google Geocoding API
+ 
+  https://developers.google.com/maps/documentation/geocoding/
+
+  address server: receives an object of the form 
+    { address: '77 Massachusetts Avenue, Cambridge, MA 02139' } 
+  and returns one of the form:
+    { latitude: 42.3605, longitude: -71.0593 }
+*/
+http.createServer(
+function (req, res) {
+    var url_parts = url.parse(req.url, true);
+    var address = url_parts.query.address;
+    console.log("Processing map_find request for " + url_parts.query.address);
+
+    res.writeHead(200, 
+        {'Content-Type' : 'application/json',
+         'Access-Control-Allow-Origin': '*'});
+
+    var options = {
+        host: "maps.googleapis.com",
+        port: 80,
+        path: "/maps/api/geocode/json?sensor=false&address=" + escape(address), 
+        method: "GET"
+    };
+    
+    var google_response = "";
+
+    http.get(
+        options,
+        function(response) {
+            response.on('data', function (chunk) {
+                google_response += chunk;
+            });
+            response.on('end', function (data) {
+                parsed_result = JSON.parse(google_response);
+                /* TODO: May receive more (or less) than one result */
+                var points = []; 
+
+    try {
+        
+        var results = parsed_result.results;
+
+		    for (var i = 0; i < results.length; i++) { 
+            var geo = results[i].geometry;
+		        var point = {
+			          "latitude": geo.location.lat,
+			          "longitude": geo.location.lng
+			      };
+                
+			      points.push(point);
+			      console.log('Returning (' + point.latitude + ', ' + point.longitude + ')'); 
+		    }
+
+		    res.end(JSON.stringify(points));
+		} 
+		catch (err) {
+		    console.log('Returning []')
+	 	    res.end('[]');
+		}
+
+            });
+        } 
+    );
+     
+
+}).listen(3500); 
 
 
 process.title = 'address_server';
