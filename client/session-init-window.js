@@ -7,7 +7,7 @@
  /* SHAREPOPOVER PUBLIC CLASS DEFINITION
   * =============================== */
 
-  var SharePopover = function ( element, options ) {
+  var SharePopover = function (element, options) {
     this.init('sharepopover', element, options);
   };
 
@@ -62,122 +62,131 @@
 
   $.fn.sharepopover = function (option) {
     return this.each(function () {
-      var $this = $(this)
-        , data = $this.data('sharepopover')
-        , options = typeof option == 'object' && option
-      if (!data) $this.data('sharepopover', (data = new SharePopover(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
+      var $this = $(this), 
+          data = $this.data('sharepopover'), 
+          options = typeof option == 'object' && option;
+      if (!data) $this.data('sharepopover', (data = new SharePopover(this, options)));
+      if (typeof option == 'string') data[option]();
+    });
+  };
 
-  $.fn.sharepopover.Constructor = SharePopover
+  $.fn.sharepopover.Constructor = SharePopover;
 
-  $.fn.sharepopover.defaults = $.extend({} , $.fn.popover.defaults, {
+  $.fn.sharepopover.defaults = $.extend({}, $.fn.popover.defaults, {
     template: '<div class="popover"><div class="arrow" style="left:93%"></div><div class="popover-inner" style="width:500px;"><h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>'
-  })
+  });
 
 }(window.jQuery);
 
-(function ($) {
+
 // VERTICALLY ALIGN FUNCTION
-$.fn.vAlign = function() {
-	return this.each(function(i){
-	var ah = $(this).height();
-	var ph = $(this).parent().height();
-	var mh = Math.ceil((ph-ah) / 2);
-	$(this).css('margin-top', mh);
-	});
-};
+(function ($) {
+  $.fn.vAlign = function () {
+    return this.each(function (i) {
+      var ah = $(this).height();
+      var ph = $(this).parent().height();
+      var mh = Math.ceil((ph - ah) / 2);
+      $(this).css('margin-top', mh);
+    });
+  };
 })(window.jQuery);
 
-var Share = {};
 
-Share.getWindowContent = function(link) {
+MapApp.sessionInitWindow = function () {
+
+  var shareButton = MapApp.shareButton.getButton();
+
+  var getWindowContent = function (link) {
     if (link === null) {
-        return HtmlContent.shareStart;   
+      return MapApp.content.startSession;   
     } else {
-        var content = HtmlContent.shareLink.replace('LINK', link);
-        return content;
+      var content = MapApp.content.sessionLink.replace('LINK', link);
+      return content;
     }
-};
+  };
 
-Share.getWindowTitle = function(link) {
+  var getWindowTitle = function (link) {
     if (link === null) {
-        return 'Share what you are viewing!';
+      return MapApp.content.startSessionTitle;
     } else {
-        return 'You are now sharing this map!';
+      return MapApp.content.sessionLinkTitle;
     }
-};
+  };
 
-Share.showWindow = function() {
-    $('#share').sharepopover('toggle');
+  var showWindow = function () {
+    shareButton.sharepopover('toggle');
     // check if #popover-form exists
     if ($('#popover-form').length > 0) {
-        $('#popover-form').vAlign();
-        $('#popover-form').submit(Share.startSharing);
-        $('#popover-form-button').click(Share.startSharing);
+      $('#popover-form').vAlign();
+      $('#popover-form').submit(startSharing);
+      $('#popover-form-button').click(startSharing);
     }
-};
+  };
 
-Share.hideWindow = function() {
-    $('#share').sharepopover('hide');
-};
+  var hideWindow = function () {
+    shareButton.sharepopover('hide');
+  };
 
-Share.startSharing = function() {
-    
-  MapApp.log.info('[Share.startSharing] User is starting share session');
-  // Send a message to server indicating our desire to join a session
-  var data = { 
-     center: MapApp.map.getCenter(),
-     username:  $('#popover-form-input').val(),
-     zoom: MapApp.map.getZoom()
-  }; 
+  var startSharing = function () {
+      
+    MapApp.log.info('[startSharing] User is starting share session');
+    // Send a message to server indicating our desire to join a session
+    var data = { 
+      center: MapApp.map.getCenter(),
+      zoom: MapApp.map.getZoom(),
+      username: $('#popover-form-input').val()
+    }; 
 
-  MapApp.collab.on('init_ack', function(data){
-    var link = Hosts.baseURL + '?session_id=' + data.session_id;
-    Share.setSharingMode(link, true);
-   });
+    MapApp.collab.on('init_ack', function (data) {
+      var link = Hosts.baseURL + '?session_id=' + data.session_id;
+      setSharingMode(link, true);
+    });
 
-  MapApp.log.info('Emitting init: ' + JSON.stringify(data)); 
-  MapApp.collab.init(data);
+    MapApp.log.info('[startSharing] Emitting init: ' + JSON.stringify(data)); 
+    MapApp.collab.init(data);
 
     /* TODO(jmunizn) Add loading animation */
 
-  return false;
-};
+    return false;
+  };
 
-Share.setSharingMode = function(link, showPopover) {
+  var setSharingMode = function (link, showPopover) {
     // get popover from share button
-    var popover = $('#share').data('sharepopover');
+    var popover = shareButton.data('sharepopover');
     if (showPopover) {
-        // need to turn off animation to make a smooth 
-        // transition if popover is already open
-        popover.options.animation = false;
+      // need to turn off animation to make a smooth 
+      // transition if popover is already open
+      popover.options.animation = false;
     }
     // get the content and title for the popover 
-    popover.options.content = Share.getWindowContent(link);
-    popover.options.title = Share.getWindowTitle(link);
-    // change the color of the share button
-    ShareButton.setSharingMode();
+    popover.options.content = getWindowContent(link);
+    popover.options.title = getWindowTitle(link);
+    
     if (showPopover) {
-        // call 'show' to refresh the popover content.
-        // then turn animation on again.
-        $('#share').sharepopover('show');
-        popover.options.animation = true;
+      // call 'show' to refresh the popover content.
+      // then turn animation on again.
+      shareButton.sharepopover('show');
+      popover.options.animation = true;
     }
     
     // Initialize right bar 
-    MapApp.chatWindow.init(function(message) {
-        MapApp.collab.sendMessage(message);
+    MapApp.chatWindow.init(function (message) {
+      MapApp.collab.sendMessage(message);
     });
-};
+  };
 
-$('#share').sharepopover({
+  shareButton.sharepopover({
     trigger: 'manual',
     html: true,
-    content: Share.getWindowContent(null),
-    title: Share.getWindowTitle(null)
-});
+    content: getWindowContent(null),
+    title: getWindowTitle(null)
+  });
 
-window.onresize = Share.hideWindow;
+  window.onresize = hideWindow;
+  shareButton.click(showWindow);
 
+  return {
+    setSharingMode: setSharingMode
+  };
+
+}();

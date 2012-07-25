@@ -408,7 +408,7 @@ var urlParam = function (name) {
 if (urlParam('session_id')) {
 
     // display the modal 
-    var text = $(HtmlContent.shareJoin);
+    var text = $(MapApp.content.joinSession);
     $('body').append(text);
 
     var id = urlParam('session_id');
@@ -417,12 +417,12 @@ if (urlParam('session_id')) {
         /* Send a message to server indicating our desire to join a session */
         var data = { 
             session_id: id,
-            username:  $("#modal-form-input").val()
+            username: $("#modal-form-input").val()
         }; 
   
         MapApp.collab.on('init_ack', function (data) {
             var link = Hosts.baseURL + '?session_id=' + data.session_id;
-            Share.setSharingMode(link, false);
+            MapApp.sessionInitWindow.setSharingMode(link, false);
         });
 
         console.log('[init] Emitting init: ' + JSON.stringify(data)); 

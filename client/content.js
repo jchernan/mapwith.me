@@ -1,12 +1,13 @@
-var HtmlContent = {};
 
-/*
+MapApp.content = function () {
+
+  /*
     Content that prompts to initialize a sharing session. 
     It is composed of text containing instructions to the user, 
     an input area to type a name, and a button to start the 
     sharing session. 
-*/
-HtmlContent.shareStart = 
+  */
+  var startSession = 
     '<div class="row-fluid">'
     + '<div class="span12">'
     + '<div class="span6">'
@@ -24,21 +25,35 @@ HtmlContent.shareStart =
     + '</div>' // end span12 
     + '</div>'; // end row-fluid
 
-/*
+
+  /*
+    Title of the session init window.
+  */
+  var startSessionTitle = 'Share what you are viewing!';
+
+
+  /*
     Content that shows the sharing session link.
-*/
-HtmlContent.shareLink =
+  */
+  var sessionLink =
     '<div>'
     + '<code>LINK</code>'
     + '</div>';
 
-/*
+
+  /*
+    Title of the session link window.
+  */
+  var sessionLinkTitle = 'You are now sharing this map!';
+
+
+  /*
     Content that prompts to join a sharing session. 
     It is composed of text containing instructions to the user, 
     an input area to type a name, and a button to start the 
     sharing session. 
-*/
-HtmlContent.shareJoin = 
+  */
+  var joinSession = 
     '<div class="modal fade hide" id="initial-modal" style="width:350px">'
     + '<div class="modal-header">'
     + '<button type="button" class="close" data-dismiss="modal">x</button>'
@@ -59,3 +74,14 @@ HtmlContent.shareJoin =
     + '<a href="#" class="btn btn-primary" id="join-modal">Join</a>'
     + '</div>'
     + '</div>';
+
+
+  return {
+    startSession: startSession,
+    startSessionTitle: startSessionTitle,
+    sessionLink: sessionLink,
+    sessionLinkTitle: sessionLinkTitle,
+    joinSession: joinSession
+  };
+
+}();
