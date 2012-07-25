@@ -137,6 +137,11 @@ MapApp.sessionInitWindow = function () {
       username: $('#popover-form-input').val()
     }; 
 
+    MapApp.collab.on('init_ack', function (data) {
+      var link = Hosts.baseURL + '?session_id=' + data.session_id;
+      setSharingMode(link, true);
+    });
+
 
     MapApp.log.info('[startSharing] Emitting init: ' + JSON.stringify(data)); 
     MapApp.collab.init(data);

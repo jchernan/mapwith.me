@@ -1,16 +1,16 @@
-//CollabBar = {}; 
+//CollabBar = {};
 
 MapApp.chatWindow = function () {
 
-  var sharingIconClass = "icon-eye-open"; 
-  var editingIconClass = "icon-hand-up"; 
+  var sharingIconClass = "icon-eye-open";
+  var editingIconClass = "icon-hand-up";
 
   var postMessage = function (sender, msg) {
     $('#chat-panel-rows .message:last').after(
-        '<div class="message"><span class="sender">' + 
-            sender + '</span>'  + msg + '</div>'      
+        '<div class="message"><span class="sender">' +
+            sender + '</span>'  + msg + '</div>'
     );
-    // chat should be scrolled to the bottom 
+    // chat should be scrolled to the bottom
     // to ensure last messages are visible.
     // http://stackoverflow.com/questions/13362/
     $('#chat-panel-rows').each(function () {
@@ -20,43 +20,43 @@ MapApp.chatWindow = function () {
   };
 
   var addUser = function (username) {
-    var icon_id = "icon_" + username; 
-    var user_list_elem_id = "user_list_elem_" + username; 
+    var icon_id = "icon_" + username;
+    var user_list_elem_id = "user_list_elem_" + username;
 
     $("#user_list li:last").after(
-            "<li id='" + user_list_elem_id  + "'>" + 
-            "<i id='" + icon_id + "' class='" + sharingIconClass + 
+            "<li id='" + user_list_elem_id  + "'>" +
+            "<i id='" + icon_id + "' class='" + sharingIconClass +
             "'></i>" + username + "</li>");
 
     stopEditing(username);
 
-    var num_friends = $("#user_list li").length - 2; 
-    var friend_name = num_friends > 1 ? " friends" : " friend"; 
+    var num_friends = $("#user_list li").length - 2;
+    var friend_name = num_friends > 1 ? " friends" : " friend";
     if (num_friends > 0) {
-      $("#user_list_title").text("Sharing with " + 
+      $("#user_list_title").text("Sharing with " +
           num_friends + friend_name + ": ");
     } else {
       $("#user_list_title").text("No friends have joined");
     }
-    
+
   };
 
   var startEditing = function (username) {
-    var icon_id = "icon_" + username; 
-    var user_list_elem_id = "user_list_elem_" + username; 
+    var icon_id = "icon_" + username;
+    var user_list_elem_id = "user_list_elem_" + username;
 
-    $("#" + icon_id).attr("class", editingIconClass);   
+    $("#" + icon_id).attr("class", editingIconClass);
   };
 
   var stopEditing = function (username) {
-    var icon_id = "icon_" + username; 
-    $("#" + icon_id).attr("class", sharingIconClass); 
+    var icon_id = "icon_" + username;
+    $("#" + icon_id).attr("class", sharingIconClass);
   };
 
   /*
-      Initialize right menu. 
+      Initialize right menu.
 
-      buttonListener sets up a callback for the chat button 
+      buttonListener sets up a callback for the chat button
       Parameters:
         buttonListener - The action to be executed when the user types a new
                          message.
@@ -70,15 +70,15 @@ MapApp.chatWindow = function () {
         if (message_to_send !== "") {
             postMessage("Me", message_to_send);
             if (buttonListener)  {
-                buttonListener(message_to_send); 
-            } 
+                buttonListener(message_to_send);
+            }
         }
         $("#chat_text").val("");
         return false;
     };
 
     $("#chat_button").click(messageAction);
-    // By default, hitting 'Enter' on a textarea will create a new line. 
+    // By default, hitting 'Enter' on a textarea will create a new line.
     // We change the behavior to submit the message upon hitting 'Enter'.
     // http://stackoverflow.com/questions/4418819/
     $("#chat_text").keydown(function (e) {
@@ -87,8 +87,8 @@ MapApp.chatWindow = function () {
             return false;
         }
     });
- 
-    addUser("Me");   
+
+    addUser("Me");
     if (typeof(usernames) !== "undefined") {
       for (var i = 0; i < usernames.length; i++) {
         addUser(usernames[i]);
@@ -97,7 +97,7 @@ MapApp.chatWindow = function () {
 
     $("#right_bar").css("display", "");
 
-    // Listener to add message from server to chat area 
+    // Listener to add message from server to chat area
     MapApp.collab.on("send_message",  function(data) {
       postMessage(data.from, data.message);
     });
@@ -119,8 +119,8 @@ MapApp.chatWindow = function () {
 
 CollabBar.postMessage = function postMessage(sender, msg) {
     $('#chat-panel-rows .message:last').after(
-        '<div class="message"><span class="sender">' + 
-            sender + '</span>'  + msg + '</div>'      
+        '<div class="message"><span class="sender">' +
+            sender + '</span>'  + msg + '</div>'
     );
     // chat should be scrolled to the bottom 
     // to ensure last messages are visible.

@@ -1,4 +1,4 @@
-/*  
+/*
   collab.js  - Framework for sending/receiving map sharing information with server
 
   Requires:
@@ -24,12 +24,12 @@ MapApp.collab = function() {
   var maxXid = 0; // The largest xid sent by this client
 
 
-  /* 
+  /*
     Stores the latest map movement that was sent to the server and the server
-    hasn't yet acknowledged. In other words, the last map movement that has been 
-    sent by the client that hasn't been forwarded back by the server.   
-    
-    Any map movement of the same type as this pending message can be ignored 
+    hasn't yet acknowledged. In other words, the last map movement that has been
+    sent by the client that hasn't been forwarded back by the server.
+
+    Any map movement of the same type as this pending message can be ignored
     until this message is acknowledged.
    */
   var pendingMsg = { opType: null, xid: null };
@@ -42,7 +42,7 @@ MapApp.collab = function() {
   var preSendMsg = function (opType) {
     pendingMsg.opType = opType;
     pendingMsg.xid = ++maxXid;
-    return pendingMsg.xid; 
+    return pendingMsg.xid;
   };
 
   // Before processing an incoming server message, decide if it can be ignored
@@ -58,7 +58,7 @@ MapApp.collab = function() {
     } else {
       // No pending outgoing message, so we cannot ignore
       return true;
-    } 
+    }
   };
 
   // Send a message to the server
@@ -74,13 +74,13 @@ MapApp.collab = function() {
     var on = function(msgType, fn) {
       socket.on(msgType, function(data) {
         if (preReceiveMessage(data, msgType)) {
-          fn(data); 
+          fn(data);
         } else {
-          MapApp.log.info('[' + msgType + '] Filtered message due to ' + 
+          MapApp.log.info('[' + msgType + '] Filtered message due to ' +
             'pending state. Message was: ' + JSON.stringify(data));
         }
       });
-    }; 
+    };
 
     // socket.io listener for center change
     on('change_center', function (data) {
@@ -120,7 +120,7 @@ MapApp.collab = function() {
 
     // socket.io listener for init_ack message
     on('init_ack', function (data) {
-      console.log('[init_ack] Received initialize ack for collab session: ' + 
+      console.log('[init_ack] Received initialize ack for collab session: ' +
           JSON.stringify(data));
 
       this.cid = data.cid;
@@ -136,8 +136,8 @@ MapApp.collab = function() {
     });
 
     // socket.io listener for error message
-    on('error', function (data) { 
-      MapApp.log.err(JSON.stringify(data)); 
+    on('error', function (data) {
+      MapApp.log.err(JSON.stringify(data));
      });
 
   };
@@ -149,19 +149,19 @@ MapApp.collab = function() {
 
        * If this is a brand-new session:
            center =  The current center location before starting to share the map.
-           { 
+           {
              - latitude:  Current latitude
              - longitude: Current longitude
-           } 
+           }
            zoom = The current zoom level before starting to share the map.
            username = Username selected by this user.
 
        * If we want to join an existing session:
            session_id = The id of the session we wish to join.
-           username = Username selected by this user. 
-  */ 
+           username = Username selected by this user.
+  */
   var init = function(data) {
-    MapApp.log.info('[init] Emitting init: ' + JSON.stringify(data)); 
+    MapApp.log.info('[init] Emitting init: ' + JSON.stringify(data));
 
 
     socket = io.connect(Hosts.collaboration);
@@ -171,10 +171,10 @@ MapApp.collab = function() {
     var xid = preSendMsg('init');
     emit('init', xid, data);
   };
-    
+
   /*
      Send message to change map center location
-    
+
      Parameters:
         center = {
           - latitude: Latitude to move to
@@ -182,17 +182,17 @@ MapApp.collab = function() {
         }
    */
   var sendChangeCenter = function(center) {
-    MapApp.log.info('[change_center] Emitting center: ' + 
+    MapApp.log.info('[change_center] Emitting center: ' +
       JSON.stringify(center));
 
-    
+
     var xid = preSendMsg('change_center');
     emit('change_center', xid, {center: center});
   };
 
   /*
      Send message to change map zoom level
-    
+
      Parameters:
         zoom = New zoom level
    */
@@ -205,7 +205,7 @@ MapApp.collab = function() {
 
   /*
      Send message to change both the map's zoom level and its center location
-    
+
      Parameters:
         center = {
             - latitude: Latitude to move to
@@ -214,11 +214,11 @@ MapApp.collab = function() {
         zoom = New zoom level
    */
   function sendChangeState(center, zoom) {
-    MapApp.log.info('[change_state] Emitting center: ' + 
+    MapApp.log.info('[change_state] Emitting center: ' +
                      JSON.stringify(center) + ' and zoom: ' + zoom);
 
     var xid = preSendMsg('change_state');
-    emit('change_state', xid, { 
+    emit('change_state', xid, {
         center: center,
         zoom: zoom
     });
@@ -227,7 +227,7 @@ MapApp.collab = function() {
 
   /*
      Send a chat message.
-    
+
      Parameters:
         message = Textual content of the message
    */
@@ -271,10 +271,10 @@ var pendingAckState = {
 function sendChangeCenter() {
     var mapCenter = MapApp.map.getCenter();
     var center = { latitude: mapCenter.lat,  longitude: mapCenter.lng };
-    console.log('[change_center] Emitting center: ' + 
+    console.log('[change_center] Emitting center: ' +
         JSON.stringify(center));
     pendingAckState.center = center;
-    socket.emit('change_center', { 
+    socket.emit('change_center', {
         center: center
     });
 }
@@ -292,11 +292,11 @@ function sendChangeState() {
     var mapCenter = MapApp.map.getCenter();
     var center = { latitude: mapCenter.lat,  longitude: mapCenter.lng };
     var zoom = MapApp.map.getZoom();
-    console.log('[change_state] Emitting center: ' + 
+    console.log('[change_state] Emitting center: ' +
         JSON.stringify(center) + ' and zoom: ' + zoom);
     pendingAckState.center = center;
     pendingAckState.zoom = zoom;
-    socket.emit('change_state', { 
+    socket.emit('change_state', {
         center: center,
         zoom: zoom
     });
@@ -317,14 +317,14 @@ function disableCollabListeners() {
 }
 
 socket.on('init_ack', function (data) {
-    console.log('[init_ack] Received initialize ack for collab session: ' + 
+    console.log('[init_ack] Received initialize ack for collab session: ' +
         JSON.stringify(data));
- 
+
     MapApp.map.setView(
         new L.LatLng(data.state.center.latitude, data.state.center.longitude),
         data.state.zoom
     );
-    
+
     enableCollabListeners();
 });
 
@@ -332,9 +332,9 @@ function setCenterFromServer(center) {
     if (pendingAckState.center === null) {
         console.log('[change_center] Setting new center');
         MapApp.map.panTo(
-            new L.LatLng(center.latitude, center.longitude) 
+            new L.LatLng(center.latitude, center.longitude)
         );
-    } else if (pendingAckState.center.latitude === center.latitude && 
+    } else if (pendingAckState.center.latitude === center.latitude &&
         pendingAckState.center.longitude === center.longitude) {
 
         console.log('[change_center] Received ack for emitted center');
@@ -382,12 +382,12 @@ socket.on('change_state', function (data) {
 // socket.io listener for send message
 socket.on('send_message', function (data) {
     console.log('[send_message] Received ' + JSON.stringify(data));
-    CollabBar.postMessage(data.from, data.message);  
+    CollabBar.postMessage(data.from, data.message);
 });
 
 
-socket.on('error', function (data) { 
-    console.log("ERROR! " + JSON.stringify(data)); 
+socket.on('error', function (data) {
+    console.log("ERROR! " + JSON.stringify(data));
 });
 
 
@@ -395,63 +395,63 @@ socket.on('error', function (data) {
 
 
 
-/* Initialize urlParam function. Code grabbed from 
+/* Initialize urlParam function. Code grabbed from
     http://www.jquery4u.com/snippets/url-parameters-jquery/#.T9lrKStYsoY
 */
 var urlParam = function (name) {
-    console.log("starting urlParam " + name); 
+    console.log("starting urlParam " + name);
 
-    var results = 
+    var results =
         new RegExp('[\\?&]' + name + '=([^&#]*)').exec(
             window.location.href);
 
-    console.log("regexp compiled  urlParam"); 
+    console.log("regexp compiled  urlParam");
     return (results) ? results[1] : null;
 };
 
 
 
-/* If user has specified a session_id, then initialize a sharing session 
+/* If user has specified a session_id, then initialize a sharing session
    immediately */
 if (urlParam('session_id')) {
 
-    // display the modal 
+    // display the modal
     var text = $(MapApp.content.joinSession);
     $('body').append(text);
 
     var id = urlParam('session_id');
 
-    var joinSession = function () { 
+    var joinSession = function () {
         /* Send a message to server indicating our desire to join a session */
-        var data = { 
+        var data = {
             session_id: id,
             username: $("#modal-form-input").val()
-        }; 
-  
+        };
+
         MapApp.collab.on('init_ack', function (data) {
             var link = Hosts.baseURL + '?session_id=' + data.session_id;
             MapApp.sessionInitWindow.setSharingMode(link, false, data.state.usernames);
         });
 
-        console.log('[init] Emitting init: ' + JSON.stringify(data)); 
+        console.log('[init] Emitting init: ' + JSON.stringify(data));
         MapApp.collab.init(data);
 
         text.modal('hide');
-        
+
         return false;
     };
-    
+
     $('#modal-form').submit(joinSession);
     $('#join-modal').click(joinSession);
 
     /* Ensure modal is always centered */
-    text.modal({ 
+    text.modal({
         backdrop: true
     }).css({
-        width: 'auto', 
+        width: 'auto',
         'margin-left': function () {
             return -($(this).width() / 2);
         }
     });
     text.modal('show');
-} 
+}
