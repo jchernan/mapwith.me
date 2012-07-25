@@ -430,6 +430,7 @@ if (urlParam('session_id')) {
   
         MapApp.collab.on('init_ack', function (data) {
             var link = Hosts.baseURL + '?session_id=' + data.session_id;
+            MapApp.sessionInitWindow.setSharingMode(link, false, data.state.usernames);
         });
 
         console.log('[init] Emitting init: ' + JSON.stringify(data)); 

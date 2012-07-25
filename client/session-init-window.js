@@ -146,6 +146,7 @@ MapApp.sessionInitWindow = function () {
     return false;
   };
 
+  var setSharingMode = function (link, showPopover, usernames) {
     // get popover from share button
     var popover = shareButton.data('sharepopover');
     if (showPopover) {
