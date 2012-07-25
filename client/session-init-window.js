@@ -133,6 +133,8 @@ Share.startSharing = function() {
      zoom: MapApp.map.getZoom()
   }; 
 
+  // This is only called on a brand new session. Therefore, we don't know of
+  // any users apart from us. 
   MapApp.collab.on('init_ack', function(data){
     var link = Hosts.baseURL + '?session_id=' + data.session_id;
     Share.setSharingMode(link, true);
@@ -146,7 +148,7 @@ Share.startSharing = function() {
   return false;
 };
 
-Share.setSharingMode = function(link, showPopover) {
+Share.setSharingMode = function(link, showPopover, usernames) {
     // get popover from share button
     var popover = $('#share').data('sharepopover');
     if (showPopover) {
@@ -167,9 +169,11 @@ Share.setSharingMode = function(link, showPopover) {
     }
     
     // Initialize right bar 
-    MapApp.chatWindow.init(function(message) {
-        MapApp.collab.sendMessage(message);
-    });
+    MapApp.chatWindow.init(
+        function(message) {
+          MapApp.collab.sendMessage(message);
+        }, 
+        usernames);
 };
 
 $('#share').sharepopover({

@@ -43,6 +43,7 @@ io.sockets.on('connection', function(socket) {
             if (data.session_id) {
                 session_id = data.session_id; 
                 assert.notEqual(typeof state_map[session_id], "undefined");
+
                 cid = ++(state_map[session_id].max_cid);
             } else {
                 /* Initialize a brand new session */
@@ -54,7 +55,7 @@ io.sockets.on('connection', function(socket) {
                 state_map[session_id] = { 
                         center: data.center, 
                         zoom: data.zoom,
-                        username: data.username,
+                        usernames: [],
                         max_cid: cid
                 };
             } 
@@ -70,6 +71,18 @@ io.sockets.on('connection', function(socket) {
                   "cid": cid 
                 }); 
 
+
+            /* We only add this user to the session map after we've sent
+               its inick_ack, which we consider the point at which the 
+               user has actually joined. 
+            */
+
+            state_map[session_id].usernames.push(data.username);
+
+            /* Inform everyone else that a new user has joined */
+            socket.broadcast.to(socket.session_id).emit(
+                'add_user', {username: socket.username});  
+ 
             console.log("emit init_ack");
 
       });

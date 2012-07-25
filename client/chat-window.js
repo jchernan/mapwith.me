@@ -30,10 +30,15 @@ MapApp.chatWindow = function () {
 
     stopEditing(username);
 
-    var num_friends = $("#user_list li").length - 1; 
+    var num_friends = $("#user_list li").length - 2; 
     var friend_name = num_friends > 1 ? " friends" : " friend"; 
-    $("#user_list_title").text("Sharing with " + 
-        num_friends + friend_name + ": ");
+    if (num_friends > 0) {
+      $("#user_list_title").text("Sharing with " + 
+          num_friends + friend_name + ": ");
+    } else {
+      $("#user_list_title").text("No friends have joined");
+    }
+    
   };
 
   var startEditing = function (username) {
@@ -52,8 +57,13 @@ MapApp.chatWindow = function () {
       Initialize right menu. 
 
       buttonListener sets up a callback for the chat button 
+      Parameters:
+        buttonListener - The action to be executed when the user types a new
+                         message.
+        usernames - The usernames other than "me" that are already part of the
+                    conversation (Optional).
    */
-  var init = function (buttonListener) {
+  var init = function (buttonListener, usernames) {
     var ENTER_KEY = 13;
     var messageAction = function () {
         var message_to_send = $.trim($("#chat_text").val());
@@ -79,12 +89,22 @@ MapApp.chatWindow = function () {
     });
  
     addUser("Me");   
+    if (typeof(usernames) !== "undefined") {
+      for (var i = 0; i < usernames.length; i++) {
+        addUser(usernames[i]);
+      }
+    }
+
     $("#right_bar").css("display", "");
 
     // Listener to add message from server to chat area 
     MapApp.collab.on("send_message",  function(data) {
       postMessage(data.from, data.message);
     });
+    MapApp.collab.on("add_user",  function(data) {
+      addUser(data.username);
+    });
+
   }
 
 

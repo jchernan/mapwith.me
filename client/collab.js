@@ -110,6 +110,14 @@ MapApp.collab = function() {
       MapApp.collab.trigger('send_message', data);
     });
 
+    // socket.io listener for add_user message
+    on('add_user', function (data) {
+      MapApp.log.info('[add_user] Received ' + JSON.stringify(data));
+      /* TODO: Add validation */
+      MapApp.collab.trigger('add_user', data);
+    });
+
+
     // socket.io listener for init_ack message
     on('init_ack', function (data) {
       console.log('[init_ack] Received initialize ack for collab session: ' + 
@@ -422,7 +430,7 @@ if (urlParam('session_id')) {
   
         MapApp.collab.on('init_ack', function (data) {
             var link = Hosts.baseURL + '?session_id=' + data.session_id;
-            Share.setSharingMode(link, false);
+            Share.setSharingMode(link, false, data.state.usernames);
         });
 
         console.log('[init] Emitting init: ' + JSON.stringify(data)); 
