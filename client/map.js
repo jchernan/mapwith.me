@@ -121,7 +121,9 @@ MapApp.map = function () {
 
     var html =  '<div style="overflow:auto;width:100%" >';
         html +=   '<div class="venue-icon"> '; 
-        html +=     '<img src="' + iconUrl  + '" />';
+        if (iconUrl) {
+          html +=     '<img class="venue-icon" src="' + iconUrl  + '" />';
+        }
         html +=   '</div>';
         html +=   '<div class="venue-main"> '; 
         html +=     '<div style="font-weight:bold">' + name + '</div>'; 
