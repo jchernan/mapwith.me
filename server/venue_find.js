@@ -31,11 +31,20 @@ var venue_find = function (point, num_results, radius, callback) {
                 var response = {}; 
 
                 var venues = jQuery.map(parsed_result.response.venues, function(val, i) {
+                    var icon;
+                    if (val.categories.length > 0) {
+                      icon = val.categories[0].icon;
+                    } else {
+                      icon = undefined;
+                    }
+
                     var address_entry = {
                         latitude : val.location.lat,
                         longitude : val.location.lng,
                         id : val.id,
                         name : val.name,
+                        address : val.location.address,
+                        icon : icon,
                         popularity : val.stats.checkinsCount,
                      };
 

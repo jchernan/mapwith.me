@@ -108,7 +108,7 @@ MapApp.map = function () {
 
   // adds a pin on the map at the given point
   // TODO: improve this method, not good that it is so hardcoded
-  var addMarker = function (point, name, color) {
+  var addMarker = function (point, color, venueInfo) {
     var markerLoc = new L.LatLng(point.latitude, point.longitude);
     var url = 'images/markers/color-pin.png';
     var icon = new MapApp.MarkerIcon(url.replace("color", color));
@@ -117,8 +117,19 @@ MapApp.map = function () {
         icon: icon
       }
     );
-    if (name !== null) {
-      marker.bindPopup(name).openPopup();
+    if (typeof(venueInfo) !== "undefined") {
+      //marker.bindPopup(name).openPopup();
+      var icon = null; 
+      if (venueInfo.icon) {
+        icon = venueInfo.icon.prefix + "32.png";
+      }
+
+      marker.bindPopup('<div> ' + 
+                            (icon ? ('<img src="' + icon  + '" />') : '') + 
+                            '<b> &nbsp;' + venueInfo.name + '</b> </div> ' +
+                       '<div>' + venueInfo.address + '</div>' +
+                       '<div>Popularity: ' + venueInfo.popularity + '</div>'
+                       ).openPopup();
     }
     layerGroup.addLayer(marker);
     return markerLoc;
@@ -166,7 +177,7 @@ MapApp.map = function () {
   var renderGeopoints = function (geopoints) {
     MapApp.log.info('Call to renderGeopoints. Received ' + geopoints.length + ' points.');
     for (var i = 0 ; i < geopoints.length ; i++) {
-      addMarker(geopoints[i], null, "pink");
+      addMarker(geopoints[i], "pink");
     }
   };
 
@@ -222,7 +233,7 @@ MapApp.map = function () {
     for (var i = 0; i < venues.length; i++) {
       var point = venues[i];
       if (inBounds(point)) {
-        addMarker(point, point.name + " " + point.popularity, "blue");
+        addMarker(point, "blue", point);
       }
     }
   };
