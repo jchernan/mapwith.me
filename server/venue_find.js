@@ -46,6 +46,8 @@ var venue_find = function (point, num_results, radius, callback) {
                         address : val.location.address,
                         icon : icon,
                         popularity : val.stats.checkinsCount,
+                        // Assign one star for every 200 checkins
+                        stars: Math.min(5, val.stats.checkinsCount / 200)
                      };
 
                     return address_entry;

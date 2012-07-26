@@ -106,8 +106,36 @@ MapApp.map = function () {
     centerOn(center, mapZooms.defaultZoom);
   };
 
+  var popupHtml = function (iconUrl, name, stars, address) {
+    var starsHtml = function (stars) {
+      var html = "";
+      for (var i = 0; i < 5; i++) {
+        if (i < stars) {
+              html += "<span class='red-star'></span>";
+        } else {
+              html += "<span class='gray-star'></span>";
+        }
+      }
+      return html;
+    }
+
+    var html =  '<div style="overflow:auto;width:100%" >';
+        html +=   '<div class="venue-icon"> '; 
+        html +=     '<img src="' + iconUrl  + '" />';
+        html +=   '</div>';
+        html +=   '<div class="venue-main"> '; 
+        html +=     '<div style="font-weight:bold">' + name + '</div>'; 
+        html +=     '<div style="height:16px">' + starsHtml(stars) + '</div>'; 
+        html +=   '</div>';
+        html += '</div>';
+        if (address) {
+          html += '<div class="venue-address">' + address + '</div>';
+        }
+ 
+        return html;
+  }
+
   // adds a pin on the map at the given point
-  // TODO: improve this method, not good that it is so hardcoded
   var addMarker = function (point, color, venueInfo) {
     var markerLoc = new L.LatLng(point.latitude, point.longitude);
     var url = 'images/markers/color-pin.png';
@@ -117,20 +145,21 @@ MapApp.map = function () {
         icon: icon
       }
     );
+
     if (typeof(venueInfo) !== "undefined") {
-      //marker.bindPopup(name).openPopup();
       var icon = null; 
       if (venueInfo.icon) {
         icon = venueInfo.icon.prefix + "32.png";
       }
 
-      marker.bindPopup('<div> ' + 
-                            (icon ? ('<img src="' + icon  + '" />') : '') + 
-                            '<b> &nbsp;' + venueInfo.name + '</b> </div> ' +
-                       '<div>' + venueInfo.address + '</div>' +
-                       '<div>Popularity: ' + venueInfo.popularity + '</div>'
-                       ).openPopup();
+      marker.bindPopup(
+        popupHtml(
+          icon,
+          venueInfo.name,
+          venueInfo.stars,
+          venueInfo.address)).openPopup();
     }
+
     layerGroup.addLayer(marker);
     return markerLoc;
   };
