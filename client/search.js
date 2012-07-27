@@ -23,7 +23,17 @@ MapApp.search = function () {
     }   
     partialPlaces[id] = partialResult;
     var mergedPlaces = venueMerge(partialPlaces);
-    //MapApp.map.clear();
+
+    console.log("mergedPlaces= "+ JSON.stringify(mergedPlaces));
+
+    /*var geopoints = $.map(mergedPlaces.geopoints, function(val, i) {
+        return {lat:val.latitude, lng:val.longitude};
+    });
+
+    var venues = $.map(mergedPlaces.venues, function(val, i) {
+        return {lat:val.latitude, lng:val.longitude};
+    });
+    */
     MapApp.map.drawPlaces(mergedPlaces.geopoints, mergedPlaces.venues);
   };
 
