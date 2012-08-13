@@ -32,6 +32,22 @@ function (req, res) {
         {'Content-Type' : 'application/json',
          'Access-Control-Allow-Origin': '*'});
 
+    var point = {
+        "latitude":latitude, 
+        "longitude":longitude
+    };
+
+
+    var partial_callback = function(id, res) {};
+    var final_callback = function(processed_venues) {
+        res.end(JSON.stringify(processed_venues));
+    };
+
+    search.venue_search([point],
+                        [500, 1000, 2000, 3000],
+                        partial_callback,
+                        final_callback);
+/*
     var parallel = new parallel_load(function(total_result) { 
         var processed_venues = venue_merge(total_result);
         console.log("Returning " + processed_venues.venues.length + " venues from Foursquare"); 
@@ -49,6 +65,7 @@ function (req, res) {
     venue_find(point, 50, 1000, parallel.add(1000, partialCallback)); 
     venue_find(point, 50, 2000, parallel.add(2000, partialCallback)); 
     venue_find(point, 50, 3000, parallel.add(3000, partialCallback)); 
+*/
 
 }).listen(4000); 
 
@@ -140,52 +157,6 @@ function (req, res) {
     search.google_search(address, function(points) {
         res.end(JSON.stringify(points));
     });
-
-/* 
-    var options = {
-        host: "maps.googleapis.com",
-        port: 80,
-        path: "/maps/api/geocode/json?sensor=false&address=" + escape(address), 
-        method: "GET"
-    };
-    
-    var google_response = "";
-
-    http.get(
-        options,
-        function(response) {
-            response.on('data', function (chunk) {
-                google_response += chunk;
-            });
-            response.on('end', function (data) {
-                parsed_result = JSON.parse(google_response);
-                var points = []; 
-
-                try {
-                  var results = parsed_result.results;
-
-                  for (var i = 0; i < results.length; i++) { 
-                    var geo = results[i].geometry;
-                    var point = {
-                        "latitude": geo.location.lat,
-                        "longitude": geo.location.lng
-                    };
-                
-                    points.push(point);
-                    console.log('Returning (' + point.latitude + ', ' + point.longitude + ')'); 
-                 }
-
-                 res.end(JSON.stringify(points));
-               } 
-               catch (err) {
-                 console.log('Returning []')
-                 res.end('[]');
-              }
-            });
-        } 
-    );
-*/ 
-
 }).listen(3500); 
 
 

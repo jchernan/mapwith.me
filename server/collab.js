@@ -2,7 +2,7 @@ var http = require("http");
 var assert = require("assert");
 var search = require("./search.js");
 var app = http.createServer(function (req, res) {
-    res.end("Screw you");
+    res.end("Maps v0.1");
  }); 
 
 var io = require("socket.io").listen(app, {origins: '*:*'} ); 
@@ -185,10 +185,26 @@ io.sockets.on('connection', function(socket) {
             data.points = points;
             send('search', data);
 
-            /* Send search end */
-            data.type = 'end'
-            data.points = undefined;
-            send('search', data);
+            var venue_partial = function(id, venues) {
+                /* Send search draw_venues message */
+                data.type = 'draw_venues'
+                data.points = venues;
+                send('search', data);
+            };
+
+            var venue_final = function(venues) {
+                /* Send search end */
+                data.type = 'end'
+                data.points = undefined;
+                send('search', data);
+            };
+
+            search.venue_search(
+                points, 
+                [500, 1000, 2000, 3000], 
+                venue_partial,
+                venue_final);
+
         });
 
     }); 
