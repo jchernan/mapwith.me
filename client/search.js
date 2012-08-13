@@ -116,13 +116,34 @@ MapApp.search = function () {
 
   MapApp.collab.on('search', function (data) {
     
+    //MapApp.log.info('[search] Received ' 
+    //  + JSON.stringify(data));
+    MapApp.log.info('[search] Current search is ' 
+      + JSON.stringify(currentSearch));
+
+    var singleUserMode = typeof(data.from_cid) === "undefined";
+    var noCurrentSearch = !currentSearch.cid && !currentSearch.xid;
+    var sameAsCurrentSearch = 
+        (data.from_cid === currentSearch.cid 
+        && data.xid === currentSearch.xid);
+
+    if (!(singleUserMode || noCurrentSearch  || sameAsCurrentSearch)) {
+    //if (typeof(data.from_cid) !== 'undefined' 
+    //  && (data.from_cid !== currentSearch.cid 
+    //    || data.xid !== currentSearch.xid)) {
+      return;
+    }
+
     var opType = data.type;
     MapApp.log.info('[search] Performing search operation "' 
       + data.type + '"');
-    
+
     switch (opType) {
 
     case 'begin': 
+      // Set client ID and transaction ID
+      currentSearch.cid = data.from_cid;
+      currentSearch.xid = data.xid;
       // Show loader animation in search bar
       MapApp.searchField.showLoader();
       MapApp.map.clear();
@@ -131,6 +152,8 @@ MapApp.search = function () {
     case 'end':
       // Hide loader animation in search bar
       MapApp.searchField.hideLoader();
+      currentSearch.cid = null;
+      currentSearch.xid = null;
       break;
 
     case 'draw_geopoints':

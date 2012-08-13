@@ -84,9 +84,8 @@ MapApp.collab = function() {
 
     // socket.io listener for search sequence
     socket.on('search', function (data) {
-      //MapApp.log.info('[search] Received ' + JSON.stringify(data));
+      MapApp.log.info('[search] Received ' + JSON.stringify(data));
       /* TODO: Add validation */
-      data.cid = cid;
       MapApp.collab.trigger('search', data);
     });
     
