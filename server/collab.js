@@ -1,5 +1,6 @@
 var http = require("http");
 var assert = require("assert");
+var search = require("./search.js");
 var app = http.createServer(function (req, res) {
     res.end("Screw you");
  }); 
@@ -17,6 +18,16 @@ app.listen(8000);
 io.sockets.on('connection', function(socket) {
 
     console.log("Someone connected"); 
+    /*
+       Every message sent by this server include information 
+        associated with the sender see annotate_data.
+
+        Additionally, when a client messages this server with data,
+        and this server then forwards the message to other clients 
+        in the same session, the server includes every field added
+        by the client (such as xids, etc). 
+    */
+
 
         /*  
             Every client must first call init to set up connection with
@@ -33,8 +44,8 @@ io.sockets.on('connection', function(socket) {
               points (?) TBD
          */
         socket.on('init', function(data) {
-            console.log("[init] Initializing collab session with args" 
-                        + JSON.stringify(data)); 
+            console.log("[init] Initializing collab session with args" + 
+                        JSON.stringify(data)); 
     
             /* TODO: What if id is not received ? */
             
@@ -107,7 +118,7 @@ io.sockets.on('connection', function(socket) {
            } 
         }
 
-     }
+     };
 
     /* 
         Annotate received message with sender information 
@@ -122,7 +133,65 @@ io.sockets.on('connection', function(socket) {
     var annotate_data = function(data) {
         data.from_cid = socket.cid;
         data.from = socket.username;
-    }
+    };
+
+
+
+    /* 
+        Search for geolocation and venues near the specified address. 
+
+        Calling this function requires a data object which needs the following
+        fields:
+
+        address - Search term. Can be an address, institution name, city, etc. 
+
+
+        Note: This is the only function (aside from init) that can be called 
+              before initiating a session (using init). When called without
+              an initialized session, this function simply performs a search
+              and returns the results to the caller. When called within an 
+              initialized session, this function works in 'collab mode' and
+              forwards the results to the other members of the session so they
+              can render the search results, too.
+        
+        Response: 
+            A sequence of messages of the following form:
+            - begin_search, to mark the start of the result set.
+            - After begin_search, a sequence of messages, each of which can be:
+              - draw_geopoints (an array of geopoints that match the query)
+              - draw_venues (an array of some venues that are close by)
+            - end_search, to mark the end of the result set.
+     */
+    socket.on('search', function(data) {
+        var send;
+        if (socket.session_id) {
+            send = function(msg, data)  { 
+                io.sockets.in(socket.session_id).emit(msg, data);
+            };
+        } else {
+            send = function(msg, data) {
+               socket.emit(msg, data); 
+            }; 
+        }
+
+        annotate_data(data);
+
+        data.type = 'begin'
+        send('search', data); 
+
+        search.google_search(data.address, function(points) {
+            /* Send search draw_geopoints message */
+            data.type = 'draw_geopoints'
+            data.points = points;
+            send('search', data);
+
+            /* Send search end */
+            data.type = 'end'
+            data.points = undefined;
+            send('search', data);
+        });
+
+    }); 
 
     /*  
         Signal from client that the user has moved inside the map to:

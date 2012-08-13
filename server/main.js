@@ -3,6 +3,7 @@ var https = require('https');
 var url = require('url');
 var fs = require('fs');
 var jQuery = require('jquery');
+var search = require("./search.js");
 var venue_find = require("./venue_find.js").venue_find;
 var venue_merge = require("../lib/venue_merge.js").venue_merge;
 var parallel_load = require("../lib/parallel_load.js").parallel_load;
@@ -135,7 +136,12 @@ function (req, res) {
     res.writeHead(200, 
         {'Content-Type' : 'application/json',
          'Access-Control-Allow-Origin': '*'});
+    
+    search.google_search(address, function(points) {
+        res.end(JSON.stringify(points));
+    });
 
+/* 
     var options = {
         host: "maps.googleapis.com",
         port: 80,
@@ -153,35 +159,32 @@ function (req, res) {
             });
             response.on('end', function (data) {
                 parsed_result = JSON.parse(google_response);
-                /* TODO: May receive more (or less) than one result */
                 var points = []; 
 
-    try {
-        
-        var results = parsed_result.results;
+                try {
+                  var results = parsed_result.results;
 
-		    for (var i = 0; i < results.length; i++) { 
-            var geo = results[i].geometry;
-		        var point = {
-			          "latitude": geo.location.lat,
-			          "longitude": geo.location.lng
-			      };
+                  for (var i = 0; i < results.length; i++) { 
+                    var geo = results[i].geometry;
+                    var point = {
+                        "latitude": geo.location.lat,
+                        "longitude": geo.location.lng
+                    };
                 
-			      points.push(point);
-			      console.log('Returning (' + point.latitude + ', ' + point.longitude + ')'); 
-		    }
+                    points.push(point);
+                    console.log('Returning (' + point.latitude + ', ' + point.longitude + ')'); 
+                 }
 
-		    res.end(JSON.stringify(points));
-		} 
-		catch (err) {
-		    console.log('Returning []')
-	 	    res.end('[]');
-		}
-
+                 res.end(JSON.stringify(points));
+               } 
+               catch (err) {
+                 console.log('Returning []')
+                 res.end('[]');
+              }
             });
         } 
     );
-     
+*/ 
 
 }).listen(3500); 
 
