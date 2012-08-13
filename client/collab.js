@@ -8,8 +8,8 @@
  */
 
 MapApp.log = {
-  warn: console.log,
-  err: console.log,
+  warn: function (msg) { console.warn(msg); },
+  err: function (msg) { console.error(msg); },
   info: function (msg) { console.log(msg); }
 };
 
@@ -82,11 +82,19 @@ MapApp.collab = function() {
       });
     };
 
+    // socket.io listener for search sequence
+    socket.on('search', function (data) {
+      //MapApp.log.info('[search] Received ' + JSON.stringify(data));
+      /* TODO: Add validation */
+      data.cid = cid;
+      MapApp.collab.trigger('search', data);
+    });
+    
     // socket.io listener for center change
     on('change_center', function (data) {
       MapApp.log.info('[change_center] Received ' + JSON.stringify(data));
       /* TODO: Add validation */
-        MapApp.collab.trigger('change_center', data);
+      MapApp.collab.trigger('change_center', data);
     });
 
     // socket.io listener for zoom change
@@ -123,7 +131,7 @@ MapApp.collab = function() {
       console.log('[init_ack] Received initialize ack for collab session: ' +
           JSON.stringify(data));
 
-      this.cid = data.cid;
+      cid = data.cid;
 
       MapApp.collab.trigger('init_ack', data);
       MapApp.collab.trigger('change_state', {
@@ -137,9 +145,24 @@ MapApp.collab = function() {
 
     // socket.io listener for error message
     on('error', function (data) {
+      console.log(data);
       MapApp.log.err(JSON.stringify(data));
-     });
+    });
 
+  };
+
+  /*
+     Send message to perform an address search
+
+     Parameters:
+        address - search term
+   */
+  var sendSearch = function(address) {
+    MapApp.log.info('[search] Emitting address: ' 
+      + address);
+
+    var xid = preSendMsg('search');
+    emit('search', xid, { address: address });
   };
 
   /*
@@ -163,10 +186,6 @@ MapApp.collab = function() {
   var init = function(data) {
     MapApp.log.info('[init] Emitting init: ' + JSON.stringify(data));
 
-
-    socket = io.connect(Hosts.collaboration);
-    setupSocketListeners();
-
     // Send initialization message to server
     var xid = preSendMsg('init');
     emit('init', xid, data);
@@ -185,7 +204,6 @@ MapApp.collab = function() {
     MapApp.log.info('[change_center] Emitting center: ' +
       JSON.stringify(center));
 
-
     var xid = preSendMsg('change_center');
     emit('change_center', xid, {center: center});
   };
@@ -200,7 +218,7 @@ MapApp.collab = function() {
     MapApp.log.info('[change_zoom] Emitting zoom: ' + zoom);
 
     var xid = preSendMsg('change_zoom');
-    socket.emit('change_zoom', xid, { zoom: zoom });
+    emit('change_zoom', xid, { zoom: zoom });
   };
 
   /*
@@ -238,9 +256,13 @@ MapApp.collab = function() {
     // an xid for this message since we don't care about receiving its ack
     socket.emit('send_message', { message: message });
   }
+  
+  socket = io.connect(Hosts.collaboration);
+  setupSocketListeners();
 
   return {
     init: init,
+    sendSearch: sendSearch,
     sendChangeCenter: sendChangeCenter,
     sendChangeZoom: sendChangeZoom,
     sendChangeState: sendChangeState,

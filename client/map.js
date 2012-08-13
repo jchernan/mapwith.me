@@ -178,46 +178,58 @@ MapApp.map = function () {
     interest near a geopoint.
   */
 
-  var storedGeopoints = null;
-  var storedVenues = null;
+  var storedGeopoints = [];
+  var storedVenues = [];
 
   var clear = function () {
-    storedGeopoints = null;
-    storedVenues = null;
+    storedGeopoints = [];
+    storedVenues = [];
     layerGroup.clearLayers();
   };
 
-  var drawPlaces = function (geopoints, venues) {
-    storedGeopoints = geopoints;
-    storedVenues = venues;
-    if (geopoints) {
-      renderGeopoints(geopoints);
-    }
-    if (venues) {
-      // TODO: do not pass a new venues array
-      renderVenues(venues.slice(0));
-    }
-  };
-
-  // add listener function drawPlaces to zoom change event
+  // add listener function to redraw geopoints 
+  // and venues on zoom change
   map.on('zoomend', function () {
     layerGroup.clearLayers();
-    drawPlaces(storedGeopoints, storedVenues);
+    renderGeopoints(storedGeopoints);
+    renderVenues(storedVenues);
   });
 
+  var drawGeopoints = function (points) {
+    storedGeopoints = storedGeopoints.concat(points);
+    renderGeopoints(points);
+  }
+  
+  var drawVenues = function (points) {
+    storedVenues = storedVenues.concat(points);
+    renderVenues(points);
+  }
+
   var renderGeopoints = function (geopoints) {
-    MapApp.log.info('Call to renderGeopoints. Received ' + geopoints.length + ' points.');
+    
+    if (geopoints.length === 0) {
+      return;
+    }
+    
+    MapApp.log.info('Call to renderGeopoints. Received ' 
+      + geopoints.length + ' points.');
+
     for (var i = 0 ; i < geopoints.length ; i++) {
       addMarker(geopoints[i], "pink");
     }
   };
 
   var renderVenues = function (venues) {    
-    MapApp.log.info('Call to renderVenues. Received ' + venues.length + ' points.');
-    var zoomLevel = map.getZoom();
+    
     if (venues.length === 0) {
       return;
     }
+
+    MapApp.log.info('Call to renderVenues. Received ' 
+      + venues.length + ' points.');
+    
+    venues = venues.slice(0);
+    var zoomLevel = map.getZoom();
     var center = map.getBounds().getCenter();
     var corner = map.getBounds().getNorthWest();
     var radiusOfInterest = distance(
@@ -225,7 +237,8 @@ MapApp.map = function () {
       { latitude: corner.lat, longitude: corner.lng }
     );
     var threshold = radiusOfInterest * 0.002;
-    MapApp.log.info('zoom level: ' + zoomLevel + ', thresh radius: ' + threshold);
+    MapApp.log.info('zoom level: ' + zoomLevel 
+      + ', thresh radius: ' + threshold);
 
     var someoneIsSpliced = true;
     var splicedCount = 0;
@@ -363,7 +376,8 @@ MapApp.map = function () {
     centerOn: centerOn,
     centerOnArea: centerOnArea,
     clear: clear,
-    drawPlaces: drawPlaces,
+    drawGeopoints: drawGeopoints,
+    drawVenues: drawVenues,
     getCenter: getCenter,
     getZoom: getZoom,
   };

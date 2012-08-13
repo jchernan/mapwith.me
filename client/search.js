@@ -54,9 +54,12 @@ MapApp.search = function () {
       "address": inputField
     };
 
+    MapApp.collab.sendSearch(inputField);
+
+    /*
     // Show progress bar 
     MapApp.searchField.showLoader();
-
+    
     // query the address server
     $.getJSON(Hosts.addressFind, address, function (data) {
 
@@ -93,6 +96,7 @@ MapApp.search = function () {
       }
 
     }).error(errorCallback);
+    */
 
     return false;
   };
@@ -104,14 +108,51 @@ MapApp.search = function () {
     MapApp.searchField.hideLoader();
   };
 
+  var sendBeginSearch = function () {
+    MapApp.collab.sendBeginSearch();
+  }
+
+  var currentSearch = { cid: null, xid: null };
+
+  MapApp.collab.on('search', function (data) {
+    
+    var opType = data.type;
+    MapApp.log.info('[search] Performing search operation "' 
+      + data.type + '"');
+    
+    switch (opType) {
+
+    case 'begin': 
+      // Show loader animation in search bar
+      MapApp.searchField.showLoader();
+      MapApp.map.clear();
+      break;
+    
+    case 'end':
+      // Hide loader animation in search bar
+      MapApp.searchField.hideLoader();
+      break;
+
+    case 'draw_geopoints':
+      if (data.points && data.points.length > 0) {
+        // draw geopoints
+        MapApp.map.drawGeopoints(data.points);
+        // center on the first geopoint in the list
+        MapApp.map.centerOn(data.points[0], MapApp.map.mapZooms.foundZoom);
+      }
+      break;
+
+    case 'draw_venues':
+      if (data.points && data.points.length > 0) {
+        MapApp.map.drawVenues(data.points); 
+      }
+      break;
+    }
+  });
+  
   return {
     findAddress: findAddress
   }
 
 }();
-
-
-
-
-
 
