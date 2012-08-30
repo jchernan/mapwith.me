@@ -55,14 +55,16 @@ MapApp.map = function () {
   }();
 
   var setCenter = function (center) {
-    map.panTo(new L.LatLng(
-      center.latitude, 
-      center.longitude) 
+    map.panTo(
+      new L.LatLng(
+        center.latitude, 
+        center.longitude), 
+      true 
     );
   };
 
   var setZoom = function (zoom) {
-    map.setZoom(zoom);
+    map.setZoom(zoom, true);
   };
 
   var getCenter = function () {
@@ -322,14 +324,14 @@ MapApp.map = function () {
 
   var enableCollabListeners = function () {
     map.on('dragend', sendChangeCenter);
-    map.on('zoomend', sendChangeZoom);
-    map.on('viewreset', sendChangeState);
+    map.on('zoomstart', sendChangeZoom);
+    map.on('userviewreset', sendChangeState);
   };
 
   var disableCollabListeners = function () {
     map.off('dragend', sendChangeCenter);
-    map.off('zoomend', sendChangeZoom);
-    map.off('viewreset', sendChangeState);
+    map.off('zoomstart', sendChangeZoom);
+    map.off('userviewreset', sendChangeState);
   };
 
   MapApp.collab.on('change_center', function (data) {
