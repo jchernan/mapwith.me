@@ -309,8 +309,9 @@ MapApp.map = function () {
   };
 
   // Listener function for a change in map zoom level
-  var sendChangeZoom = function () {
-    var zoom = map.getZoom();
+  var sendChangeZoom = function (data) {
+    var zoom = data.zoom;
+    console.log("sendChangeZoom with data= " + data);
     MapApp.collab.sendChangeZoom(zoom);
   };
 
@@ -324,13 +325,13 @@ MapApp.map = function () {
 
   var enableCollabListeners = function () {
     map.on('dragend', sendChangeCenter);
-    map.on('zoomstart', sendChangeZoom);
+    map.on('userzoomstart', function(data) {sendChangeZoom(data); });
     map.on('userviewreset', sendChangeState);
   };
 
   var disableCollabListeners = function () {
     map.off('dragend', sendChangeCenter);
-    map.off('zoomstart', sendChangeZoom);
+    map.off('zoomstart', function(data) {sendChangeZoom(data); });
     map.off('userviewreset', sendChangeState);
   };
 

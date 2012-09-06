@@ -200,7 +200,7 @@ MapApp.collab = function() {
     MapApp.log.info('[change_zoom] Emitting zoom: ' + zoom);
 
     var xid = preSendMsg('change_zoom');
-    socket.emit('change_zoom', xid, { zoom: zoom });
+    emit('change_zoom', xid, { zoom: zoom });
   };
 
   /*
