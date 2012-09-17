@@ -79,6 +79,15 @@ MapApp.map = function () {
     return map.getZoom();
   };
 
+  var setView = function (center, zoom) {
+    map.setView(
+      new L.LatLng(center.latitude, center.longitude), 
+      zoom,
+      false,
+      true
+    );
+  };
+
   // checks if the given point is inside any of the map areas
   var inBounds = function (point) {
     for (var area in mapAreas) {
@@ -325,13 +334,11 @@ MapApp.map = function () {
 
   var enableCollabListeners = function () {
     map.on('dragend', sendChangeCenter);
-    map.on('userzoomstart', function(data) {sendChangeZoom(data); });
     map.on('userviewreset', sendChangeState);
   };
 
   var disableCollabListeners = function () {
     map.off('dragend', sendChangeCenter);
-    map.off('zoomstart', function(data) {sendChangeZoom(data); });
     map.off('userviewreset', sendChangeState);
   };
 
@@ -349,8 +356,7 @@ MapApp.map = function () {
   MapApp.collab.on('change_state', function (data) {
     MapApp.log.info('[change_state] Setting new state with center: '
       + JSON.stringify(data.center) + ' and zoom: ' + data.zoom);
-    setCenter(data.center);
-    setZoom(data.zoom);
+    setView(data.center, data.zoom);
   });
 
   MapApp.collab.on('init_ack', function (data) {
