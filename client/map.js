@@ -55,14 +55,16 @@ MapApp.map = function () {
   }();
 
   var setCenter = function (center) {
-    map.panTo(new L.LatLng(
-      center.latitude, 
-      center.longitude) 
+    map.panTo(
+      new L.LatLng(
+        center.latitude, 
+        center.longitude), 
+      true 
     );
   };
 
   var setZoom = function (zoom) {
-    map.setZoom(zoom);
+    map.setZoom(zoom, true);
   };
 
   var getCenter = function () {
@@ -75,6 +77,15 @@ MapApp.map = function () {
 
   var getZoom = function () {
     return map.getZoom();
+  };
+
+  var setView = function (center, zoom) {
+    map.setView(
+      new L.LatLng(center.latitude, center.longitude), 
+      zoom,
+      false,
+      true
+    );
   };
 
   // checks if the given point is inside any of the map areas
@@ -320,8 +331,9 @@ MapApp.map = function () {
   };
 
   // Listener function for a change in map zoom level
-  var sendChangeZoom = function () {
-    var zoom = map.getZoom();
+  var sendChangeZoom = function (data) {
+    var zoom = data.zoom;
+    console.log("sendChangeZoom with data= " + data);
     MapApp.collab.sendChangeZoom(zoom);
   };
 
@@ -335,14 +347,12 @@ MapApp.map = function () {
 
   var enableCollabListeners = function () {
     map.on('dragend', sendChangeCenter);
-    map.on('zoomend', sendChangeZoom);
-    map.on('viewreset', sendChangeState);
+    map.on('userviewreset', sendChangeState);
   };
 
   var disableCollabListeners = function () {
     map.off('dragend', sendChangeCenter);
-    map.off('zoomend', sendChangeZoom);
-    map.off('viewreset', sendChangeState);
+    map.off('userviewreset', sendChangeState);
   };
 
   MapApp.collab.on('change_center', function (data) {
@@ -359,8 +369,7 @@ MapApp.map = function () {
   MapApp.collab.on('change_state', function (data) {
     MapApp.log.info('[change_state] Setting new state with center: '
       + JSON.stringify(data.center) + ' and zoom: ' + data.zoom);
-    setCenter(data.center);
-    setZoom(data.zoom);
+    setView(data.center, data.zoom);
   });
 
   MapApp.collab.on('init_ack', function (data) {
