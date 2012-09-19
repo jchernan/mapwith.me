@@ -41,4 +41,6 @@ var Cities = {
     "boston": Boston
 };
 
+var DefaultCity = 'san-francisco';
+
 var MapApp = {};

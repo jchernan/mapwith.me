@@ -1,17 +1,19 @@
 
 // custom icon for the marker pins
 MapApp.MarkerIcon = L.Icon.extend({
-  iconUrl: 'images/markers/black-pin.png',
-  shadowUrl: null,
-  iconSize: new L.Point(16, 28),
-  iconAnchor: new L.Point(8, 28),
-  popupAnchor: new L.Point(0, - 28)
+  options: {
+    iconUrl: 'images/markers/black-pin.png',
+    shadowUrl: null,
+    iconSize: new L.Point(16, 28),
+    iconAnchor: new L.Point(8, 28),
+    popupAnchor: new L.Point(0, - 28)
+  }
 });
 
 MapApp.map = function () {
 
   var mapAreas = Cities;
-  var defaultArea = 'san-francisco';
+  var defaultArea = DefaultCity;
   var tileStreamUrl = Hosts.tileStream + "/v2/maps/{z}/{x}/{y}.png";
 
   // zoom values for the different map behaviors
@@ -44,8 +46,9 @@ MapApp.map = function () {
 
     // add map attributions
     map.attributionControl.setPrefix(
-      'Powered by <a href="http://leaflet.cloudmade.com">Leaflet</a> ' + 
-      'and <a href="http://foursquare.com">Foursquare</a>'
+      'Powered by <a href="http://leaflet.cloudmade.com">Leaflet</a>, ' + 
+      '<a href="http://foursquare.com">Foursquare</a>, ' + 
+			'and <a href="http://www.google.com">Google</a>'
     );  
     map.attributionControl.addAttribution(
       'Map Data &copy; <a href="http://www.openstreetmap.org">OpenStreetMap</a>'
@@ -79,15 +82,6 @@ MapApp.map = function () {
     return map.getZoom();
   };
 
-  var setView = function (center, zoom) {
-    map.setView(
-      new L.LatLng(center.latitude, center.longitude), 
-      zoom,
-      false,
-      true
-    );
-  };
-
   // checks if the given point is inside any of the map areas
   var inBounds = function (point) {
     for (var area in mapAreas) {
@@ -105,16 +99,18 @@ MapApp.map = function () {
     return false;
   };
 
-  var centerOn = function (center, zoom) {
+  var setView = function (center, zoom, silent) {
     map.setView(
       new L.LatLng(center.latitude, center.longitude), 
-      zoom
+      zoom,
+      false,
+      silent
     );
   };
-  
-  var centerOnArea = function (area) {
+
+  var setViewOnArea = function (area) {
     var center = mapAreas[area].center; 
-    centerOn(center, mapZooms.defaultZoom);
+    setView(center, mapZooms.defaultZoom);
   };
 
   var popupHtml = function (iconUrl, name, stars, address) {
@@ -152,7 +148,7 @@ MapApp.map = function () {
   var addMarker = function (point, color, venueInfo) {
     var markerLoc = new L.LatLng(point.latitude, point.longitude);
     var url = 'images/markers/color-pin.png';
-    var icon = new MapApp.MarkerIcon(url.replace("color", color));
+    var icon = new MapApp.MarkerIcon({iconUrl: url.replace("color", color)});
     var marker = new L.Marker(
       markerLoc, {
         icon: icon
@@ -347,12 +343,12 @@ MapApp.map = function () {
 
   var enableCollabListeners = function () {
     map.on('dragend', sendChangeCenter);
-    map.on('userviewreset', sendChangeState);
+    map.on('collabend', sendChangeState);
   };
 
   var disableCollabListeners = function () {
     map.off('dragend', sendChangeCenter);
-    map.off('userviewreset', sendChangeState);
+    map.off('collabend', sendChangeState);
   };
 
   MapApp.collab.on('change_center', function (data) {
@@ -369,7 +365,7 @@ MapApp.map = function () {
   MapApp.collab.on('change_state', function (data) {
     MapApp.log.info('[change_state] Setting new state with center: '
       + JSON.stringify(data.center) + ' and zoom: ' + data.zoom);
-    setView(data.center, data.zoom);
+    setView(data.center, data.zoom, true);
   });
 
   MapApp.collab.on('init_ack', function (data) {
@@ -382,8 +378,8 @@ MapApp.map = function () {
     defaultArea: defaultArea,
     mapZooms: mapZooms,
     inBounds: inBounds,
-    centerOn: centerOn,
-    centerOnArea: centerOnArea,
+    setView: setView,
+    setViewOnArea: setViewOnArea,
     clear: clear,
     drawGeopoints: drawGeopoints,
     drawVenues: drawVenues,
@@ -394,6 +390,6 @@ MapApp.map = function () {
 }();
 
 // set initial center and zoom level
-MapApp.map.centerOnArea(MapApp.map.defaultArea);
+MapApp.map.setViewOnArea(MapApp.map.defaultArea);
 
 
