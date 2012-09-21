@@ -34,7 +34,9 @@ MapApp.map = function () {
   var map = function () {
     
     // create the map
-    var map = new L.Map("map");
+    var map = new L.Map("map", {
+      inertia: false
+    });
     var tileLayer = new L.TileLayer(
       tileLayerUrl, {
         maxZoom: mapZooms.max,
