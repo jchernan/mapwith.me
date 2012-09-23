@@ -1,10 +1,11 @@
 var Hosts = {};
 
-Hosts.tileStream = "http://www.mapwith.me:8888";
 Hosts.addressFind = "http://www.mapwith.me/map_find";
 Hosts.venuesFind = "http://www.mapwith.me/venue_find";
 Hosts.collaboration = "http://www.mapwith.me:8000";
 Hosts.baseURL = "http://www.mapwith.me";
+Hosts.tiles = "http://www.mapwith.me:8888/v2/maps/{z}/{x}/{y}.png";
+//Hosts.tiles = "http://{s}.tiles.mapbox.com/v3/jchernan.map-siiysyev/{z}/{x}/{y}.png";
 
 var SanFrancisco = {
     center: {

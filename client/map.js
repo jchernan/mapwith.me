@@ -14,7 +14,7 @@ MapApp.map = function () {
 
   var mapAreas = Cities;
   var defaultArea = DefaultCity;
-  var tileStreamUrl = Hosts.tileStream + "/v2/maps/{z}/{x}/{y}.png";
+  var tileLayerUrl = Hosts.tiles;
 
   // zoom values for the different map behaviors
   var mapZooms = {
@@ -36,7 +36,7 @@ MapApp.map = function () {
     // create the map
     var map = new L.Map("map");
     var tileLayer = new L.TileLayer(
-      tileStreamUrl, {
+      tileLayerUrl, {
         maxZoom: mapZooms.max,
         minZoom: mapZooms.min
       }
