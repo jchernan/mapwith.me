@@ -36,7 +36,7 @@ MapApp.content = function () {
     Content that shows the sharing session link.
   */
   var sessionLink =
-    '<div>'
+    '<div id="session-link">'
     + '<code>LINK</code>'
     + '</div>';
 
