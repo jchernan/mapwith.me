@@ -32,63 +32,23 @@ public class AppTest
         return new TestSuite( AppTest.class );
     }
 
-    public static WebDriver getDriver() {
-        WebDriver driver = new FirefoxDriver();
-        driver.get("http://mapwith.me");
-        return driver;
- 
-    }
-
-    public static Actions startSharing(String username) {
-        WebDriver driver = getDriver();
-        Actions builder = new Actions(driver);
-
-        /* Click on share */
-        builder.click(driver.findElement(By.id("share"))).build().perform();
-        /* Type username */
-        builder.sendKeys(driver.findElement(By.id("popover-form-input")), username).build().perform();
-        /* Click 'Start' on popover */
-        builder.click(driver.findElement(By.id("popover-form-button"))).build().perform();
-         
-        return builder;
-    }
-
+   
     /**
-     * Rigourous Test :-)
+     * Launch two browser windows and start a sharing session between them.
      */
     public void testApp()
     {
-
-        //Actions builder = startSharing("JulianBot");
-
         MapDriver mapDriver = new MapDriver();
         mapDriver.startSharing("Jossie");
-/* 
-        WebDriver driver = new FirefoxDriver();
-        
+        assertTrue(mapDriver.getSessionId() != null);
+        MapDriver mapDriver2 = new MapDriver(mapDriver.getSessionId(), "Johnnie");
 
-        driver.get("http://mapwith.me");
-        
- //       WebElement target = driver.findElement(By.id("map"));
-        Actions builder = new Actions(driver);
+        mapDriver.panBy(100, 250);
+        mapDriver.zoomByDoubleClick();
 
-        builder.click(driver.findElement(By.id("share"))).build().perform();
-        builder.sendKeys(driver.findElement(By.id("popover-form-input")), "JulianBot").build().perform();
-
-        builder.click(driver.findElement(By.id("popover-form-button"))).build().perform();
-        builder.doubleClick(driver.findElement(By.id("map"))).build().perform();
-
-        builder.dragAndDropBy(driver.findElement(By.id("map")), 200, 250).dragAndDropBy(driver.findElement(By.id("map")), 200, 250).build().perform();
-
-//        builder.dragAndDropBy(driver.findElement(By.id("map")), 200, 250).build().perform();
-//        builder.dragAndDropBy(driver.findElement(By.id("map")), 200, 250).build().perform();
-//        builder.dragAndDropBy(driver.findElement(By.id("map")), 200, 250).build().perform();
-//        builder.dragAndDropBy(driver.findElement(By.id("map")), 200, 250).build().perform();
-//        builder.dragAndDropBy(driver.findElement(By.id("map")), 200, 250).build().perform();
-
-//        builder.moveToElement(target, 40, 40).click().click().build().perform();
-*/
-
+        try { Thread.sleep(2000); } catch (Exception e) {}
+        mapDriver.close();
+        mapDriver2.close();
 
         assertTrue( true );
     }
