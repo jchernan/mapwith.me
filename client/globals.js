@@ -45,6 +45,7 @@ var Cities = {
 var DefaultCity = 'san-francisco';
 
 var MapApp = {
-  useLeaflet: false
+  useLeaflet: false,
+  log: require("/log.js").log
 };
 

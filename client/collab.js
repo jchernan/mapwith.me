@@ -8,12 +8,6 @@
     - backbone.js (Event handling)
  */
 
-MapApp.log = {
-  warn: function (msg) { console.warn(msg); },
-  err: function (msg) { console.error(msg); },
-  info: function (msg) { console.log(msg); }
-};
-
 MapApp.assert = function (expression, message) {
   if (! expression) {
     MapApp.log.err(message);
