@@ -567,13 +567,12 @@ MapApp.map = function () {
   };
 
   MapApp.collab.on('change_center', function (data) {
-    MapApp.log.info('[change_center] Setting new center: '
-      + JSON.stringify(data.center));
+    MapApp.log.setCenter(data.center);
     MapApp.map.setCenter(data.center);
   });
 
   MapApp.collab.on('change_zoom', function (data) {
-    MapApp.log.info('[change_zoom] Setting new zoom: ' + data.zoom);
+    MapApp.log.setZoom(data.zoom);
     MapApp.map.setZoom(data.zoom);
   });
 
