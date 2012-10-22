@@ -8,6 +8,10 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.*;
 import org.openqa.selenium.firefox.*;
 
+import com.maps.log.LogComparator;
+import com.maps.log.LogEntry;
+import java.util.List;
+
 /**
  * Unit test for simple App.
  */
@@ -43,13 +47,22 @@ public class AppTest
         assertTrue(mapDriver.getSessionId() != null);
         MapDriver mapDriver2 = new MapDriver(mapDriver.getSessionId(), "Johnnie");
 
+        try { Thread.sleep(2000); } catch (Exception e) {}
+
+        mapDriver.enableDebugLogs();
+        mapDriver2.enableDebugLogs();
+
         mapDriver.panBy(100, 250);
         mapDriver.zoomByDoubleClick();
 
         try { Thread.sleep(2000); } catch (Exception e) {}
+
+        List<LogEntry> logs1 = mapDriver.getLogs();
+        List<LogEntry> logs2 = mapDriver2.getLogs();
+
         mapDriver.close();
         mapDriver2.close();
 
-        assertTrue( true );
+        assertTrue(LogComparator.compare(logs1, logs2));
     }
 }

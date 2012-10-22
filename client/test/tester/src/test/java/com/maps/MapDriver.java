@@ -4,9 +4,12 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.*;
 import org.openqa.selenium.firefox.*;
 import java.util.regex.*;
+import java.util.*;
+import com.maps.log.*;
 
 public class MapDriver {
     private WebDriver driver;
+    private JavascriptExecutor js;
     private Integer id = null;
     private Actions emptyBuilder = null;
 
@@ -17,6 +20,7 @@ public class MapDriver {
     
     public MapDriver(Integer sessionId, String username) {
         this.driver = new FirefoxDriver();
+        this.js = (JavascriptExecutor) this.driver;
         this.id = sessionId;
         this.emptyBuilder = new Actions(driver);
 
@@ -29,6 +33,15 @@ public class MapDriver {
 
     }
 
+    private void joinSharingSession(String username) {
+        /* This can only happen when no other sharing session exists */
+        assert(isSharing());
+
+        /* Type username */
+        perform(emptyBuilder.sendKeys(find("modal-form-input"), username));
+        /* Click 'Join' on modal */
+        perform(emptyBuilder.click(find("join-modal")));
+    }
 
     private boolean isSharing() {
         return id != null; 
@@ -52,7 +65,6 @@ public class MapDriver {
         }
     }
 
-
     public void startSharing(String username) {
         /* This can only happen when no other sharing session exists */
         assert(! isSharing());
@@ -69,6 +81,10 @@ public class MapDriver {
         this.id = parseId(find("session-link").getText());
     }
 
+    public Integer getSessionId() {
+        return this.id;
+    }
+
     public void panBy(int xOff, int yOff) {
         perform(emptyBuilder.dragAndDropBy(find("map"), xOff, yOff));
     }
@@ -77,21 +93,20 @@ public class MapDriver {
         perform(emptyBuilder.doubleClick(find("map")));
     }
 
-
-    private void joinSharingSession(String username) {
-        /* This can only happen when no other sharing session exists */
-        assert(isSharing());
-
-        /* Type username */
-        perform(emptyBuilder.sendKeys(find("modal-form-input"), username));
-        /* Click 'Join' on modal */
-        perform(emptyBuilder.click(find("join-modal")));
+    public void enableDebugLogs() {
+        String logLevel = "window.MapApp.log.levels.DEBUG";
+        String script = "window.MapApp.log.setLogLevel(" + logLevel + ");";
+        js.executeScript(script);
     }
 
-
-
-    public Integer getSessionId() {
-        return this.id;
+    public List<LogEntry> getLogs() {
+        String script = "return window.MapApp.log.getLogs();";
+        List<Object> jsLogs = (List<Object>) js.executeScript(script); 
+        List<LogEntry> entries = new ArrayList<LogEntry>();
+        for (Object log : jsLogs) {
+            entries.add(LogEntryFactory.createLogEntry(log));
+        }
+        return entries;
     }
 
     public void close() {

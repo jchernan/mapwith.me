@@ -577,8 +577,7 @@ MapApp.map = function () {
   });
 
   MapApp.collab.on('change_state', function (data) {
-    MapApp.log.info('[change_state] Setting new state with center: '
-      + JSON.stringify(data.center) + ' and zoom: ' + data.zoom);
+    MapApp.log.setState(data.center, data.zoom);
     MapApp.map.setView(data.center, data.zoom, true);
   });
 

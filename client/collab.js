@@ -127,21 +127,21 @@ MapApp.collab = function () {
     
     // socket.io listener for center change
     on('change_center', function (data) {
-      MapApp.log.info('[change_center] Received ' + JSON.stringify(data));
+      MapApp.log.receivedCenter(data.center);
       /* TODO: Add validation */
       MapApp.collab.trigger('change_center', data);
     });
 
     // socket.io listener for zoom change
     on('change_zoom', function (data) {
-      MapApp.log.info('[change_zoom] Received ' + JSON.stringify(data));
+      MapApp.log.receivedZoom(data.zoom);
       /* TODO: Add validation */
       MapApp.collab.trigger('change_zoom', data);
     });
 
     // socket.io listener for view change
     on('change_state', function (data) {
-      MapApp.log.info('[change_state] Received ' + JSON.stringify(data));
+      MapApp.log.receivedState(data.center, data.zoom);
       /* TODO: Add validation */
       MapApp.collab.trigger('change_state', data);
     });
@@ -181,7 +181,6 @@ MapApp.collab = function () {
 
     // socket.io listener for error message
     on('error', function (data) {
-      console.log(data);
       MapApp.log.err(JSON.stringify(data));
     });
 
@@ -272,9 +271,8 @@ MapApp.collab = function () {
     var data = { center: center };
     var xid = preSendMsg('change_center', data);
     if (xid > 0) {
-      MapApp.log.info('[change_center] Emitting center: ' +
-        JSON.stringify(center));
       emit('change_center', xid, data);
+      MapApp.log.sentCenter(center);
     }
   };
 
@@ -288,8 +286,8 @@ MapApp.collab = function () {
     var data = { zoom: zoom };
     var xid = preSendMsg('change_zoom', data);
     if (xid > 0) {
-      MapApp.log.info('[change_zoom] Emitting zoom: ' + zoom);
       emit('change_zoom', xid, data);
+      MapApp.log.sentZoom(zoom);
     }
   };
 
@@ -305,15 +303,13 @@ MapApp.collab = function () {
         zoom = New zoom level
    */
   function sendChangeState(center, zoom) {
-    MapApp.log.info('[change_state] Emitting center: ' +
-                     JSON.stringify(center) + ' and zoom: ' + zoom);
-
     var xid = preSendMsg('change_state');
     emit('change_state', xid, {
         center: center,
         zoom: zoom
       }
     );
+    MapApp.log.sentState(center, zoom);
   }
 
 
