@@ -25,9 +25,9 @@ public class MapDriver {
         this.emptyBuilder = new Actions(driver);
 
         if (sessionId == null) {
-            this.driver.get("http://mapwith.me");
+            this.driver.get("file:///Users/jmunizn/Documents/Projects/maps2/maps/client/index.html");
         } else {
-            this.driver.get("http://mapwith.me?session_id=" + sessionId);
+            this.driver.get("file:///Users/jmunizn/Documents/Projects/maps2/maps/client/index.html?session_id=" + sessionId);
             joinSharingSession(username);
         }
 
