@@ -10,7 +10,9 @@ import org.openqa.selenium.firefox.*;
 
 import com.maps.log.LogComparator;
 import com.maps.log.LogEntry;
+
 import java.util.List;
+import java.util.Random;
 
 import com.maps.log.LogEntry.*;
 import com.maps.MapDriver.*;
@@ -40,6 +42,76 @@ public class AppTest
     }
 
    
+    /**
+     * Perform random stuff 
+     */
+    class RandomMover implements Runnable {
+        private MapDriver mapDriver;
+        int numSteps; 
+        Random r;
+
+        public RandomMover(MapDriver mapDriver, int numSteps) {
+            this.mapDriver = mapDriver;
+            this.numSteps = numSteps;
+            this.r = new Random(); 
+        }
+
+        public void run() {
+            for (int i = 0; i < numSteps ; i++) {
+                int choice = r.nextInt(5);
+                switch (choice) {
+                    case 0: mapDriver.panBy(r.nextInt(500), r.nextInt(500));
+                            break;
+
+                    case 1: mapDriver.zoomByDoubleClick();
+                            try { Thread.sleep(2000); } catch (Exception e) {}
+                            break;
+
+                    case 2: mapDriver.zoomByButton(Zoom.IN);
+                            try { Thread.sleep(2000); } catch (Exception e) {}
+                            break;
+
+                    case 3: mapDriver.jumpTo(Location.SF);
+                            try { Thread.sleep(2000); } catch (Exception e) {}
+                            break;
+
+                    case 4: mapDriver.jumpTo(Location.BOS);
+                            try { Thread.sleep(2000); } catch (Exception e) {}
+                            break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Two browsers doing random stuff simultaneously should end up in the same
+     * position
+     */
+    public void testEventualConvergence() 
+    {
+        MapDriver mapDriver = new MapDriver();
+        mapDriver.startSharing("Jossie");
+        assertTrue(mapDriver.getSessionId() != null);
+        MapDriver mapDriver2 = new MapDriver(mapDriver.getSessionId(), "Johnnie");
+
+        Thread t1 = new Thread(new RandomMover(mapDriver, 15));
+        Thread t2 = new Thread(new RandomMover(mapDriver2, 15));
+
+        t1.start();
+        t2.start();
+
+        try { 
+            t1.join();
+            t2.join();
+        } catch (Exception e) {}
+
+        assertEquals(mapDriver.getCenter(), mapDriver2.getCenter());
+        assertEquals(mapDriver.getZoom(),   mapDriver2.getZoom());
+
+        mapDriver.close();
+        mapDriver2.close();
+    }
+
     /**
      * Launch two browser windows and start a sharing session between them.
      */
