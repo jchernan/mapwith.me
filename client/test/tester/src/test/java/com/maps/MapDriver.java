@@ -12,6 +12,8 @@ public class MapDriver {
     private JavascriptExecutor js;
     private Integer id = null;
     private Actions emptyBuilder = null;
+    enum Zoom { IN, OUT }
+    enum Location { SF, BOS }
 
     /* Start a Firefox window and point it to mapwith.me */
     public MapDriver() {
@@ -55,6 +57,11 @@ public class MapDriver {
         return driver.findElement(By.id(id));
     }
 
+    private WebElement findByClass(String className) {
+        return driver.findElement(By.className(className));
+    }
+
+
     private static int parseId(String url) {
         Pattern p = Pattern.compile(".*session_id=([0-9]*).*");
         Matcher m = p.matcher(url);
@@ -92,6 +99,30 @@ public class MapDriver {
     public void zoomByDoubleClick() {
         perform(emptyBuilder.doubleClick(find("map")));
     }
+
+    public void zoomByButton(Zoom zoom) {
+        switch (zoom) { 
+            case IN: 
+                perform(emptyBuilder.click(findByClass("leaflet-control-zoom-in")));
+                break;
+            case OUT:
+                perform(emptyBuilder.click(findByClass("leaflet-control-zoom-out")));
+                break;
+        }
+    }
+
+    public void jumpTo(Location location) {
+        switch (location) {
+            case BOS:
+                perform(emptyBuilder.click(find("navbar-button-bos")));
+                break;
+            case SF:
+                perform(emptyBuilder.click(find("navbar-button-sf")));
+                break;
+        }
+    }
+
+
 
     public void enableDebugLogs() {
         String logLevel = "window.MapApp.log.levels.DEBUG";

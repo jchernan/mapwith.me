@@ -12,6 +12,9 @@ import com.maps.log.LogComparator;
 import com.maps.log.LogEntry;
 import java.util.List;
 
+import com.maps.log.LogEntry.*;
+import com.maps.MapDriver.*;
+
 /**
  * Unit test for simple App.
  */
@@ -58,7 +61,14 @@ public class AppTest
         mapDriver.zoomByDoubleClick();
         mapDriver.panBy(200, 350);
         mapDriver.zoomByDoubleClick();
-
+        try { Thread.sleep(2000); } catch (Exception e) {}
+        mapDriver.zoomByButton(Zoom.IN);
+        try { Thread.sleep(2000); } catch (Exception e) {}
+        mapDriver.zoomByButton(Zoom.OUT);
+        try { Thread.sleep(2000); } catch (Exception e) {}
+        mapDriver.jumpTo(Location.BOS);
+        try { Thread.sleep(2000); } catch (Exception e) {}
+        mapDriver.jumpTo(Location.SF);
         try { Thread.sleep(2000); } catch (Exception e) {}
 
         List<LogEntry> logs1 = mapDriver.getLogs();
@@ -69,15 +79,16 @@ public class AppTest
         mapDriver2.close();
         mapDriver3.close();
             
-        assertEquals(4, logs1.size());
-        assertEquals(8, logs2.size());
-        assertEquals(8, logs3.size());
+        System.out.println(String.format("%s %s %s", logs1.size(), logs2.size(), logs3.size()));
+        assertEquals(8,  logs1.size());
+        assertEquals(16, logs2.size());
+        assertEquals(16, logs3.size());
         assertEquals(logs2, logs3);
         
         for (int i = 0; i < logs2.size(); i++) {
             /* Users that didn't move shouldn't emit messages */
-            assertTrue(logs2.get(i).getAction() != LogEntry.LogAction.SEND);
-            assertTrue(logs3.get(i).getAction() != LogEntry.LogAction.SEND);
+            assertTrue(logs2.get(i).getAction() != LogAction.SEND);
+            assertTrue(logs3.get(i).getAction() != LogAction.SEND);
         }
 
         assertTrue(LogComparator.compare(logs1, logs2));
