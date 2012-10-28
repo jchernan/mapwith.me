@@ -12,8 +12,47 @@ public class MapDriver {
     private JavascriptExecutor js;
     private Integer id = null;
     private Actions emptyBuilder = null;
+
     enum Zoom { IN, OUT }
     enum Location { SF, BOS }
+
+    static class Point {
+        public Point(Double latitude, Double longitude) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
+    
+        public Point(String latitude, String longitude) {
+            this(Double.parseDouble(latitude), Double.parseDouble(longitude));
+        }
+
+        private Double latitude;
+        private Double longitude;
+
+        public Double getLatitude() { 
+            return this.latitude;
+        }
+
+        public Double getLongitude() {
+            return this.longitude;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof Point) {
+                Point p = (Point)o;
+                return p.latitude.equals(latitude) && 
+                       p.longitude.equals(longitude);
+            } else {
+                return false;
+            }
+        }
+        
+        @Override
+        public String toString() {
+            return String.format("Point(%s,%s)", latitude, longitude);
+        }
+    }
 
     /* Start a Firefox window and point it to mapwith.me */
     public MapDriver() {
@@ -121,8 +160,22 @@ public class MapDriver {
                 break;
         }
     }
+    
+    public Object getCenter() {
+        String script = "return window.MapApp.map.getCenter()";
+        Json center = new Json(js.executeScript(script));
+          
+        System.out.println(center.getClass());
+        return new Point(
+            center.get("latitude").getValue(), 
+            center.get("longitude").getValue());
+    }
 
-
+    public Long getZoom() {
+        String script = "return window.MapApp.map.getZoom()";
+        Long zoom = (Long) js.executeScript(script);
+        return zoom;
+    }
 
     public void enableDebugLogs() {
         String logLevel = "window.MapApp.log.levels.DEBUG";

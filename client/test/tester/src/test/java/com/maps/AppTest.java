@@ -75,11 +75,18 @@ public class AppTest
         List<LogEntry> logs2 = mapDriver2.getLogs();
         List<LogEntry> logs3 = mapDriver3.getLogs();
 
+
+        assertEquals(mapDriver.getCenter(), mapDriver2.getCenter());
+        assertEquals(mapDriver.getCenter(), mapDriver3.getCenter());
+
+        assertEquals(mapDriver.getZoom(), mapDriver2.getZoom());
+        assertEquals(mapDriver.getZoom(), mapDriver3.getZoom());
+
+
         mapDriver.close();
         mapDriver2.close();
         mapDriver3.close();
             
-        System.out.println(String.format("%s %s %s", logs1.size(), logs2.size(), logs3.size()));
         assertEquals(8,  logs1.size());
         assertEquals(16, logs2.size());
         assertEquals(16, logs3.size());
