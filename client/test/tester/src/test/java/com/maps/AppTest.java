@@ -8,7 +8,7 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.*;
 import org.openqa.selenium.firefox.*;
 
-import com.maps.log.LogComparator;
+import com.maps.log.LogEntryFactory;
 import com.maps.log.LogEntry;
 
 import java.util.List;
@@ -160,8 +160,8 @@ public class AppTest
         mapDriver3.close();
             
         assertEquals(8,  logs1.size());
-        assertEquals(16, logs2.size());
-        assertEquals(16, logs3.size());
+        assertEquals(8, logs2.size());
+        assertEquals(8, logs3.size());
         assertEquals(logs2, logs3);
         
         for (int i = 0; i < logs2.size(); i++) {
@@ -170,6 +170,7 @@ public class AppTest
             assertTrue(logs3.get(i).getAction() != LogAction.SEND);
         }
 
-        assertTrue(LogComparator.compare(logs1, logs2));
+        List<LogEntry> cLogs1 = LogEntryFactory.generateComplement(logs1);
+        assertEquals(cLogs1, logs2);
     }
 }

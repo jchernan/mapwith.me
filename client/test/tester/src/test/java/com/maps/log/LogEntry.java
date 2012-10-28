@@ -17,7 +17,7 @@ public class LogEntry {
     private LogCategory category;
     private LogAction action;
 
-    public LogEntry(LogCategory category, LogAction action) {
+    protected LogEntry(LogCategory category, LogAction action) {
         this.category = category;
         this.action = action;
     }
