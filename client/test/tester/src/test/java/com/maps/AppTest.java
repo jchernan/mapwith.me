@@ -105,6 +105,8 @@ public class AppTest
             t2.join();
         } catch (Exception e) {}
 
+        try { Thread.sleep(5000); } catch (Exception e) {}
+
         assertEquals(mapDriver.getCenter(), mapDriver2.getCenter());
         assertEquals(mapDriver.getZoom(),   mapDriver2.getZoom());
 
