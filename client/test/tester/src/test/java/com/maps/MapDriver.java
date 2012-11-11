@@ -12,6 +12,7 @@ public class MapDriver {
     private JavascriptExecutor js;
     private Integer id = null;
     private Actions emptyBuilder = null;
+    private String username = null;
 
     enum Zoom { IN, OUT }
     enum Location { SF, BOS }
@@ -64,6 +65,7 @@ public class MapDriver {
         this.js = (JavascriptExecutor) this.driver;
         this.id = sessionId;
         this.emptyBuilder = new Actions(driver);
+        this.username = username;
 
         if (sessionId == null) {
             this.driver.get("file:///Users/jmunizn/Documents/Projects/maps2/maps/client/index.html");
@@ -72,6 +74,14 @@ public class MapDriver {
             joinSharingSession(username);
         }
 
+    }
+
+    public WebDriver getWebDriver() {
+        return driver;
+    }
+
+    public String getUserName() {
+        return username;
     }
 
     private void joinSharingSession(String username) {
@@ -125,6 +135,7 @@ public class MapDriver {
         /* Now parse the resulting ID */
         try { Thread.sleep(1000); } catch (Exception e) {}
         this.id = parseId(find("session-link").getText());
+        this.username = username;
     }
 
     public Integer getSessionId() {
@@ -165,7 +176,6 @@ public class MapDriver {
         String script = "return window.MapApp.map.getCenter()";
         Json center = new Json(js.executeScript(script));
           
-        System.out.println(center.getClass());
         return new Point(
             center.get("latitude").getValue(), 
             center.get("longitude").getValue());
