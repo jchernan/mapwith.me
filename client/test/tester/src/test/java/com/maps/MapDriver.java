@@ -69,8 +69,10 @@ public class MapDriver {
 
         if (sessionId == null) {
             this.driver.get("file:///Users/jmunizn/Documents/Projects/maps2/maps/client/index.html");
+            //this.driver.get("file:///Users/julian/Documents/projects/maps/client/index.html");
         } else {
             this.driver.get("file:///Users/jmunizn/Documents/Projects/maps2/maps/client/index.html?session_id=" + sessionId);
+            //this.driver.get("file:///Users/julian/Documents/projects/maps/client/index.html?session_id=" + sessionId);
             joinSharingSession(username);
         }
 
@@ -140,6 +142,11 @@ public class MapDriver {
 
     public Integer getSessionId() {
         return this.id;
+    }
+
+    public void sendMessage(String message) {
+        perform(emptyBuilder.sendKeys(find("chat_text"), message));
+        perform(emptyBuilder.click(find("chat_button")));
     }
 
     public void panBy(int xOff, int yOff) {

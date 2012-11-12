@@ -97,24 +97,30 @@ public class AppTest {
 
         public void run() {
             for (int i = 0; i < numSteps ; i++) {
-                int choice = r.nextInt(5);
+                int choice = r.nextInt(10);
                 switch (choice) {
-                    case 0: mapDriver.panBy(r.nextInt(500), r.nextInt(500));
+                    case 0: mapDriver.sendMessage("Panning map");
+                            mapDriver.panBy(r.nextInt(500), 500);
+                            try { Thread.sleep(10); } catch (Exception e) {}
                             break;
 
-                    case 1: mapDriver.zoomByDoubleClick();
+                    case 1: mapDriver.sendMessage("Zooming by double click");
+                            mapDriver.zoomByDoubleClick();
                             try { Thread.sleep(2000); } catch (Exception e) {}
                             break;
 
-                    case 2: mapDriver.zoomByButton(Zoom.IN);
+                    case 2: mapDriver.sendMessage("Zooming by button");
+                            mapDriver.zoomByButton(Zoom.IN);
                             try { Thread.sleep(2000); } catch (Exception e) {}
                             break;
 
-                    case 3: mapDriver.jumpTo(Location.SF);
+                    case 3: mapDriver.sendMessage("Jumping to SF");
+                            mapDriver.jumpTo(Location.SF);
                             try { Thread.sleep(2000); } catch (Exception e) {}
                             break;
 
-                    case 4: mapDriver.jumpTo(Location.BOS);
+                    case 4: mapDriver.sendMessage("Jumping to Boston");
+                            mapDriver.jumpTo(Location.BOS);
                             try { Thread.sleep(2000); } catch (Exception e) {}
                             break;
                 }
@@ -135,7 +141,12 @@ public class AppTest {
         MapDriver mapDriver2 = new MapDriver(mapDriver.getSessionId(), "Johnnie");
         addDriver(mapDriver2);
 
+        mapDriver.jumpTo(Location.BOS);
         Thread t1 = new Thread(new RandomMover(mapDriver, 15));
+
+        try { Thread.sleep(100); } catch (Exception e) {}
+
+        mapDriver.jumpTo(Location.SF);
         Thread t2 = new Thread(new RandomMover(mapDriver2, 15));
 
         t1.start();
