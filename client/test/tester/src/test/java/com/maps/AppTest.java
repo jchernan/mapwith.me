@@ -1,9 +1,6 @@
 package com.maps;
 
-import org.junit.*;
-import org.junit.rules.TestName;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
+import org.junit.Test;
 import static org.junit.Assert.*;
 
 import org.openqa.selenium.*;
@@ -14,10 +11,7 @@ import com.maps.log.LogEntryFactory;
 import com.maps.log.LogEntry;
 
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Random;
-import java.io.FileOutputStream;
-import java.io.File;
 
 import com.maps.log.LogEntry.*;
 import com.maps.MapDriver.*;
@@ -25,62 +19,8 @@ import com.maps.MapDriver.*;
 /**
  * Unit test for simple App.
  */
-public class AppTest {
+public class AppTest extends MapTest {
 
-    private String REPORTS_DIR = "target/surefire-reports/";
-
-    private List<MapDriver> mapDrivers;
-
-    @Rule
-    public TestName testName = new TestName();
-
-    @Rule
-    public TestWatcher testWatcher = new TestWatcher() {
-        @Override
-        protected void succeeded(Description d) {
-            for (MapDriver driver : mapDrivers) {
-                driver.close();
-            }
-            mapDrivers = null;
-        }
-
-        @Override
-        protected void failed(Throwable e, Description d) {
-            for (MapDriver driver : mapDrivers) {
-                captureScreenshot(testName.getMethodName(), driver);
-                driver.close();
-            }
-            mapDrivers = null;
-        }
-    };
-
-    @Before
-    public void setUp() {
-        mapDrivers = new ArrayList<MapDriver>();
-    }
-
-    private void captureScreenshot(String testName, MapDriver driver) {
-
-        try {
-            new File(REPORTS_DIR).mkdirs();
-            String fileName = this.getClass().getCanonicalName()
-                + "-" + testName
-                + "-" + driver.getUserName()
-                + "-screenshot.png";
-            FileOutputStream out = new FileOutputStream(
-                REPORTS_DIR + fileName);
-            TakesScreenshot ts = (TakesScreenshot) driver.getWebDriver();
-            out.write(ts.getScreenshotAs(OutputType.BYTES));
-            out.close();
-        } catch (Exception e) {
-            // No need to crash the tests if the screenshot fails
-        }
-    }
-
-    private void addDriver(MapDriver driver) {
-        mapDrivers.add(driver);
-    }
-   
     /**
      * Perform random stuff 
      */
@@ -134,12 +74,10 @@ public class AppTest {
      */
     @Test
     public void testEventualConvergence() {
-        MapDriver mapDriver = new MapDriver();
-        addDriver(mapDriver);
+        MapDriver mapDriver = createMapDriver();
         mapDriver.startSharing("Jossie");
         assertTrue(mapDriver.getSessionId() != null);
-        MapDriver mapDriver2 = new MapDriver(mapDriver.getSessionId(), "Johnnie");
-        addDriver(mapDriver2);
+        MapDriver mapDriver2 = createMapDriver(mapDriver.getSessionId(), "Johnnie");
 
         mapDriver.jumpTo(Location.BOS);
         Thread t1 = new Thread(new RandomMover(mapDriver, 15));
@@ -168,14 +106,11 @@ public class AppTest {
      */
     @Test
     public void testOneMover() {
-        MapDriver mapDriver = new MapDriver();
-        addDriver(mapDriver);
+        MapDriver mapDriver = createMapDriver();
         mapDriver.startSharing("Jossie");
         assertTrue(mapDriver.getSessionId() != null);
-        MapDriver mapDriver2 = new MapDriver(mapDriver.getSessionId(), "Johnnie");
-        addDriver(mapDriver2);
-        MapDriver mapDriver3 = new MapDriver(mapDriver.getSessionId(), "Julito");
-        addDriver(mapDriver3);
+        MapDriver mapDriver2 = createMapDriver(mapDriver.getSessionId(), "Johnnie");
+        MapDriver mapDriver3 = createMapDriver(mapDriver.getSessionId(), "Julito");
 
         try { Thread.sleep(2000); } catch (Exception e) {}
 
@@ -184,8 +119,11 @@ public class AppTest {
         mapDriver3.enableDebugLogs();
 
         mapDriver.panBy(100, 250);
+        try { Thread.sleep(2000); } catch (Exception e) {}
         mapDriver.zoomByDoubleClick();
+        try { Thread.sleep(2000); } catch (Exception e) {}
         mapDriver.panBy(200, 350);
+        try { Thread.sleep(2000); } catch (Exception e) {}
         mapDriver.zoomByDoubleClick();
         try { Thread.sleep(2000); } catch (Exception e) {}
         mapDriver.zoomByButton(Zoom.IN);
