@@ -1,20 +1,8 @@
 
-// custom icon for the marker pins
-MapApp.MarkerIcon = L.Icon.extend({
-  options: {
-    iconUrl: 'images/markers/black-pin.png',
-    shadowUrl: null,
-    iconSize: new L.Point(16, 28),
-    iconAnchor: new L.Point(8, 28),
-    popupAnchor: new L.Point(0, - 28)
-  }
-});
-
 MapApp.map = function () {
 
   var mapAreas = Cities;
   var defaultArea = DefaultCity;
-  var tileLayerUrl = Hosts.tiles;
 
   // zoom values for the different map behaviors
   var mapZooms = {
@@ -30,89 +18,354 @@ MapApp.map = function () {
   /*
     Map Methods
   */
+  var map;
 
-  var map = function () {
-    
-    // create the map
-    var map = new L.Map("map", {
-      inertia: false
-    });
-    var tileLayer = new L.TileLayer(
-      tileLayerUrl, {
-        maxZoom: mapZooms.max,
-        minZoom: mapZooms.min
+  var leafletFunctions = {
+    /*
+    * Initializes the map
+    */
+    initialize: function () {
+
+      $('#map').addClass('map-leaflet');
+
+      // create the map
+      map = new L.Map("map", {
+        inertia: false
+      });
+
+      var tileLayer = new L.TileLayer(
+        Hosts.tiles, {
+          maxZoom: mapZooms.max,
+          minZoom: mapZooms.min
+        }
+      );
+      map.addLayer(layerGroup);
+      map.addLayer(tileLayer);
+
+      // add map attributions
+      map.attributionControl.setPrefix(
+        'Powered by <a href="http://leaflet.cloudmade.com">Leaflet</a>, ' +
+        '<a href="http://foursquare.com">Foursquare</a>, ' +
+        'and <a href="http://www.google.com">Google</a>'
+      );
+      map.attributionControl.addAttribution(
+        'Map Data &copy; <a href="http://www.openstreetmap.org">OpenStreetMap</a>'
+      );
+
+      // add listener function to redraw geopoints
+      // and venues on zoom change
+      map.on('zoomend', function () {
+        MapApp.map.clearMarkers();
+        renderGeopoints(storedGeopoints);
+        renderVenues(storedVenues);
+      });
+      var center = mapAreas[defaultArea].center;
+      map.setView(
+        new L.LatLng(center.latitude, center.longitude),
+        mapZooms.defaultZoom,
+        false,
+        false
+      );
+    },
+    /*
+    * Sets the map's center coordinate
+    */
+    setCenter: function (center) {
+      map.panTo(
+        new L.LatLng(
+          center.latitude,
+          center.longitude),
+        true
+      );
+    },
+    /*
+    * Sets the map's zoom level
+    */
+    setZoom: function (zoom) {
+      map.setZoom(zoom, true);
+    },
+    /*
+    * Sets the map's center coordinate and zoom level
+    */
+    setView: function (center, zoom, silent) {
+      map.setView(
+        new L.LatLng(center.latitude, center.longitude),
+        zoom,
+        false,
+        silent
+      );
+    },
+    /*
+    * Gets the map's center coordinate
+    */
+    getCenter: function () {
+      var center = map.getCenter();
+      return {
+        latitude: center.lat,
+        longitude: center.lng
       }
-    );
-    map.addLayer(layerGroup);
-    map.addLayer(tileLayer);
+    },
+    /*
+    * Gets the map's zoom level
+    */
+    getZoom: function () {
+      return map.getZoom();
+    },
+    /*
+    * Gets the map's corner coordinate
+    */
+    getCorner: function () {
+      var corner = map.getBounds().getNorthWest();
+      return {
+        latitude: corner.lat,
+        longitude: corner.lng
+      }
+    },
+    /*
+    * Checks if the given point is inside any of the map areas
+    */
+    inBounds: function (point) {
+      for (var area in mapAreas) {
+        if (mapAreas.hasOwnProperty(area)) {
+          var mapArea = mapAreas[area];
+          if (point.latitude >= mapArea.lowerRight.latitude &&
+            point.latitude <= mapArea.upperLeft.latitude &&
+            point.longitude >= mapArea.upperLeft.longitude &&
+            point.longitude <= mapArea.lowerRight.longitude) {
 
-    // add map attributions
-    map.attributionControl.setPrefix(
-      'Powered by <a href="http://leaflet.cloudmade.com">Leaflet</a>, ' + 
-      '<a href="http://foursquare.com">Foursquare</a>, ' + 
-			'and <a href="http://www.google.com">Google</a>'
-    );  
-    map.attributionControl.addAttribution(
-      'Map Data &copy; <a href="http://www.openstreetmap.org">OpenStreetMap</a>'
-    );
-
-    return map;
-  }();
-
-  var setCenter = function (center) {
-    map.panTo(
-      new L.LatLng(
-        center.latitude, 
-        center.longitude), 
-      true 
-    );
-  };
-
-  var setZoom = function (zoom) {
-    map.setZoom(zoom, true);
-  };
-
-  var getCenter = function () {
-    var center = map.getCenter();
-    return {
-      latitude: center.lat,
-      longitude: center.lng
-    }
-  };
-
-  var getZoom = function () {
-    return map.getZoom();
-  };
-
-  // checks if the given point is inside any of the map areas
-  var inBounds = function (point) {
-    for (var area in mapAreas) {
-      if (mapAreas.hasOwnProperty(area)) {
-        var mapArea = mapAreas[area];
-        if (point.latitude >= mapArea.lowerRight.latitude && 
-          point.latitude <= mapArea.upperLeft.latitude && 
-          point.longitude >= mapArea.upperLeft.longitude && 
-          point.longitude <= mapArea.lowerRight.longitude) {
-                
-          return true;
+            return true;
+          }
         }
       }
+      return false;
+    },
+    /*
+    * Adds a marker on the map at the given point
+    */
+    addMarker: function (point, markerImage, venueInfo) {
+      var markerLoc = new L.LatLng(point.latitude, point.longitude);
+      var url = 'images/markers/color-pin.png';
+      var icon = markerImage;//new MarkerIcon({iconUrl: url.replace("color", color)});
+      var marker = new L.Marker(
+        markerLoc, {
+          icon: icon
+        }
+      );
+
+      if (typeof(venueInfo) !== "undefined") {
+        var icon = null; 
+        if (venueInfo.icon) {
+          icon = venueInfo.icon.prefix + "32.png";
+        }
+
+        marker.bindPopup(
+          popupHtml(
+            icon,
+            venueInfo.name,
+            venueInfo.stars,
+            venueInfo.address)).openPopup();
+      }
+
+      layerGroup.addLayer(marker);
+      return markerLoc;
+    },
+    /*
+    * Clears all the markers from the map
+    */
+    clearMarkers: function () {
+      layerGroup.clearLayers();
+    },
+    /*
+    * Represents the image for a geopoint marker
+    */
+    geopointImage: L.icon({
+      iconUrl: 'images/markers/pink-pin.png',
+      shadowUrl: null,
+      iconSize: new L.Point(16, 28),
+      iconAnchor: new L.Point(8, 28),
+      popupAnchor: new L.Point(0, - 28)
+    }),
+    /*
+    * Represents the image for a venue marker
+    */
+    venueImage: L.icon({
+      iconUrl: 'images/markers/blue-pin.png',
+      shadowUrl: null,
+      iconSize: new L.Point(16, 28),
+      iconAnchor: new L.Point(8, 28),
+      popupAnchor: new L.Point(0, - 28)
+    }),
+    /*
+    * Enables the collaboration listeners
+    */
+    enableCollabListeners: function () {
+      map.on('dragend', sendChangeCenter);
+      map.on('collabend', sendChangeState);
     }
-    return false;
   };
 
-  var setView = function (center, zoom, silent) {
-    map.setView(
-      new L.LatLng(center.latitude, center.longitude), 
-      zoom,
-      false,
-      silent
-    );
-  };
+  var googleFunctions = {
+    initialize: function () {
+
+      var center = mapAreas[defaultArea].center;
+      var mapOptions = {
+        center: new google.maps.LatLng(
+          center.latitude,
+          center.longitude
+        ),
+        zoom: mapZooms.defaultZoom,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+      };
+
+      $('#map').addClass('map-google');
+
+      map = new google.maps.Map(
+        document.getElementById('map'),
+        mapOptions
+      );
+
+      // add listener function to redraw geopoints
+      // and venues on zoom change
+      google.maps.event.addListener(map, 'zoom_changed', function() {
+        MapApp.map.clearMarkers();
+        renderGeopoints(storedGeopoints);
+        renderVenues(storedVenues);
+      });
+    },
+    /*
+    * Sets the map's center coordinate
+    */
+    setCenter: function (center) {
+      map.panTo(
+        new google.maps.LatLng(
+          center.latitude,
+          center.longitude)
+      );
+    },
+    /*
+    * Sets the map's zoom level
+    */
+    setZoom: function (zoom) {
+      map.setZoom(zoom);
+    },
+    /*
+    * Sets the map's center coordinate and zoom level
+    */
+    setView: function (center, zoom, silent) {
+      MapApp.map.setCenter(center);
+      MapApp.map.setZoom(zoom);
+    },
+    /*
+    * Gets the map's center coordinate
+    */
+    getCenter: function () {
+      var center = map.getCenter();
+      return {
+        latitude: center.lat(),
+        longitude: center.lng()
+      }
+    },
+    /*
+    * Gets the map's zoom level
+    */
+    getZoom: function () {
+      return map.getZoom();
+    },
+    /*
+    * Gets the map's corner coordinate
+    */
+    getCorner: function () {
+      var corner = map.getBounds().getNorthEast();
+      return {
+        latitude: corner.lat(),
+        longitude: corner.lng()
+      }
+    },
+    /*
+    * Checks if the given point is inside any of the map areas
+    */
+    inBounds: function (point) {
+      return true;
+    },
+    /*
+    * Adds a pin on the map at the given point
+    */
+    addMarker: function (point, markerImage, venueInfo) {
+      var markerLoc = new google.maps.LatLng(
+        point.latitude,
+        point.longitude
+      );
+
+      var marker = new google.maps.Marker({
+        position: markerLoc,
+        icon: markerImage,
+        map: map
+      });
+
+      if (typeof(venueInfo) !== 'undefined') {
+        var icon = null;
+        if (venueInfo.icon) {
+          icon = venueInfo.icon.prefix + '32.png';
+        }
+
+        var infoWindow = new google.maps.InfoWindow({
+          content: popupHtml(
+            icon,
+            venueInfo.name,
+            venueInfo.stars,
+            venueInfo.address
+          )
+        });
+
+        google.maps.event.addListener(marker, 'click', function () {
+          infoWindow.open(map, marker);
+        });
+      }
+
+      shownMarkers.push(marker);
+      return markerLoc;
+    },
+    /*
+    * Clears all the markers from the map
+    */
+    clearMarkers: function () {
+      if (shownMarkers) {
+        for (i in shownMarkers) {
+          shownMarkers[i].setMap(null);
+        }
+        shownMarkers.length = 0;
+      }
+    },
+    /*
+    * Represents the image for a geopoint marker
+    */
+    geopointImage: new google.maps.MarkerImage(
+      'images/markers/pink-pin.png',
+      new google.maps.Size(16, 28),
+      new google.maps.Point(0, 0),
+      new google.maps.Point(8, 28)
+    ),
+    /*
+    * Represents the image for a venue marker
+    */
+    venueImage: new google.maps.MarkerImage(
+      'images/markers/blue-pin.png',
+      new google.maps.Size(16, 28),
+      new google.maps.Point(0, 0),
+      new google.maps.Point(8, 28)
+    ),
+    /*
+    * Enables the collaboration listeners
+    */
+    enableCollabListeners: function () {
+      google.maps.event.addListener(map, 'zoom_changed', sendChangeZoom);
+      google.maps.event.addListener(map, 'center_changed', sendChangeCenter);
+    }
+  }
 
   var setViewOnArea = function (area) {
     var center = mapAreas[area].center; 
-    setView(center, mapZooms.defaultZoom);
+    MapApp.map.setView(center, mapZooms.defaultZoom);
   };
 
   var popupHtml = function (iconUrl, name, stars, address) {
@@ -146,35 +399,6 @@ MapApp.map = function () {
         return html;
   }
 
-  // adds a pin on the map at the given point
-  var addMarker = function (point, color, venueInfo) {
-    var markerLoc = new L.LatLng(point.latitude, point.longitude);
-    var url = 'images/markers/color-pin.png';
-    var icon = new MapApp.MarkerIcon({iconUrl: url.replace("color", color)});
-    var marker = new L.Marker(
-      markerLoc, {
-        icon: icon
-      }
-    );
-
-    if (typeof(venueInfo) !== "undefined") {
-      var icon = null; 
-      if (venueInfo.icon) {
-        icon = venueInfo.icon.prefix + "32.png";
-      }
-
-      marker.bindPopup(
-        popupHtml(
-          icon,
-          venueInfo.name,
-          venueInfo.stars,
-          venueInfo.address)).openPopup();
-    }
-
-    layerGroup.addLayer(marker);
-    return markerLoc;
-  };
-
   /*
     Rendering methods. The map stores the points that it is
     currently rendering. A point can be either a geopoint
@@ -187,22 +411,15 @@ MapApp.map = function () {
     interest near a geopoint.
   */
 
+  var shownMarkers = [];
   var storedGeopoints = [];
   var storedVenues = [];
 
   var clear = function () {
     storedGeopoints = [];
     storedVenues = [];
-    layerGroup.clearLayers();
+    MapApp.map.clearMarkers();
   };
-
-  // add listener function to redraw geopoints 
-  // and venues on zoom change
-  map.on('zoomend', function () {
-    layerGroup.clearLayers();
-    renderGeopoints(storedGeopoints);
-    renderVenues(storedVenues);
-  });
 
   var drawGeopoints = function (points) {
     storedGeopoints = storedGeopoints.concat(points);
@@ -215,36 +432,29 @@ MapApp.map = function () {
   }
 
   var renderGeopoints = function (geopoints) {
-    
     if (geopoints.length === 0) {
       return;
     }
-    
     MapApp.log.info('Call to renderGeopoints. Received ' 
       + geopoints.length + ' points.');
 
     for (var i = 0 ; i < geopoints.length ; i++) {
-      addMarker(geopoints[i], "pink");
+      MapApp.map.addMarker(geopoints[i], MapApp.map.geopointImage);
     }
   };
 
   var renderVenues = function (venues) {    
-    
     if (venues.length === 0) {
       return;
     }
-
     MapApp.log.info('Call to renderVenues. Received ' 
       + venues.length + ' points.');
     
     venues = venues.slice(0);
-    var zoomLevel = map.getZoom();
-    var center = map.getBounds().getCenter();
-    var corner = map.getBounds().getNorthWest();
-    var radiusOfInterest = distance(
-      { latitude: center.lat, longitude: center.lng }, 
-      { latitude: corner.lat, longitude: corner.lng }
-    );
+    var zoomLevel = MapApp.map.getZoom();
+    var center = MapApp.map.getCenter();
+    var corner = MapApp.map.getCorner();
+    var radiusOfInterest = distance(center, corner);
     var threshold = radiusOfInterest * 0.002;
     MapApp.log.info('zoom level: ' + zoomLevel 
       + ', thresh radius: ' + threshold);
@@ -260,10 +470,6 @@ MapApp.map = function () {
         var nearestVenue = venues[nearestVenueIdx]; 
         var venueIdxToSplice; 
 
-        //MapApp.log.info('distance between two venues is ' 
-        // + distance(nearestVenue, venue) 
-        // + '. and threshold is  ' + threshold); 
-
         // Decide which venue to splice between nearestVenue and venue
         // based on their popularity
         if (nearestVenue.popularity < venue.popularity) {
@@ -274,7 +480,6 @@ MapApp.map = function () {
 
         if (distance(nearestVenue, venue) < threshold) {
           venues.splice(venueIdxToSplice, 1); 
-          // MapApp.log.info('splicing venue at ' + nearestVenueIdx); 
           someoneIsSpliced = true;
           splicedCount += 1;
         }
@@ -285,8 +490,8 @@ MapApp.map = function () {
     MapApp.log.info('Rendering ' + venues.length + ' venues');
     for (var i = 0; i < venues.length; i++) {
       var point = venues[i];
-      if (inBounds(point)) {
-        addMarker(point, "blue", point);
+      if (MapApp.map.inBounds(point)) {
+        MapApp.map.addMarker(point, MapApp.map.venueImage, point);
       }
     }
   };
@@ -323,75 +528,78 @@ MapApp.map = function () {
 
   // Listener function for a change in map center
   var sendChangeCenter = function () {
-    var mapCenter = map.getCenter();
-    var center = { latitude: mapCenter.lat,  longitude: mapCenter.lng };
+    var center = MapApp.map.getCenter();
     MapApp.collab.sendChangeCenter(center);
   };
 
   // Listener function for a change in map zoom level
-  var sendChangeZoom = function (data) {
-    var zoom = data.zoom;
-    console.log("sendChangeZoom with data= " + data);
+  var sendChangeZoom = function () {
+    var zoom = MapApp.map.getZoom();
     MapApp.collab.sendChangeZoom(zoom);
   };
 
   // Listener function for a change in map view
   var sendChangeState = function () {
-    var mapCenter = map.getCenter();
-    var center = { latitude: mapCenter.lat,  longitude: mapCenter.lng };
-    var zoom = map.getZoom();
+    var center = MapApp.map.getCenter();
+    var zoom = MapApp.map.getZoom();
     MapApp.collab.sendChangeState(center, zoom);
-  };
-
-  var enableCollabListeners = function () {
-    map.on('dragend', sendChangeCenter);
-    map.on('collabend', sendChangeState);
-  };
-
-  var disableCollabListeners = function () {
-    map.off('dragend', sendChangeCenter);
-    map.off('collabend', sendChangeState);
   };
 
   MapApp.collab.on('change_center', function (data) {
     MapApp.log.info('[change_center] Setting new center: ' 
       + JSON.stringify(data.center));
-    setCenter(data.center);
+    MapApp.map.setCenter(data.center);
   });
 
   MapApp.collab.on('change_zoom', function (data) {
     MapApp.log.info('[change_zoom] Setting new zoom: ' + data.zoom);
-    setZoom(data.zoom);
+    MapApp.map.setZoom(data.zoom);
   });
 
   MapApp.collab.on('change_state', function (data) {
     MapApp.log.info('[change_state] Setting new state with center: '
       + JSON.stringify(data.center) + ' and zoom: ' + data.zoom);
-    setView(data.center, data.zoom, true);
+    MapApp.map.setView(data.center, data.zoom, true);
   });
 
   MapApp.collab.on('init_ack', function (data) {
     MapApp.log.info('[init_ack] Received initialize ack for collab session: ' 
       + JSON.stringify(data));
-    enableCollabListeners(); 
+    MapApp.map.enableCollabListeners();
   });
  
-  return {
+  var res = {
     defaultArea: defaultArea,
     mapZooms: mapZooms,
-    inBounds: inBounds,
-    setView: setView,
     setViewOnArea: setViewOnArea,
     clear: clear,
     drawGeopoints: drawGeopoints,
     drawVenues: drawVenues,
-    getCenter: getCenter,
-    getZoom: getZoom,
   };
+
+  for (var fn in leafletFunctions) {
+    if (MapApp.useLeaflet && leafletFunctions.hasOwnProperty(fn)) {
+      res[fn] = leafletFunctions[fn];
+    } else if (googleFunctions.hasOwnProperty(fn)) {
+      res[fn] = googleFunctions[fn];
+    }
+  }
+
+  return res;
 
 }();
 
-// set initial center and zoom level
-MapApp.map.setViewOnArea(MapApp.map.defaultArea);
-
+// add listener to initialize map on page load
+if (MapApp.useLeaflet) {
+  window.addEventListener(
+    'load',
+    MapApp.map.initialize
+  );
+} else {
+  google.maps.event.addDomListener(
+    window,
+    'load',
+    MapApp.map.initialize
+  );
+}
 

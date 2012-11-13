@@ -18,12 +18,23 @@
         /* disable scroll animations */
         overflow: hidden;
       }
-      #map {
+      .map-leaflet {
         position: absolute;
         top: 40px;
         bottom: 0;
         right: 0;
         left: 0;
+      }
+      .map-google {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      .map-google img {
+        /* Fix distortion on Google Maps controls
+        https://github.com/twitter/bootstrap/issues/1552 */
+        max-width: none;
+        /* max-width: inherit; */
       }
       #address-input {
         background-repeat: no-repeat;
@@ -210,6 +221,7 @@
     </div> <!-- end right_bar -->
 
     <script type="text/javascript" src="leaflet/leaflet.js"></script>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
     <script type="text/javascript" src="jquery/jquery.js"></script>
     <script type="text/javascript" src="socket.io/socket.io.js"></script> 
     <script type="text/javascript" src="bootstrap/js/bootstrap.js"></script> 

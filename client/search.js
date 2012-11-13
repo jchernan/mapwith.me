@@ -1,34 +1,6 @@
 
 MapApp.search = function () {
  
-  var partialPlaces = null;
-
-  var venueMerge = require("/venue_merge.js").venue_merge;
-
-  var parallelLoad = require('/parallel_load.js').parallel_load;
-
-  // a parallel_load object to process the callbacks of the 
-  // requests made to the venues server. the final callback 
-  // is simply removing the loading icon, since the partial 
-  // callbacks are doing all the work.
-  var parallelProcessVenues = new parallelLoad(function () {
-    // Remove loading icon 
-    MapApp.searchField.hideLoader();
-  });
-
-  // partial callbacks for parallelProcessVenues
-  var processVenues = function (id, partialResult)  {
-    if (!partialPlaces) {
-      partialPlaces = {};
-    }   
-    partialPlaces[id] = partialResult;
-    var mergedPlaces = venueMerge(partialPlaces);
-
-    console.log("mergedPlaces= "+ JSON.stringify(mergedPlaces));
-
-    MapApp.map.drawPlaces(mergedPlaces.geopoints, mergedPlaces.venues);
-  };
-
   // sends a request to the address server to get the coordinates
   // of the input address. then it sends a request to the venues 
   // server to get the venues around the coordinate.
@@ -51,23 +23,10 @@ MapApp.search = function () {
     return false;
   };
 
-  var errorCallback = function (data) {
-    // if there is an error, set view at the default center point
-    MapApp.log.err("Error: " + data.statusText);
-    MapApp.log.err("Response text: " + data.responseText);
-    MapApp.searchField.hideLoader();
-  };
-
-  var sendBeginSearch = function () {
-    MapApp.collab.sendBeginSearch();
-  }
-
   var currentSearch = { cid: null, xid: null };
 
   MapApp.collab.on('search', function (data) {
     
-    //MapApp.log.info('[search] Received ' 
-    //  + JSON.stringify(data));
     MapApp.log.info('[search] Current search is ' 
       + JSON.stringify(currentSearch));
 

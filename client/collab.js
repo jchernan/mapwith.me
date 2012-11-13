@@ -33,13 +33,31 @@ MapApp.collab = function() {
     until this message is acknowledged.
    */
   var pendingMsg = { opType: null, xid: null };
+  var receivedMsg = { opType: null, data: null };
 
   /*
      Before sending a message via socket.io, assign it a XID and register its
      opType (changeCenter, changeZoom, etc). This allows us to ignore some
      messages while we're waiting for an acknowledgement.
    */
-  var preSendMsg = function (opType) {
+  var preSendMsg = function (opType, data) {
+    if (receivedMsg.opType === opType) {
+      switch (opType) {
+        case 'change_zoom':
+          if (receivedMsg.data.zoom === data.zoom) {
+            receivedMsg = { opType: null, data: null };
+            return -1;
+          }
+          break;
+        case 'change_center':
+          if (receivedMsg.data.center.latitude === data.center.latitude
+            && receivedMsg.data.center.longitude === data.center.longitude) {
+            receivedMsg = { opType: null, data: null };
+            return -1;
+          }
+          break;
+      }
+    }
     pendingMsg.opType = opType;
     pendingMsg.xid = ++maxXid;
     return pendingMsg.xid;
@@ -57,6 +75,8 @@ MapApp.collab = function() {
       return false;
     } else {
       // No pending outgoing message, so we cannot ignore
+      receivedMsg.opType = opType;
+      receivedMsg.data = data;
       return true;
     }
   };
@@ -200,11 +220,13 @@ MapApp.collab = function() {
         }
    */
   var sendChangeCenter = function(center) {
-    MapApp.log.info('[change_center] Emitting center: ' +
-      JSON.stringify(center));
-
-    var xid = preSendMsg('change_center');
-    emit('change_center', xid, {center: center});
+    var data = { center: center };
+    var xid = preSendMsg('change_center', data);
+    if (xid > 0) {
+      MapApp.log.info('[change_center] Emitting center: ' +
+        JSON.stringify(center));
+      emit('change_center', xid, data);
+    }
   };
 
   /*
@@ -214,10 +236,12 @@ MapApp.collab = function() {
         zoom = New zoom level
    */
   var sendChangeZoom = function(zoom) {
-    MapApp.log.info('[change_zoom] Emitting zoom: ' + zoom);
-
-    var xid = preSendMsg('change_zoom');
-    emit('change_zoom', xid, { zoom: zoom });
+    var data = { zoom: zoom };
+    var xid = preSendMsg('change_zoom', data);
+    if (xid > 0) {
+      MapApp.log.info('[change_zoom] Emitting zoom: ' + zoom);
+      emit('change_zoom', xid, data);
+    }
   };
 
   /*

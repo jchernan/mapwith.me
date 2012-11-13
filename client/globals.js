@@ -44,4 +44,6 @@ var Cities = {
 
 var DefaultCity = 'san-francisco';
 
-var MapApp = {};
+var MapApp = {
+  useLeaflet: true
+};
