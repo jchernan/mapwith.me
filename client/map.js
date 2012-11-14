@@ -29,7 +29,13 @@ MapApp.map = function () {
       $('#map').addClass('map-leaflet');
 
       // create the map
+      var center = mapAreas[defaultArea].center;
       map = new L.Map("map", {
+        center: new L.LatLng(
+          center.latitude,
+          center.longitude
+        ),
+        zoom: mapZooms.defaultZoom,
         inertia: false
       });
 
@@ -59,13 +65,6 @@ MapApp.map = function () {
         renderGeopoints(storedGeopoints);
         renderVenues(storedVenues);
       });
-      var center = mapAreas[defaultArea].center;
-      map.setView(
-        new L.LatLng(center.latitude, center.longitude),
-        mapZooms.defaultZoom,
-        false,
-        false
-      );
     },
     /*
     * Sets the map's center coordinate
@@ -74,7 +73,8 @@ MapApp.map = function () {
       map.panTo(
         new L.LatLng(
           center.latitude,
-          center.longitude),
+          center.longitude
+        ),
         true
       );
     },
@@ -207,6 +207,9 @@ MapApp.map = function () {
   var googleFunctions = {
     initialize: function () {
 
+      $('#map').addClass('map-google');
+
+      // create the map
       var center = mapAreas[defaultArea].center;
       var mapOptions = {
         center: new google.maps.LatLng(
@@ -214,10 +217,20 @@ MapApp.map = function () {
           center.longitude
         ),
         zoom: mapZooms.defaultZoom,
-        mapTypeId: google.maps.MapTypeId.ROADMAP
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeControl: true,
+        mapTypeControlOptions: {
+          position: google.maps.ControlPosition.TOP_RIGHT,
+          mapTypeIds: [
+            google.maps.MapTypeId.ROADMAP, 
+            google.maps.MapTypeId.HYBRID, 
+            google.maps.MapTypeId.SATELLITE
+          ]
+        },
+        rotateControl: false,
+        streetViewControl: false,
+        tilt: 0
       };
-
-      $('#map').addClass('map-google');
 
       map = new google.maps.Map(
         document.getElementById('map'),
