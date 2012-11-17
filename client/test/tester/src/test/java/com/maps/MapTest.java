@@ -107,5 +107,9 @@ public class MapTest {
     private void addDriver(MapDriver driver) {
         mapDrivers.add(driver);
     }
+
+    public void sleep(long millis) {
+        try { Thread.sleep(millis); } catch (Exception e) {}
+    }
 }
 

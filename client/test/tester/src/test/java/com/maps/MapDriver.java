@@ -4,7 +4,9 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.interactions.*;
 import org.openqa.selenium.firefox.*;
 import java.util.regex.*;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 import com.maps.log.*;
 
 public class MapDriver {
@@ -13,6 +15,10 @@ public class MapDriver {
     private Integer id = null;
     private Actions emptyBuilder = null;
     private String username = null;
+
+    private String mapLocator;
+    private String zoomInLocator;
+    private String zoomOutLocator;
 
     enum Zoom { IN, OUT }
     enum Location { SF, BOS }
@@ -67,15 +73,29 @@ public class MapDriver {
         this.emptyBuilder = new Actions(driver);
         this.username = username;
 
-        if (sessionId == null) {
-            this.driver.get("file:///Users/jmunizn/Documents/Projects/maps2/maps/client/index.html");
-            //this.driver.get("file:///Users/julian/Documents/projects/maps/client/index.html");
-        } else {
-            this.driver.get("file:///Users/jmunizn/Documents/Projects/maps2/maps/client/index.html?session_id=" + sessionId);
-            //this.driver.get("file:///Users/julian/Documents/projects/maps/client/index.html?session_id=" + sessionId);
+        //String baseUrl = "file:///Users/jmunizn/Documents/Projects/maps2/maps/client/index.html";
+        String baseUrl = "file:///Users/julian/Documents/projects/maps/client/index.html";
+
+        if (sessionId != null) {
+            baseUrl = baseUrl + "?session_id=" + sessionId;
+        }
+
+        this.driver.get(baseUrl);
+
+        if (sessionId != null) {
             joinSharingSession(username);
         }
 
+        String mapClass = this.driver.findElement(By.id("map")).getAttribute("class");
+        if (mapClass.equals("map-google")) {
+            this.mapLocator = "//div[@id='map']/div/div/div";
+            this.zoomInLocator = "//div[@id='map']/div/div[7]/div[2]/div";
+            this.zoomOutLocator = "//div[@id='map']/div/div[7]/div[2]/div[4]";
+        } else {
+            this.mapLocator = "//div[@id='map']";
+            this.zoomInLocator = "//*[@class='leaflet-control-zoom-in']";
+            this.zoomOutLocator = "//*[@class='leaflet-control-zoom-out']";
+        }
     }
 
     public WebDriver getWebDriver() {
@@ -110,6 +130,10 @@ public class MapDriver {
 
     private WebElement findByClass(String className) {
         return driver.findElement(By.className(className));
+    }
+
+    private WebElement findByXPath(String id) {
+        return driver.findElement(By.xpath(id));
     }
 
 
@@ -150,21 +174,25 @@ public class MapDriver {
     }
 
     public void panBy(int xOff, int yOff) {
-        perform(emptyBuilder.dragAndDropBy(find("map"), xOff, yOff));
+        perform(emptyBuilder.dragAndDropBy(findByXPath(mapLocator), xOff, yOff));
     }
 
     public void zoomByDoubleClick() {
-        perform(emptyBuilder.doubleClick(find("map")));
+        perform(emptyBuilder.doubleClick(findByXPath(mapLocator)));
     }
 
     public void zoomByButton(Zoom zoom) {
+        try {
         switch (zoom) { 
             case IN: 
-                perform(emptyBuilder.click(findByClass("leaflet-control-zoom-in")));
+                perform(emptyBuilder.click(findByXPath(zoomInLocator)));
                 break;
             case OUT:
-                perform(emptyBuilder.click(findByClass("leaflet-control-zoom-out")));
+                perform(emptyBuilder.click(findByXPath(zoomOutLocator)));
                 break;
+        }
+        } catch (NoSuchElementException e) {
+            // exeption means we are using gmaps
         }
     }
 
