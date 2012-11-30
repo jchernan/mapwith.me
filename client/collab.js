@@ -50,8 +50,8 @@ MapApp.collab = function() {
           }
           break;
         case 'change_center':
-          if (receivedMsg.data.center.latitude === data.center.latitude
-            && receivedMsg.data.center.longitude === data.center.longitude) {
+          if (Math.abs(receivedMsg.data.center.latitude - data.center.latitude) < 0.0001
+            && Math.abs(receivedMsg.data.center.longitude - data.center.longitude) < 0.0001) {
             receivedMsg = { opType: null, data: null };
             return -1;
           }
