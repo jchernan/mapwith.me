@@ -178,7 +178,7 @@ public class MapDriver {
     }
 
     public void zoomByDoubleClick() {
-        perform(emptyBuilder.doubleClick(findByXPath(mapLocator)));
+        perform(emptyBuilder.moveToElement(findByXPath(mapLocator)).doubleClick());
     }
 
     public void zoomByButton(Zoom zoom) {
