@@ -576,8 +576,6 @@ MapApp.map = function () {
   });
 
   MapApp.collab.on('init_ack', function (data) {
-    MapApp.log.info('[init_ack] Received initialize ack for collab session: ' 
-      + JSON.stringify(data));
     MapApp.map.enableCollabListeners();
   });
  

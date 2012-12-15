@@ -118,8 +118,8 @@ MapApp.sessionInitWindow = function () {
     // check if #popover-form exists
     if ($('#popover-form').length > 0) {
       $('#popover-form').vAlign();
-      $('#popover-form').submit(startSharing);
-      $('#popover-form-button').click(startSharing);
+      $('#popover-form').submit(MapApp.collab.startSession);
+      $('#popover-form-button').click(MapApp.collab.startSession);
     }
   };
 
@@ -127,31 +127,7 @@ MapApp.sessionInitWindow = function () {
     shareButton.sharepopover('hide');
   };
 
-  var startSharing = function () {
-      
-    MapApp.log.info('[startSharing] User is starting share session');
-    // Send a message to server indicating our desire to join a session
-    var data = { 
-      center: MapApp.map.getCenter(),
-      zoom: MapApp.map.getZoom(),
-      username: $('#popover-form-input').val()
-    }; 
-
-    MapApp.collab.on('init_ack', function (data) {
-      var link = Hosts.baseURL + '?session_id=' + data.session_id;
-      setSharingMode(link, true);
-    });
-
-
-    MapApp.log.info('[startSharing] Emitting init: ' + JSON.stringify(data)); 
-    MapApp.collab.init(data);
-
-    /* TODO(jmunizn) Add loading animation */
-
-    return false;
-  };
-
-  var setSharingMode = function (link, showPopover, usernames) {
+  var setSharingMode = function (link, showPopover) {
     // get popover from share button
     var popover = shareButton.data('sharepopover');
     if (showPopover) {
@@ -169,14 +145,7 @@ MapApp.sessionInitWindow = function () {
       shareButton.sharepopover('show');
       popover.options.animation = true;
     }
-    
-    // Initialize right bar 
-    MapApp.chatWindow.init(
-        function(message) {
-          MapApp.collab.sendMessage(message);
-        }, 
-        usernames);
-};
+  };
 
   shareButton.sharepopover({
     trigger: 'manual',
@@ -188,8 +157,9 @@ MapApp.sessionInitWindow = function () {
   window.onresize = hideWindow;
   shareButton.click(showWindow);
 
-  return {
-    setSharingMode: setSharingMode
-  };
+  MapApp.collab.on('init_ack', function (data) {
+    var link = Hosts.baseURL + '?session_id=' + data.session_id;
+    setSharingMode(link, true);
+  });
 
 }();

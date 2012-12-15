@@ -99,15 +99,20 @@ MapApp.chatWindow = function () {
     MapApp.collab.on("send_message",  function(data) {
       postMessage(data.from, data.message);
     });
+
     MapApp.collab.on("add_user",  function(data) {
       addUser(data.username);
     });
 
   }
 
-
-  return {
-    init : init
-  };
+  MapApp.collab.on('init_ack', function (data) {
+    init(
+      function (message) {
+        MapApp.collab.sendMessage(message);
+      },
+      data.state.usernames
+    );
+  });
 
 }();

@@ -13,12 +13,25 @@ MapApp.log = {
   info: function (msg) { console.log(msg); }
 };
 
-MapApp.assert = function(expression, message) {
+MapApp.assert = function (expression, message) {
   if (! expression) {
-    MapApp.log.err(message); throw new AssertException(message); }
+    MapApp.log.err(message);
+    throw new AssertException(message);
+  }
 };
 
-MapApp.collab = function() {
+/*
+    Initialize urlParam function. Code grabbed from
+    http://www.jquery4u.com/snippets/url-parameters-jquery/#.T9lrKStYsoY
+*/
+var urlParam = function (name) {
+  MapApp.log.info("Retrieving URL parameter " + name);
+  var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(
+    window.location.href);
+  return (results) ? results[1] : null;
+};
+
+MapApp.collab = function () {
   var socket;
   var cid;    // The client id of this client
   var maxXid = 0; // The largest xid sent by this client
@@ -43,19 +56,19 @@ MapApp.collab = function() {
   var preSendMsg = function (opType, data) {
     if (receivedMsg.opType === opType) {
       switch (opType) {
-        case 'change_zoom':
-          if (receivedMsg.data.zoom === data.zoom) {
-            receivedMsg = { opType: null, data: null };
-            return -1;
-          }
-          break;
-        case 'change_center':
-          if (Math.abs(receivedMsg.data.center.latitude - data.center.latitude) < 0.0001
-            && Math.abs(receivedMsg.data.center.longitude - data.center.longitude) < 0.0001) {
-            receivedMsg = { opType: null, data: null };
-            return -1;
-          }
-          break;
+      case 'change_zoom':
+        if (receivedMsg.data.zoom === data.zoom) {
+          receivedMsg = { opType: null, data: null };
+          return -1;
+        }
+        break;
+      case 'change_center':
+        if (Math.abs(receivedMsg.data.center.latitude - data.center.latitude) < 0.0001
+          && Math.abs(receivedMsg.data.center.longitude - data.center.longitude) < 0.0001) {
+          receivedMsg = { opType: null, data: null };
+          return -1;
+        }
+        break;
       }
     }
     pendingMsg.opType = opType;
@@ -91,8 +104,8 @@ MapApp.collab = function() {
   var setupSocketListeners = function () {
     MapApp.assert(socket, "Socket must be initialized");
 
-    var on = function(msgType, fn) {
-      socket.on(msgType, function(data) {
+    var on = function (msgType, fn) {
+      socket.on(msgType, function (data) {
         if (preReceiveMessage(data, msgType)) {
           fn(data);
         } else {
@@ -153,13 +166,24 @@ MapApp.collab = function() {
       cid = data.cid;
 
       MapApp.collab.trigger('init_ack', data);
-      MapApp.collab.trigger('change_state', {
-        center: {
-          latitude: data.state.center.latitude,
-          longitude: data.state.center.longitude
-        },
-        zoom : data.state.zoom
-      });
+
+      var currentCenter = MapApp.map.getCenter();
+      var currentZoom = MapApp.map.getZoom();
+      var incomingCenter = data.state.center;
+      var incomingZoom = data.state.zoom;
+      if (currentZoom !== incomingZoom
+        || Math.abs(currentCenter.latitude - incomingCenter.latitude) > 0.0001
+        || Math.abs(currentCenter.longitude - incomingCenter.longitude) > 0.0001) {
+
+        MapApp.collab.trigger('change_state', {
+          center: {
+            latitude: data.state.center.latitude,
+            longitude: data.state.center.longitude
+          },
+          zoom : data.state.zoom
+        });
+      }
+
     });
 
     // socket.io listener for error message
@@ -176,8 +200,8 @@ MapApp.collab = function() {
      Parameters:
         address - search term
    */
-  var sendSearch = function(address) {
-    MapApp.log.info('[search] Emitting address: ' 
+  var sendSearch = function (address) {
+    MapApp.log.info('[search] Emitting address: '
       + address);
 
     var xid = preSendMsg('search');
@@ -202,12 +226,43 @@ MapApp.collab = function() {
            session_id = The id of the session we wish to join.
            username = Username selected by this user.
   */
-  var init = function(data) {
+  var init = function (data) {
     MapApp.log.info('[init] Emitting init: ' + JSON.stringify(data));
 
     // Send initialization message to server
     var xid = preSendMsg('init');
     emit('init', xid, data);
+  };
+
+  var startSession = function () {
+    MapApp.log.info('[start-session] User is starting share session');
+
+    // Send a message to server indicating our desire to join a session
+    var data = {
+      center: MapApp.map.getCenter(),
+      zoom: MapApp.map.getZoom(),
+      username: $('#popover-form-input').val()
+    };
+
+    init(data);
+
+    /* TODO(jmunizn) Add loading animation */
+
+    return false;
+  };
+
+  var joinSession = function () {
+    MapApp.log.info('[join-session] User is joining share session');
+
+    // Send a message to server indicating our desire to join a session
+    var data = {
+      session_id: urlParam('session_id'),
+      username: $("#modal-form-input").val()
+    };
+
+    init(data);
+
+    return false;
   };
 
   /*
@@ -219,7 +274,7 @@ MapApp.collab = function() {
           - longitude: Longitude to move to
         }
    */
-  var sendChangeCenter = function(center) {
+  var sendChangeCenter = function (center) {
     var data = { center: center };
     var xid = preSendMsg('change_center', data);
     if (xid > 0) {
@@ -235,7 +290,7 @@ MapApp.collab = function() {
      Parameters:
         zoom = New zoom level
    */
-  var sendChangeZoom = function(zoom) {
+  var sendChangeZoom = function (zoom) {
     var data = { zoom: zoom };
     var xid = preSendMsg('change_zoom', data);
     if (xid > 0) {
@@ -262,7 +317,8 @@ MapApp.collab = function() {
     emit('change_state', xid, {
         center: center,
         zoom: zoom
-    });
+      }
+    );
   }
 
 
@@ -284,7 +340,8 @@ MapApp.collab = function() {
   setupSocketListeners();
 
   return {
-    init: init,
+    startSession: startSession,
+    joinSession: joinSession,
     sendSearch: sendSearch,
     sendChangeCenter: sendChangeCenter,
     sendChangeZoom: sendChangeZoom,
@@ -296,65 +353,3 @@ MapApp.collab = function() {
 
 _.extend(MapApp.collab, Backbone.Events);
 
-
-
-/* Initialize urlParam function. Code grabbed from
-    http://www.jquery4u.com/snippets/url-parameters-jquery/#.T9lrKStYsoY
-*/
-var urlParam = function (name) {
-    console.log("starting urlParam " + name);
-
-    var results =
-        new RegExp('[\\?&]' + name + '=([^&#]*)').exec(
-            window.location.href);
-
-    console.log("regexp compiled  urlParam");
-    return (results) ? results[1] : null;
-};
-
-
-
-/* If user has specified a session_id, then initialize a sharing session
-   immediately */
-if (urlParam('session_id')) {
-
-    // display the modal
-    var text = $(MapApp.content.joinSession);
-    $('body').append(text);
-
-    var id = urlParam('session_id');
-
-    var joinSession = function () {
-        /* Send a message to server indicating our desire to join a session */
-        var data = {
-            session_id: id,
-            username: $("#modal-form-input").val()
-        };
-
-        MapApp.collab.on('init_ack', function (data) {
-            var link = Hosts.baseURL + '?session_id=' + data.session_id;
-            MapApp.sessionInitWindow.setSharingMode(link, false, data.state.usernames);
-        });
-
-        console.log('[init] Emitting init: ' + JSON.stringify(data));
-        MapApp.collab.init(data);
-
-        text.modal('hide');
-
-        return false;
-    };
-
-    $('#modal-form').submit(joinSession);
-    $('#join-modal').click(joinSession);
-
-    /* Ensure modal is always centered */
-    text.modal({
-        backdrop: true
-    }).css({
-        width: 'auto',
-        'margin-left': function () {
-            return -($(this).width() / 2);
-        }
-    });
-    text.modal('show');
-}
