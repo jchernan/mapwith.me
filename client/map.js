@@ -11,10 +11,10 @@ MapApp.map = function () {
     defaultZoom: 13,
     foundZoom: 15
   };
-  
+
   // create the map layers
   var layerGroup = new L.LayerGroup();
- 
+
   /*
     Map Methods
   */
@@ -103,7 +103,7 @@ MapApp.map = function () {
       return {
         latitude: center.lat,
         longitude: center.lng
-      }
+      };
     },
     /*
     * Gets the map's zoom level
@@ -119,7 +119,7 @@ MapApp.map = function () {
       return {
         latitude: corner.lat,
         longitude: corner.lng
-      }
+      };
     },
     /*
     * Checks if the given point is inside any of the map areas
@@ -145,7 +145,7 @@ MapApp.map = function () {
     addMarker: function (point, markerImage, venueInfo) {
       var markerLoc = new L.LatLng(point.latitude, point.longitude);
       var url = 'images/markers/color-pin.png';
-      var icon = markerImage;//new MarkerIcon({iconUrl: url.replace("color", color)});
+      var icon = markerImage;
       var marker = new L.Marker(
         markerLoc, {
           icon: icon
@@ -153,14 +153,14 @@ MapApp.map = function () {
       );
 
       if (typeof(venueInfo) !== "undefined") {
-        var icon = null; 
+        var iconImg = null;
         if (venueInfo.icon) {
-          icon = venueInfo.icon.prefix + "32.png";
+          iconImg = venueInfo.icon.prefix + "32.png";
         }
 
         marker.bindPopup(
           popupHtml(
-            icon,
+            iconImg,
             venueInfo.name,
             venueInfo.stars,
             venueInfo.address)).openPopup();
@@ -222,8 +222,8 @@ MapApp.map = function () {
         mapTypeControlOptions: {
           position: google.maps.ControlPosition.TOP_RIGHT,
           mapTypeIds: [
-            google.maps.MapTypeId.ROADMAP, 
-            google.maps.MapTypeId.HYBRID, 
+            google.maps.MapTypeId.ROADMAP,
+            google.maps.MapTypeId.HYBRID,
             google.maps.MapTypeId.SATELLITE
           ]
         },
@@ -239,7 +239,7 @@ MapApp.map = function () {
 
       // add listener function to redraw geopoints
       // and venues on zoom change
-      google.maps.event.addListener(map, 'zoom_changed', function() {
+      google.maps.event.addListener(map, 'zoom_changed', function () {
         MapApp.map.clearMarkers();
         renderGeopoints(storedGeopoints);
         renderVenues(storedVenues);
@@ -276,7 +276,7 @@ MapApp.map = function () {
       return {
         latitude: center.lat(),
         longitude: center.lng()
-      }
+      };
     },
     /*
     * Gets the map's zoom level
@@ -292,7 +292,7 @@ MapApp.map = function () {
       return {
         latitude: corner.lat(),
         longitude: corner.lng()
-      }
+      };
     },
     /*
     * Checks if the given point is inside any of the map areas
@@ -343,7 +343,7 @@ MapApp.map = function () {
     */
     clearMarkers: function () {
       if (shownMarkers) {
-        for (i in shownMarkers) {
+        for (var i in shownMarkers) {
           shownMarkers[i].setMap(null);
         }
         shownMarkers.length = 0;
@@ -374,10 +374,10 @@ MapApp.map = function () {
       google.maps.event.addListener(map, 'zoom_changed', sendChangeZoom);
       google.maps.event.addListener(map, 'center_changed', sendChangeCenter);
     }
-  }
+  };
 
   var setViewOnArea = function (area) {
-    var center = mapAreas[area].center; 
+    var center = mapAreas[area].center;
     MapApp.map.setView(center, mapZooms.defaultZoom);
   };
 
@@ -386,41 +386,41 @@ MapApp.map = function () {
       var html = "";
       for (var i = 0; i < 5; i++) {
         if (i < stars) {
-              html += "<span class='red-star'></span>";
+          html += "<span class='red-star'></span>";
         } else {
-              html += "<span class='gray-star'></span>";
+          html += "<span class='gray-star'></span>";
         }
       }
       return html;
-    }
+    };
 
     var html =  '<div style="overflow:auto;width:100%" >';
-        html +=   '<div class="venue-icon"> '; 
-        if (iconUrl) {
-          html +=     '<img class="venue-icon" src="' + iconUrl  + '" />';
-        }
-        html +=   '</div>';
-        html +=   '<div class="venue-main"> '; 
-        html +=     '<div style="font-weight:bold">' + name + '</div>'; 
-        html +=     '<div style="height:16px">' + starsHtml(stars) + '</div>'; 
-        html +=   '</div>';
-        html += '</div>';
-        if (address) {
-          html += '<div class="venue-address">' + address + '</div>';
-        }
- 
-        return html;
-  }
+    html +=   '<div class="venue-icon"> ';
+    if (iconUrl) {
+      html +=     '<img class="venue-icon" src="' + iconUrl  + '" />';
+    }
+    html +=   '</div>';
+    html +=   '<div class="venue-main"> ';
+    html +=     '<div style="font-weight:bold">' + name + '</div>';
+    html +=     '<div style="height:16px">' + starsHtml(stars) + '</div>';
+    html +=   '</div>';
+    html += '</div>';
+    if (address) {
+      html += '<div class="venue-address">' + address + '</div>';
+    }
+
+    return html;
+  };
 
   /*
     Rendering methods. The map stores the points that it is
     currently rendering. A point can be either a geopoint
-    or a venue. 
-    
-    A geopoint is a geographical coordinate in the map retrieved from 
+    or a venue.
+
+    A geopoint is a geographical coordinate in the map retrieved from
     a geolocator search using an input address.
 
-    A venue is a geographical coordinate that represents a place of 
+    A venue is a geographical coordinate that represents a place of
     interest near a geopoint.
   */
 
@@ -437,18 +437,18 @@ MapApp.map = function () {
   var drawGeopoints = function (points) {
     storedGeopoints = storedGeopoints.concat(points);
     renderGeopoints(points);
-  }
-  
+  };
+
   var drawVenues = function (points) {
     storedVenues = storedVenues.concat(points);
     renderVenues(points);
-  }
+  };
 
   var renderGeopoints = function (geopoints) {
     if (geopoints.length === 0) {
       return;
     }
-    MapApp.log.info('Call to renderGeopoints. Received ' 
+    MapApp.log.info('Call to renderGeopoints. Received '
       + geopoints.length + ' points.');
 
     for (var i = 0 ; i < geopoints.length ; i++) {
@@ -456,32 +456,32 @@ MapApp.map = function () {
     }
   };
 
-  var renderVenues = function (venues) {    
+  var renderVenues = function (venues) {
     if (venues.length === 0) {
       return;
     }
-    MapApp.log.info('Call to renderVenues. Received ' 
+    MapApp.log.info('Call to renderVenues. Received '
       + venues.length + ' points.');
-    
+
     venues = venues.slice(0);
     var zoomLevel = MapApp.map.getZoom();
     var center = MapApp.map.getCenter();
     var corner = MapApp.map.getCorner();
     var radiusOfInterest = distance(center, corner);
     var threshold = radiusOfInterest * 0.002;
-    MapApp.log.info('zoom level: ' + zoomLevel 
+    MapApp.log.info('zoom level: ' + zoomLevel
       + ', thresh radius: ' + threshold);
 
     var someoneIsSpliced = true;
     var splicedCount = 0;
 
-    while (someoneIsSpliced) { 
+    while (someoneIsSpliced) {
       someoneIsSpliced = false;
       for (var i = 0; i < venues.length; i++) {
         var venue = venues[i];
-        var nearestVenueIdx = nearestNeighbor(venue, venues); 
-        var nearestVenue = venues[nearestVenueIdx]; 
-        var venueIdxToSplice; 
+        var nearestVenueIdx = nearestNeighbor(venue, venues);
+        var nearestVenue = venues[nearestVenueIdx];
+        var venueIdxToSplice;
 
         // Decide which venue to splice between nearestVenue and venue
         // based on their popularity
@@ -489,20 +489,20 @@ MapApp.map = function () {
           venueIdxToSplice = nearestVenueIdx;
         } else {
           venueIdxToSplice = i;
-        } 
+        }
 
         if (distance(nearestVenue, venue) < threshold) {
-          venues.splice(venueIdxToSplice, 1); 
+          venues.splice(venueIdxToSplice, 1);
           someoneIsSpliced = true;
           splicedCount += 1;
         }
-      } 
+      }
     }
 
     MapApp.log.info('Spliced ' + splicedCount + ' venues');
     MapApp.log.info('Rendering ' + venues.length + ' venues');
-    for (var i = 0; i < venues.length; i++) {
-      var point = venues[i];
+    for (var j = 0; j < venues.length; j++) {
+      var point = venues[j];
       if (MapApp.map.inBounds(point)) {
         MapApp.map.addMarker(point, MapApp.map.venueImage, point);
       }
@@ -510,12 +510,12 @@ MapApp.map = function () {
   };
 
   var nearestNeighbor = function (point, points) {
-    var distances = $.map(points, function (point_i, i) {    
+    var distances = $.map(points, function (point_i, i) {
       if (point_i === point)
         return Number.MAX_VALUE; //Avoid comparing the point against itself
-      else 
+      else
         return distance(point_i, point);
-    }); 
+    });
 
     var min_distance = Number.MAX_VALUE;
     var min_point_idx = 0;
@@ -523,7 +523,7 @@ MapApp.map = function () {
     for (var i = 0; i < points.length; i++) {
       if (distances[i] < min_distance) {
         min_point_idx = i;
-        min_distance = distances[i];            
+        min_distance = distances[i];
       }
     }
 
@@ -531,12 +531,12 @@ MapApp.map = function () {
   };
 
   var distance = function (p1, p2) {
-    return Math.pow(p1.latitude - p2.latitude, 2) 
+    return Math.pow(p1.latitude - p2.latitude, 2)
       + Math.pow(p1.longitude - p2.longitude, 2);
   };
 
   /*
-    Collaboration Methods 
+    Collaboration Methods
   */
 
   // Listener function for a change in map center
@@ -578,14 +578,14 @@ MapApp.map = function () {
   MapApp.collab.on('init_ack', function (data) {
     MapApp.map.enableCollabListeners();
   });
- 
+
   var res = {
     defaultArea: defaultArea,
     mapZooms: mapZooms,
     setViewOnArea: setViewOnArea,
     clear: clear,
     drawGeopoints: drawGeopoints,
-    drawVenues: drawVenues,
+    drawVenues: drawVenues
   };
 
   for (var fn in leafletFunctions) {

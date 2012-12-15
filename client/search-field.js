@@ -6,11 +6,11 @@ MapApp.searchField = function () {
 
   var getInput = function () {
     return $(cssId).val();
-  }
+  };
 
   var showLoader = function () {
     $(cssId).css(
-      'background-image', 
+      'background-image',
       'url("' + loaderIconImg + '")'
     );
   };
@@ -23,7 +23,7 @@ MapApp.searchField = function () {
     showLoader: showLoader,
     hideLoader: hideLoader,
     getInput: getInput
-  }
+  };
 
 }();
 

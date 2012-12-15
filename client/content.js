@@ -2,12 +2,12 @@
 MapApp.content = function () {
 
   /*
-    Content that prompts to initialize a sharing session. 
-    It is composed of text containing instructions to the user, 
-    an input area to type a name, and a button to start the 
-    sharing session. 
+    Content that prompts to initialize a sharing session.
+    It is composed of text containing instructions to the user,
+    an input area to type a name, and a button to start the
+    sharing session.
   */
-  var startSession = 
+  var startSession =
     '<div class="row-fluid">'
     + '<div class="span12">'
     + '<div class="span6">'
@@ -22,7 +22,7 @@ MapApp.content = function () {
     + '</div>' // end input-append
     + '</form>' // end form
     + '</div>' // end span6
-    + '</div>' // end span12 
+    + '</div>' // end span12
     + '</div>'; // end row-fluid
 
 
@@ -48,12 +48,12 @@ MapApp.content = function () {
 
 
   /*
-    Content that prompts to join a sharing session. 
-    It is composed of text containing instructions to the user, 
-    an input area to type a name, and a button to start the 
-    sharing session. 
+    Content that prompts to join a sharing session.
+    It is composed of text containing instructions to the user,
+    an input area to type a name, and a button to start the
+    sharing session.
   */
-  var joinSession = 
+  var joinSession =
     '<div class="modal fade hide" id="initial-modal" style="width:350px">'
     + '<div class="modal-header">'
     + '<button type="button" class="close" data-dismiss="modal">x</button>'
@@ -62,13 +62,13 @@ MapApp.content = function () {
     + '<div class="modal-body" >'
     + '<div>'
     + '<p>Type your name and then click <strong>Join</strong> to start sharing.</p> '
-    + '</div>' 
+    + '</div>'
     + '<form id="modal-form">'
     + '<center>'
     + '<input id="modal-form-input" class="input-large" type="text" placeholder="Type your name">'
     + '</center>'
-    + '</form>' 
-    + '</div>' 
+    + '</form>'
+    + '</div>'
     + '<div class="modal-footer">'
     + '<a href="#" class="btn" data-dismiss="modal">Close</a>'
     + '<a href="#" class="btn btn-primary" id="join-modal">Join</a>'

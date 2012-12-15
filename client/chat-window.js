@@ -14,7 +14,8 @@ MapApp.chatWindow = function () {
     $('#chat-panel-rows').each(function () {
         var scrollHeight = Math.max(this.scrollHeight, this.clientHeight);
         this.scrollTop = scrollHeight - this.clientHeight;
-    });
+      }
+    );
   };
 
   var addUser = function (username) {
@@ -64,15 +65,15 @@ MapApp.chatWindow = function () {
   var init = function (buttonListener, usernames) {
     var ENTER_KEY = 13;
     var messageAction = function () {
-        var message_to_send = $.trim($("#chat_text").val());
-        if (message_to_send !== "") {
-            postMessage("Me", message_to_send);
-            if (buttonListener)  {
-                buttonListener(message_to_send);
-            }
+      var message_to_send = $.trim($("#chat_text").val());
+      if (message_to_send !== "") {
+        postMessage("Me", message_to_send);
+        if (buttonListener)  {
+          buttonListener(message_to_send);
         }
-        $("#chat_text").val("");
-        return false;
+      }
+      $("#chat_text").val("");
+      return false;
     };
 
     $("#chat_button").click(messageAction);
@@ -80,10 +81,10 @@ MapApp.chatWindow = function () {
     // We change the behavior to submit the message upon hitting 'Enter'.
     // http://stackoverflow.com/questions/4418819/
     $("#chat_text").keydown(function (e) {
-        if (e.keyCode === ENTER_KEY) {
-            messageAction();
-            return false;
-        }
+      if (e.keyCode === ENTER_KEY) {
+        messageAction();
+        return false;
+      }
     });
 
     addUser("Me");
@@ -96,15 +97,15 @@ MapApp.chatWindow = function () {
     $("#right_bar").css("display", "");
 
     // Listener to add message from server to chat area
-    MapApp.collab.on("send_message",  function(data) {
+    MapApp.collab.on("send_message",  function (data) {
       postMessage(data.from, data.message);
     });
 
-    MapApp.collab.on("add_user",  function(data) {
+    MapApp.collab.on("add_user",  function (data) {
       addUser(data.username);
     });
 
-  }
+  };
 
   MapApp.collab.on('init_ack', function (data) {
     init(

@@ -16,7 +16,7 @@
 
   SharePopover.prototype = $.extend({}, $.fn.popover.Constructor.prototype, {
 
-    constructor: SharePopover, 
+    constructor: SharePopover,
     show: function () {
       var $tip, inside, pos, actualWidth, actualHeight, placement, tp;
 
@@ -43,7 +43,7 @@
         actualHeight = $tip[0].offsetHeight;
 
         tp = {
-          top: pos.top + pos.height + 3, 
+          top: pos.top + pos.height + 3,
           left: pos.left + pos.width - actualWidth
         };
 
@@ -62,8 +62,8 @@
 
   $.fn.sharepopover = function (option) {
     return this.each(function () {
-      var $this = $(this), 
-          data = $this.data('sharepopover'), 
+      var $this = $(this),
+          data = $this.data('sharepopover'),
           options = typeof option == 'object' && option;
       if (!data) $this.data('sharepopover', (data = new SharePopover(this, options)));
       if (typeof option == 'string') data[option]();
@@ -98,7 +98,7 @@ MapApp.sessionInitWindow = function () {
 
   var getWindowContent = function (link) {
     if (link === null) {
-      return MapApp.content.startSession;   
+      return MapApp.content.startSession;
     } else {
       var content = MapApp.content.sessionLink.replace('LINK', link);
       return content;
@@ -131,14 +131,14 @@ MapApp.sessionInitWindow = function () {
     // get popover from share button
     var popover = shareButton.data('sharepopover');
     if (showPopover) {
-      // need to turn off animation to make a smooth 
+      // need to turn off animation to make a smooth
       // transition if popover is already open
       popover.options.animation = false;
     }
-    // get the content and title for the popover 
+    // get the content and title for the popover
     popover.options.content = getWindowContent(link);
     popover.options.title = getWindowTitle(link);
-    
+
     if (showPopover) {
       // call 'show' to refresh the popover content.
       // then turn animation on again.

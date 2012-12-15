@@ -2,7 +2,7 @@
 MapApp.sessionJoinWindow = function () {
 
   var text = $(MapApp.content.joinSession);
-  
+
   var init = function () {
 
     // display the modal
@@ -14,12 +14,14 @@ MapApp.sessionJoinWindow = function () {
     // Ensure modal is always centered
     text.modal({
         backdrop: true
-    }).css({
+      }
+    ).css({
         width: 'auto',
         'margin-left': function () {
-            return -($(this).width() / 2);
+          return -($(this).width() / 2);
         }
-    });
+      }
+    );
 
     text.modal('show');
   };
@@ -28,7 +30,7 @@ MapApp.sessionJoinWindow = function () {
     text.modal('hide');
   });
 
-  // If user has specified a session_id, 
+  // If user has specified a session_id,
   // then initialize the session join window
   if (urlParam('session_id')) {
     init();
