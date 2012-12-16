@@ -4,13 +4,15 @@ var require = function (file, cwd) {
     if (!mod) throw new Error(
         'Failed to resolve module ' + file + ', tried ' + resolved
     );
-    var res = mod._cached ? mod._cached : mod();
+    var cached = require.cache[resolved];
+    var res = cached? cached.exports : mod();
     return res;
-}
+};
 
 require.paths = [];
 require.modules = {};
-require.extensions = [".js",".coffee"];
+require.cache = {};
+require.extensions = [".js",".coffee",".json"];
 
 require._core = {
     'assert': true,
@@ -41,6 +43,7 @@ require.resolve = (function () {
         throw new Error("Cannot find module '" + x + "'");
         
         function loadAsFileSync (x) {
+            x = path.normalize(x);
             if (require.modules[x]) {
                 return x;
             }
@@ -53,7 +56,7 @@ require.resolve = (function () {
         
         function loadAsDirectorySync (x) {
             x = x.replace(/\/+$/, '');
-            var pkgfile = x + '/package.json';
+            var pkgfile = path.normalize(x + '/package.json');
             if (require.modules[pkgfile]) {
                 var pkg = require.modules[pkgfile]();
                 var b = pkg.browserify;
@@ -118,7 +121,7 @@ require.alias = function (from, to) {
     
     var keys = (Object.keys || function (obj) {
         var res = [];
-        for (var key in obj) res.push(key)
+        for (var key in obj) res.push(key);
         return res;
     })(require.modules);
     
@@ -134,80 +137,66 @@ require.alias = function (from, to) {
     }
 };
 
-require.define = function (filename, fn) {
-    var dirname = require._core[filename]
-        ? ''
-        : require.modules.path().dirname(filename)
-    ;
+(function () {
+    var process = {};
+    var global = typeof window !== 'undefined' ? window : {};
+    var definedProcess = false;
     
-    var require_ = function (file) {
-        return require(file, dirname)
-    };
-    require_.resolve = function (name) {
-        return require.resolve(name, dirname);
-    };
-    require_.modules = require.modules;
-    require_.define = require.define;
-    var module_ = { exports : {} };
-    
-    require.modules[filename] = function () {
-        require.modules[filename]._cached = module_.exports;
-        fn.call(
-            module_.exports,
-            require_,
-            module_,
-            module_.exports,
-            dirname,
-            filename
-        );
-        require.modules[filename]._cached = module_.exports;
-        return module_.exports;
-    };
-};
-
-if (typeof process === 'undefined') process = {};
-
-if (!process.nextTick) process.nextTick = (function () {
-    var queue = [];
-    var canPost = typeof window !== 'undefined'
-        && window.postMessage && window.addEventListener
-    ;
-    
-    if (canPost) {
-        window.addEventListener('message', function (ev) {
-            if (ev.source === window && ev.data === 'browserify-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
-            }
-        }, true);
-    }
-    
-    return function (fn) {
-        if (canPost) {
-            queue.push(fn);
-            window.postMessage('browserify-tick', '*');
+    require.define = function (filename, fn) {
+        if (!definedProcess && require.modules.__browserify_process) {
+            process = require.modules.__browserify_process();
+            definedProcess = true;
         }
-        else setTimeout(fn, 0);
+        
+        var dirname = require._core[filename]
+            ? ''
+            : require.modules.path().dirname(filename)
+        ;
+        
+        var require_ = function (file) {
+            var requiredModule = require(file, dirname);
+            var cached = require.cache[require.resolve(file, dirname)];
+
+            if (cached && cached.parent === null) {
+                cached.parent = module_;
+            }
+
+            return requiredModule;
+        };
+        require_.resolve = function (name) {
+            return require.resolve(name, dirname);
+        };
+        require_.modules = require.modules;
+        require_.define = require.define;
+        require_.cache = require.cache;
+        var module_ = {
+            id : filename,
+            filename: filename,
+            exports : {},
+            loaded : false,
+            parent: null
+        };
+        
+        require.modules[filename] = function () {
+            require.cache[filename] = module_;
+            fn.call(
+                module_.exports,
+                require_,
+                module_,
+                module_.exports,
+                dirname,
+                filename,
+                process,
+                global
+            );
+            module_.loaded = true;
+            return module_.exports;
+        };
     };
 })();
 
-if (!process.title) process.title = 'browser';
 
-if (!process.binding) process.binding = function (name) {
-    if (name === 'evals') return require('vm')
-    else throw new Error('No such module')
-};
-
-if (!process.cwd) process.cwd = function () { return '.' };
-
-if (!process.env) process.env = {};
-if (!process.argv) process.argv = [];
-
-require.define("path", function (require, module, exports, __dirname, __filename) {
-function filter (xs, fn) {
+require.define("path",function(require,module,exports,__dirname,__filename,process,global){function filter (xs, fn) {
     var res = [];
     for (var i = 0; i < xs.length; i++) {
         if (fn(xs[i], i, xs)) res.push(xs[i]);
@@ -344,8 +333,65 @@ exports.extname = function(path) {
 
 });
 
-require.define("/log.js", function (require, module, exports, __dirname, __filename) {
-    
+require.define("__browserify_process",function(require,module,exports,__dirname,__filename,process,global){var process = module.exports = {};
+
+process.nextTick = (function () {
+    var canSetImmediate = typeof window !== 'undefined'
+        && window.setImmediate;
+    var canPost = typeof window !== 'undefined'
+        && window.postMessage && window.addEventListener
+    ;
+
+    if (canSetImmediate) {
+        return function (f) { return window.setImmediate(f) };
+    }
+
+    if (canPost) {
+        var queue = [];
+        window.addEventListener('message', function (ev) {
+            if (ev.source === window && ev.data === 'browserify-tick') {
+                ev.stopPropagation();
+                if (queue.length > 0) {
+                    var fn = queue.shift();
+                    fn();
+                }
+            }
+        }, true);
+
+        return function nextTick(fn) {
+            queue.push(fn);
+            window.postMessage('browserify-tick', '*');
+        };
+    }
+
+    return function nextTick(fn) {
+        setTimeout(fn, 0);
+    };
+})();
+
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+
+process.binding = function (name) {
+    if (name === 'evals') return (require)('vm')
+    else throw new Error('No such module. (Possibly not yet loaded)')
+};
+
+(function () {
+    var cwd = '/';
+    var path;
+    process.cwd = function () { return cwd };
+    process.chdir = function (dir) {
+        if (!path) path = require('path');
+        cwd = path.resolve(dir, cwd);
+    };
+})();
+
+});
+
+require.define("/log.js",function(require,module,exports,__dirname,__filename,process,global){
 var log = function () {
 
   var logLevel = 0;
@@ -499,135 +545,6 @@ var log = function () {
 exports.log = log;
 
 });
-require("/log.js");
-
-require.define("/parallel_load.js", function (require, module, exports, __dirname, __filename) {
-    /* Implementation of a parallel function mechanism with a single callback at
-    the end.
-
-    Example: Suppose you want to perform two server requests at the same time:
-
-        Parallel p = new Parallel(callback);
-
-        server1_request(args_1, p.add(id1));
-        server2_request(args_2, p.add(id2));
-
-    The last server to submit the request will end up calling function callback.
-    This callback function will receive a map of ids to the responses from that
-    id.
-
-
-        Based on http://howtonode.org/control-flow
- */
-function parallel_load(callback) {
-  this.callback = callback;
-  this.items = 0;
-  this.results = {};
-}
-
-parallel_load.prototype = {
-  /* Use this as the callback to the asynchronous function you wish to
-     parallelize
-   */
-  add : function (id, partialCallback) {
-    this.items++;
-    var self = this;
-
-    return function (partial_res) {
-      self.results[id] = partial_res;
-      self.items--;
-
-      partialCallback(id, partial_res);
-
-      if (self.items === 0) {
-        self.callback(self.results);
-      }
-    };
-
-  }
-};
-
-
-exports.parallel_load = parallel_load;
-
-});
-require("/parallel_load.js");
-
-require.define("/venue_merge.js", function (require, module, exports, __dirname, __filename) {
-    /* Given an array of partial results in the format:
-  zoomLevel1:
-     { geopoint[s]: { latitude: 42.3605, longitude: -71.0593 },
-        venues: [ [Object], [Object], ... ] },
-  zoomLevel2:
-     { geopoint[s]:[ { latitude: 42.3605, longitude: -71.0593 },
-        venues: [ [Object], [Object], ... ] },
-  ...
-
-  Returns a result in the format:
-     { geopoint[s]: { latitude: 42.3605, longitude: -71.0593 },
-        venues: [ [Object], [Object], ... ] }
-
-  The venues in the resulting object are the union of the venues of each of the
-  results by zoom-level, uniquely identified by id
- */
-function venue_merge(callback_result) {
-  console.log("merging console resuls");
-  var result = {
-    geopoints : [],
-    venues : []
-  };
-
-  var geopoints_map = {};
-  var venues_map = {};
-
-  for (var zoom_level in callback_result) {
-    if (callback_result.hasOwnProperty(zoom_level))  {
-      var partial_result = callback_result[zoom_level];
-      var points;
-      if (partial_result.geopoints) {
-        points = partial_result.geopoints;
-      } else {
-        points = [partial_result.geopoint];
-      }
-
-      for (var i = 0; i < points.length; i++) {
-        var point = points[i];
-        geopoints_map['lat' + point.latitude +
-                      'lon' + point.longitude] = point;
-      }
-
-      for (var venue_num in partial_result.venues) {
-        var venue = partial_result.venues[venue_num];
-        venues_map[venue.id] = venue;
-      }
-    }
-  }
-
-  /* geopoints_map now contains a mapping from geo_id to geopoint for all geopoints
-     across partial results. Now, collect them into a single geopoints array */
-  for (var geo_id in geopoints_map) {
-    if (geopoints_map.hasOwnProperty(geo_id)) {
-      result.geopoints.push(geopoints_map[geo_id]);
-    }
-  }
-
-  /* venues_map now contains a mapping from venue_id to venue for all venues
-     across partial results. Now, collect them into a single venue array */
-  for (var venue_id in venues_map) {
-    if (venues_map.hasOwnProperty(venue_id)) {
-      result.venues.push(venues_map[venue_id]);
-    }
-  }
-
-  return result;
-}
-
-if (typeof exports !== 'undefined') {
-  exports.venue_merge = venue_merge;
-}
-
-});
-require("/venue_merge.js");
 
 var Hosts = {};
 

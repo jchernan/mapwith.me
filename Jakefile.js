@@ -1,5 +1,6 @@
 var JSHINT = require('jshint').JSHINT;
 var uglifyjs = require('uglify-js');
+var browserify = require('browserify');
 var fs = require('fs');
 
 var src = [
@@ -59,7 +60,7 @@ var lint = function (file) {
 //directory('dist');
 
 desc('Concatenate source files');
-task('concat', ['lint'], function () {
+task('concat', ['lint', 'lib'], function () {
   var out = src.map(function (file) {
     return fs.readFileSync(canonical('client/', file), 'utf-8');
   });
@@ -72,10 +73,10 @@ task('concat', ['lint'], function () {
 
 desc('Minify final source file');
 task('min', ['concat'], function () {
-  var result = uglifyjs.minify([canonical('client/', dst)]);
+  var out = uglifyjs.minify([canonical('client/', dst)]);
   fs.writeFileSync(
     canonical('client/', dst + '.min'),
-    result.code,
+    out.code,
     'utf-8'
   );
 });
@@ -98,5 +99,18 @@ task('lint', [], function () {
     fail('Need to solve JSHint errors.');
   }
 });
+
+desc('Browserify library files');
+task('lib', [], function () {
+  var b = browserify();
+  b.require(canonical('./lib/', 'log'));
+  var out = b.bundle();
+  fs.writeFileSync(
+    canonical('client/', 'library'),
+    out,
+    'utf-8'
+  );
+});
+
 
 task('default', ['min']);

@@ -1,5 +1,3 @@
 *.DS_Store
-client/library.js
-client/lib.js
 client/bootstrap/img/glyphicons*png
 *.swp
