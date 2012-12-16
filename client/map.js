@@ -249,6 +249,10 @@ MapApp.map = function () {
     * Sets the map's center coordinate
     */
     setCenter: function (center) {
+      var currentCenter = MapApp.map.getCenter();
+      if (isSameCenter(currentCenter, center)) {
+        return;
+      }
       map.panTo(
         new google.maps.LatLng(
           center.latitude,
@@ -259,6 +263,10 @@ MapApp.map = function () {
     * Sets the map's zoom level
     */
     setZoom: function (zoom) {
+      var currentZoom = MapApp.map.getZoom();
+      if (currentZoom === zoom) {
+        return;
+      }
       map.setZoom(zoom);
     },
     /*

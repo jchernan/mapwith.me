@@ -688,7 +688,8 @@ MapApp.content = function () {
 }();
 
 /*
-  collab.js  - Framework for sending/receiving map sharing information with server
+  collab.js  - Framework for sending/receiving map sharing
+  information with server
 
   Requires:
     - socket.io
@@ -704,8 +705,8 @@ MapApp.assert = function (expression, message) {
 };
 
 /*
-    Initialize urlParam function. Code grabbed from
-    http://www.jquery4u.com/snippets/url-parameters-jquery/#.T9lrKStYsoY
+  Initialize urlParam function. Code grabbed from
+  http://www.jquery4u.com/snippets/url-parameters-jquery/#.T9lrKStYsoY
 */
 var urlParam = function (name) {
   MapApp.log.info("Retrieving URL parameter " + name);
@@ -714,28 +715,34 @@ var urlParam = function (name) {
   return (results) ? results[1] : null;
 };
 
+var isSameCenter = function (c1, c2) {
+  return Math.abs(c1.latitude - c2.latitude) < 0.0001
+    && Math.abs(c2.longitude - c2.longitude) < 0.0001;
+};
+
 MapApp.collab = function () {
   var socket;
   var cid;    // The client id of this client
   var maxXid = 0; // The largest xid sent by this client
 
-
   /*
-    Stores the latest map movement that was sent to the server and the server
-    hasn't yet acknowledged. In other words, the last map movement that has been
-    sent by the client that hasn't been forwarded back by the server.
+    Stores the latest map movement that was sent to the server and
+    the server hasn't yet acknowledged. In other words, the last map
+    movement that has been sent by the client that hasn't been
+    forwarded back by the server.
 
-    Any map movement of the same type as this pending message can be ignored
-    until this message is acknowledged.
-   */
+    Any map movement of the same type as this pending message can be
+    ignored until this message is acknowledged.
+  */
   var pendingMsg = { opType: null, xid: null };
   var receivedMsg = { opType: null, data: null };
 
   /*
-     Before sending a message via socket.io, assign it a XID and register its
-     opType (changeCenter, changeZoom, etc). This allows us to ignore some
-     messages while we're waiting for an acknowledgement.
-   */
+    Before sending a message via socket.io, assign it a XID and
+    register its opType (changeCenter, changeZoom, etc). This allows
+    us to ignore some messages while we're waiting for an
+    acknowledgement.
+  */
   var preSendMsg = function (opType, data) {
     if (receivedMsg.opType === opType) {
       switch (opType) {
@@ -746,8 +753,7 @@ MapApp.collab = function () {
         }
         break;
       case 'change_center':
-        if (Math.abs(receivedMsg.data.center.latitude - data.center.latitude) < 0.0001
-          && Math.abs(receivedMsg.data.center.longitude - data.center.longitude) < 0.0001) {
+        if (isSameCenter(receivedMsg.data.center, data.center)) {
           receivedMsg = { opType: null, data: null };
           return -1;
         }
@@ -759,12 +765,15 @@ MapApp.collab = function () {
     return pendingMsg.xid;
   };
 
-  // Before processing an incoming server message, decide if it can be ignored
-  //   based on any outstanding pending out-going messagse.
+  /*
+    Before processing an incoming server message, decide if it can
+    be ignored based on any outstanding pending out-going messagse.
+  */
   var preReceiveMessage = function (data, opType) {
     if (pendingMsg.opType === opType) {
-      // There's a pending outgoing message of the same type, so we can ignore
-      // it. If this is our ack, though, then we can clear the pendingMsg.
+      // There's a pending outgoing message of the same type,
+      // so we can ignore it. If this is our ack, though, then we
+      // can clear the pendingMsg.
       if (data.xid === pendingMsg.xid) {
         pendingMsg = { opType: null, xid: null };
       }
@@ -843,30 +852,20 @@ MapApp.collab = function () {
 
     // socket.io listener for init_ack message
     on('init_ack', function (data) {
-      MapApp.log.info('[init_ack] Received initialize ack for collab session: ' +
-          JSON.stringify(data));
+      MapApp.log.info('[init_ack] Received initialize ack '
+        + 'for collab session: '
+        + JSON.stringify(data));
 
       cid = data.cid;
 
       MapApp.collab.trigger('init_ack', data);
-
-      var currentCenter = MapApp.map.getCenter();
-      var currentZoom = MapApp.map.getZoom();
-      var incomingCenter = data.state.center;
-      var incomingZoom = data.state.zoom;
-      if (currentZoom !== incomingZoom
-        || Math.abs(currentCenter.latitude - incomingCenter.latitude) > 0.0001
-        || Math.abs(currentCenter.longitude - incomingCenter.longitude) > 0.0001) {
-
-        MapApp.collab.trigger('change_state', {
-          center: {
-            latitude: data.state.center.latitude,
-            longitude: data.state.center.longitude
-          },
-          zoom : data.state.zoom
-        });
-      }
-
+      MapApp.collab.trigger('change_state', {
+        center: {
+          latitude: data.state.center.latitude,
+          longitude: data.state.center.longitude
+        },
+        zoom : data.state.zoom
+      });
     });
 
     // socket.io listener for error message
@@ -896,7 +895,8 @@ MapApp.collab = function () {
      Parameters:
 
        * If this is a brand-new session:
-           center =  The current center location before starting to share the map.
+           center =  The current center location before starting
+           to share the map.
            {
              - latitude:  Current latitude
              - longitude: Current longitude
@@ -981,7 +981,8 @@ MapApp.collab = function () {
   };
 
   /*
-     Send message to change both the map's zoom level and its center location
+     Send message to change both the map's zoom level and its
+     center location
 
      Parameters:
         center = {
@@ -1010,8 +1011,9 @@ MapApp.collab = function () {
   function sendMessage(message) {
     MapApp.log.info('[message] Emitting message: ' +  message);
 
-    // Don't use emit to avoid assigning an xid to this message. We don't need
-    // an xid for this message since we don't care about receiving its ack
+    // Don't use emit to avoid assigning an xid to this message.
+    // We don't need an xid for this message since we don't care
+    // about receiving its ack
     socket.emit('send_message', { message: message });
   }
   
@@ -1404,6 +1406,10 @@ MapApp.map = function () {
     * Sets the map's center coordinate
     */
     setCenter: function (center) {
+      var currentCenter = MapApp.map.getCenter();
+      if (isSameCenter(currentCenter, center)) {
+        return;
+      }
       map.panTo(
         new google.maps.LatLng(
           center.latitude,
@@ -1414,6 +1420,10 @@ MapApp.map = function () {
     * Sets the map's zoom level
     */
     setZoom: function (zoom) {
+      var currentZoom = MapApp.map.getZoom();
+      if (currentZoom === zoom) {
+        return;
+      }
       map.setZoom(zoom);
     },
     /*
