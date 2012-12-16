@@ -49,3 +49,4 @@ var MapApp = {
   log: require("/log.js").log
 };
 
+MapApp.log.setLogLevel(MapApp.log.levels.ERROR);

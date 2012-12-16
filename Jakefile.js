@@ -4,7 +4,7 @@ var browserify = require('browserify');
 var fs = require('fs');
 
 var src = [
-  //'library',
+  'library',
   'globals',
   'content',
   'collab',
@@ -18,7 +18,7 @@ var src = [
 ];
 
 var lib = [
-  //'log',
+  'log',
   'parallel_load',
   'venue_merge'
 ];
@@ -60,7 +60,7 @@ var lint = function (file) {
 //directory('dist');
 
 desc('Concatenate source files');
-task('concat', ['lint'], function () {
+task('concat', ['lint', 'lib'], function () {
   var out = src.map(function (file) {
     return fs.readFileSync(canonical('client/', file), 'utf-8');
   });
