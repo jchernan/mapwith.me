@@ -567,7 +567,7 @@ MapApp.map = function () {
   };
 
   MapApp.collab.on('change_center', function (data) {
-    MapApp.log.info('[change_center] Setting new center: ' 
+    MapApp.log.info('[change_center] Setting new center: '
       + JSON.stringify(data.center));
     MapApp.map.setCenter(data.center);
   });

@@ -48,4 +48,3 @@ var MapApp = {
   useLeaflet: false
 };
 
-MapApp.log.setLogLevel(MapApp.log.levels.ERROR);
