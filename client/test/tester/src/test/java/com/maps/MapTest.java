@@ -5,6 +5,7 @@ import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+import static org.junit.Assert.*;
 
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
@@ -18,11 +19,13 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 
 import com.maps.log.LogEntry;
+import com.maps.MapDriver.*;
 
 
 public class MapTest {
 
     private String REPORTS_DIR = "target/surefire-reports/";
+    private double SAME_POINT_THRESH = 0.0001;
 
     private List<MapDriver> mapDrivers;
 
@@ -106,6 +109,19 @@ public class MapTest {
 
     private void addDriver(MapDriver driver) {
         mapDrivers.add(driver);
+    }
+
+    public void assertSameCenter(MapDriver d1, MapDriver d2) {
+        Point p1 = d1.getCenter();
+        Point p2 = d2.getCenter();
+        assertTrue(Math.abs(p1.getLatitude()
+            - p2.getLatitude()) < SAME_POINT_THRESH);
+        assertTrue(Math.abs(p1.getLongitude()
+            - p2.getLongitude()) < SAME_POINT_THRESH);
+    }
+
+    public void assertSameZoom(MapDriver d1, MapDriver d2) {
+        assertEquals(d1.getZoom(), d2.getZoom());
     }
 
     public void sleep(long millis) {

@@ -92,8 +92,8 @@ public class AppTest extends MapTest {
 
         sleep(5000);
 
-        assertEquals(mapDriver.getCenter(), mapDriver2.getCenter());
-        assertEquals(mapDriver.getZoom(),   mapDriver2.getZoom());
+        assertSameCenter(mapDriver, mapDriver2);
+        assertSameZoom(mapDriver, mapDriver2);
     }
 
     /**
@@ -133,11 +133,11 @@ public class AppTest extends MapTest {
         List<LogEntry> logs2 = mapDriver2.getLogs();
         List<LogEntry> logs3 = mapDriver3.getLogs();
 
-        assertEquals(mapDriver.getCenter(), mapDriver2.getCenter());
-        assertEquals(mapDriver.getCenter(), mapDriver3.getCenter());
+        assertSameCenter(mapDriver, mapDriver2);
+        assertSameCenter(mapDriver, mapDriver3);
 
-        assertEquals(mapDriver.getZoom(), mapDriver2.getZoom());
-        assertEquals(mapDriver.getZoom(), mapDriver3.getZoom());
+        assertSameZoom(mapDriver, mapDriver2);
+        assertSameZoom(mapDriver, mapDriver3);
 
         for (int i = 0; i < logs1.size(); i++) {
             /* Users that moved shouldn't receive messages */

@@ -69,8 +69,8 @@ public class SimpleTest extends MapTest {
         List<LogEntry> logs1 = mapDriver1.getLogs();
         List<LogEntry> logs2 = mapDriver2.getLogs();
 
-        assertEquals(mapDriver1.getCenter(), mapDriver2.getCenter());
-        assertEquals(mapDriver1.getZoom(), mapDriver2.getZoom());
+        assertSameCenter(mapDriver1, mapDriver2);
+        assertSameZoom(mapDriver1, mapDriver2);
 
         for (int i = 0; i < logs1.size(); i++) {
             /* Users that moved shouldn't receive messages */

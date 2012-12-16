@@ -207,7 +207,7 @@ public class MapDriver {
         }
     }
     
-    public Object getCenter() {
+    public Point getCenter() {
         String script = "return window.MapApp.map.getCenter()";
         Json center = new Json(js.executeScript(script));
           
