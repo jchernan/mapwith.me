@@ -73,8 +73,7 @@ public class MapDriver {
         this.emptyBuilder = new Actions(driver);
         this.username = username;
 
-        //String baseUrl = "file:///Users/jmunizn/Documents/Projects/maps2/maps/client/index.html";
-        String baseUrl = String.format("file:///%s/../../index.html", System.getProperty("user.dir"));
+        String baseUrl = String.format("file:///%s/../../dist/index.html", System.getProperty("user.dir"));
 
         if (sessionId != null) {
             baseUrl = baseUrl + "?session_id=" + sessionId;
