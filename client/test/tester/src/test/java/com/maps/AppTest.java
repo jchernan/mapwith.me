@@ -153,9 +153,8 @@ public class AppTest extends MapTest {
                 logs3.get(i).getAction() != LogAction.SEND);
         }
 
-        assertEquals(8,  logs1.size());
-        assertEquals(8, logs2.size());
-        assertEquals(8, logs3.size());
+        assertEquals(logs1.size(), logs2.size());
+        assertEquals(logs1.size(), logs3.size());
         assertEquals(logs2, logs3);
         
         List<LogEntry> cLogs1 = LogEntryFactory.generateComplement(logs1);

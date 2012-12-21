@@ -734,8 +734,8 @@ MapApp.collab = function () {
     Any map movement of the same type as this pending message can be
     ignored until this message is acknowledged.
   */
-  var pendingMsg = { opType: null, xid: null };
-  var receivedMsg = { opType: null, data: null };
+  var pendingMsg = [];
+  var receivedMsg = [];
 
   /*
     Before sending a message via socket.io, assign it a XID and
@@ -743,47 +743,112 @@ MapApp.collab = function () {
     us to ignore some messages while we're waiting for an
     acknowledgement.
   */
-  var preSendMsg = function (opType, data) {
-    if (receivedMsg.opType === opType) {
+  var preSendMessage = function (opType, data) {
+    // Check if the message we want to send is a message
+    // that we have received (for example, a received message
+    // induces a set center, which in turn fires a map event
+    // for change_center; we want to stop these messages).
+    // Loop through the received messages and compare their data.
+    var foundReceived = false;
+    checkMessages(opType, receivedMsg, function (i, msg) {
+      var msgData = msg.data;
       switch (opType) {
       case 'change_zoom':
-        if (receivedMsg.data.zoom === data.zoom) {
-          receivedMsg = { opType: null, data: null };
-          return -1;
+        if (msgData.zoom === data.zoom) {
+          receivedMsg.splice(i, 1);
+          foundReceived = true;
         }
         break;
       case 'change_center':
-        if (isSameCenter(receivedMsg.data.center, data.center)) {
-          receivedMsg = { opType: null, data: null };
-          return -1;
+        if (isSameCenter(msgData.center, data.center)) {
+          receivedMsg.splice(i, 1);
+          foundReceived = true;
         }
         break;
       }
+    });
+    // If the message we want to send is a message we have
+    // received, then return an invalid XID to indicate that
+    // the message should not be sent.
+    if (foundReceived) {
+      return -1;
     }
-    pendingMsg.opType = opType;
-    pendingMsg.xid = ++maxXid;
-    return pendingMsg.xid;
+ 
+    // Otherwise, get the new XID.
+    var newXid = ++maxXid;
+
+    // Check if the pending list already has a message
+    // with this opType. If there is one, update its xid.
+    var found = checkMessages(opType, pendingMsg, function (i, msg) {
+      msg.xid = newXid;
+    });
+    // If the pending list had no message with this opType,
+    // then add a new message with the new XID.
+    if (!found) {
+      pendingMsg.push({
+        'opType': opType,
+        'xid': newXid
+      });
+    }
+
+    // Return the XID associated with the new message.
+    return newXid;
   };
 
   /*
     Before processing an incoming server message, decide if it can
-    be ignored based on any outstanding pending out-going messagse.
+    be ignored based on any outstanding pending out-going message.
   */
   var preReceiveMessage = function (data, opType) {
-    if (pendingMsg.opType === opType) {
-      // There's a pending outgoing message of the same type,
-      // so we can ignore it. If this is our ack, though, then we
-      // can clear the pendingMsg.
-      if (data.xid === pendingMsg.xid) {
-        pendingMsg = { opType: null, xid: null };
+    // Check if the message we are receiving is a message in
+    // the list of pending acks.
+    var found;
+    found = checkMessages(opType, pendingMsg, function (i, msg) {
+      // If this is our ack, then we can clear the pending message
+      if (msg.xid === data.xid) {
+        pendingMsg.splice(i, 1);
       }
+    });
+    // If we find a pending outgoing message of the same type
+    // as the message we have received, ignore the received message.
+    // Return false if the incoming message should be ignored.
+    if (found) {
       return false;
-    } else {
-      // No pending outgoing message, so we cannot ignore
-      receivedMsg.opType = opType;
-      receivedMsg.data = data;
-      return true;
     }
+    
+    // Check if the list of received messages already has a message
+    // with this opType. If there is one, update its data.
+    found = checkMessages(opType, receivedMsg, function (i, msg) {
+      msg.data = data;
+    });
+    // If the received list had no message with this opType,
+    // then add a new message with the new data.
+    if (!found) {
+      receivedMsg.push({
+        'opType': opType,
+        'data': data
+      });
+    }
+
+    // Return true to indicate a valid incoming message
+    return true;
+  };
+
+  /*
+    Loop through the list of messages looking for a message with
+    the given opType. If a message is found, call function fn
+    and return true.
+  */
+  var checkMessages = function (opType, messages, fn) {
+    var found = false;
+    for (var i = messages.length - 1 ; i >= 0 ; i -= 1) {
+      var msg = messages[i];
+      if (msg.hasOwnProperty('opType') && msg.opType === opType) {
+        fn(i, msg);
+        found = true;
+      }
+    }
+    return found;
   };
 
   // Send a message to the server
@@ -885,7 +950,7 @@ MapApp.collab = function () {
     MapApp.log.info('[search] Emitting address: '
       + address);
 
-    var xid = preSendMsg('search');
+    var xid = preSendMessage('search');
     emit('search', xid, { address: address });
   };
 
@@ -912,7 +977,7 @@ MapApp.collab = function () {
     MapApp.log.info('[init] Emitting init: ' + JSON.stringify(data));
 
     // Send initialization message to server
-    var xid = preSendMsg('init');
+    var xid = preSendMessage('init');
     emit('init', xid, data);
   };
 
@@ -958,7 +1023,7 @@ MapApp.collab = function () {
    */
   var sendChangeCenter = function (center) {
     var data = { center: center };
-    var xid = preSendMsg('change_center', data);
+    var xid = preSendMessage('change_center', data);
     if (xid > 0) {
       emit('change_center', xid, data);
       MapApp.log.sentCenter(center);
@@ -973,7 +1038,7 @@ MapApp.collab = function () {
    */
   var sendChangeZoom = function (zoom) {
     var data = { zoom: zoom };
-    var xid = preSendMsg('change_zoom', data);
+    var xid = preSendMessage('change_zoom', data);
     if (xid > 0) {
       emit('change_zoom', xid, data);
       MapApp.log.sentZoom(zoom);
@@ -992,7 +1057,7 @@ MapApp.collab = function () {
         zoom = New zoom level
    */
   function sendChangeState(center, zoom) {
-    var xid = preSendMsg('change_state');
+    var xid = preSendMessage('change_state');
     emit('change_state', xid, {
         center: center,
         zoom: zoom
