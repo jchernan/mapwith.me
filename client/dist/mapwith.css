@@ -38,17 +38,41 @@ body {
 #share {
   width: 4em;
 }
-#right_bar {
+#right-bar {
   position: absolute;
-  right: 50px;
+  right: 20px;
   top: 150px;
   width: 290px;
   z-index: 2;
+  /* content hides after sliding */
+  overflow: hidden;
 }
-#whos_online {
+/* Good tutorial about CSS positioning
+http://www.barelyfitz.com/screencast/html-training/css/positioning/ */
+.right-bar-minimize {
+  position: absolute;
+  /* this div is empty, so need to force display */
+  display: inline-block;
+  top: 0;
+  left: 0;
+  width: 15px;
+  height: 100%;
+  background: #dedede;
+}
+#chat-header {
+  position: relative;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  /* content doesn't wrap when sliding */
+  white-space: nowrap;
   opacity: 0.85;
 }
 #chat-window {
+  position: relative;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  /* content doesn't wrap when sliding */
+  white-space: nowrap;
   opacity: 0.85;
 }
 #chat-panel {
@@ -65,7 +89,9 @@ body {
   max-height: 240px;
   max-width: 240px;
   overflow: auto;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  /* small indentation */
+  margin-left: 5px;
 }
 #chat-panel-rows .message {
   margin: 5px 5px;
@@ -82,18 +108,18 @@ body {
   margin-right: 10px;
 }
 #chat-send-form {
+  margin-left: 5px;
   margin-bottom: 0px;
 }
 #chat-send-form textarea {
   resize: none;
   height: 38px; 
-  width: 166px;
+  width: 170px;
 }
 #chat-send-form .btn {
   width: 70px;
   height: 48px;
 }
-
 /* Styles for venue HTML pop-up */
 span.red-star {
   background:url(images/stars/star.gif);
@@ -102,7 +128,6 @@ span.red-star {
   height:16px;
   background-position:0px 32px;
 }
-
 span.gray-star {
   background:url(images/stars/star.gif);
   display:inline-block;
@@ -110,21 +135,17 @@ span.gray-star {
   height:16px;
   background-position:0px 0px;
 }
-
 div.venue-address {
   padding-top:5px;
 }
-
 div.venue-icon {
   float:left;
   overflow:hidden;
 }
-
 img.venue-icon {
   width:32px;
   height:32px;
 }
-
 div.venue-main {
   float:left;
   overflow:hidden;

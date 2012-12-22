@@ -94,7 +94,7 @@ MapApp.chatWindow = function () {
       }
     }
 
-    $("#right_bar").css("display", "");
+    $("#right-bar").css("display", "");
 
     // Listener to add message from server to chat area
     MapApp.collab.on("send_message",  function (data) {
@@ -114,6 +114,23 @@ MapApp.chatWindow = function () {
       },
       data.state.usernames
     );
+  });
+
+  // Slide chat window to minimize it
+  // http://www.learningjquery.com/2009/02/slide-elements-in-different-directions
+  var rightBarInnerElems = ['#chat-header', '#chat-window'];
+  $(document).ready(function () {
+    $('.right-bar-minimize').click(function () {
+      for (var i = 0 ; i < 2 ; i++) {
+        var element = $(rightBarInnerElems[i]);
+        element.animate({
+          marginLeft: parseInt(
+            element.css('marginLeft'), 10) === 0 ?
+            element.outerWidth() - 20 :
+            0
+        });
+      }
+    });
   });
 
 }();
