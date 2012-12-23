@@ -1568,16 +1568,16 @@ MapApp.map = function () {
           icon = venueInfo.icon.prefix + '32.png';
         }
 
-        var infoWindow = new google.maps.InfoWindow({
-          content: popupHtml(
-            icon,
-            venueInfo.name,
-            venueInfo.stars,
-            venueInfo.address
-          )
-        });
-
         google.maps.event.addListener(marker, 'click', function () {
+          var infoWindow = MapApp.map.markerInfoWindow;
+          infoWindow.setContent(
+            popupHtml(
+              icon,
+              venueInfo.name,
+              venueInfo.stars,
+              venueInfo.address
+            )
+          );
           infoWindow.open(map, marker);
         });
       }
@@ -1596,6 +1596,11 @@ MapApp.map = function () {
         shownMarkers.length = 0;
       }
     },
+    /*
+    * Represents the information window that is displayed
+    * when clicking a geopoint marker.
+    */
+    markerInfoWindow: new google.maps.InfoWindow(),
     /*
     * Represents the image for a geopoint marker
     */
@@ -1830,11 +1835,18 @@ MapApp.map = function () {
     drawVenues: drawVenues
   };
 
-  for (var fn in leafletFunctions) {
-    if (MapApp.useLeaflet && leafletFunctions.hasOwnProperty(fn)) {
-      res[fn] = leafletFunctions[fn];
-    } else if (googleFunctions.hasOwnProperty(fn)) {
-      res[fn] = googleFunctions[fn];
+  var fn;
+  if (MapApp.useLeaflet) {
+    for (fn in leafletFunctions) {
+      if (leafletFunctions.hasOwnProperty(fn)) {
+        res[fn] = leafletFunctions[fn];
+      }
+    }
+  } else {
+    for (fn in googleFunctions) {
+      if (googleFunctions.hasOwnProperty(fn)) {
+        res[fn] = googleFunctions[fn];
+      }
     }
   }
 
